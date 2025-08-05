@@ -9,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Users, TestTube, MessageSquare, LogOut, Building2 } from 'lucide-react';
+import { AddPatientForm } from '@/components/forms/AddPatientForm';
+import { AddTestReportForm } from '@/components/forms/AddTestReportForm';
+import { AddFeedbackForm } from '@/components/forms/AddFeedbackForm';
 
 interface Lab {
   id: string;
@@ -253,9 +256,12 @@ const Dashboard = () => {
 
           <TabsContent value="patients">
             <Card>
-              <CardHeader>
-                <CardTitle>Patients</CardTitle>
-                <CardDescription>Manage patient information and records</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle>Patients</CardTitle>
+                  <CardDescription>Manage patient information and records</CardDescription>
+                </div>
+                <AddPatientForm onPatientAdded={fetchData} />
               </CardHeader>
               <CardContent>
                 <Table>
@@ -288,9 +294,12 @@ const Dashboard = () => {
 
           <TabsContent value="reports">
             <Card>
-              <CardHeader>
-                <CardTitle>Test Reports</CardTitle>
-                <CardDescription>View and manage laboratory test results</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle>Test Reports</CardTitle>
+                  <CardDescription>View and manage laboratory test results</CardDescription>
+                </div>
+                <AddTestReportForm onReportAdded={fetchData} />
               </CardHeader>
               <CardContent>
                 <Table>
@@ -358,9 +367,12 @@ const Dashboard = () => {
 
           <TabsContent value="feedback">
             <Card>
-              <CardHeader>
-                <CardTitle>Feedback</CardTitle>
-                <CardDescription>Patient feedback and ratings</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle>Feedback</CardTitle>
+                  <CardDescription>Patient feedback and ratings</CardDescription>
+                </div>
+                <AddFeedbackForm onFeedbackAdded={fetchData} />
               </CardHeader>
               <CardContent>
                 <Table>

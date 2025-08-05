@@ -1,0 +1,189 @@
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Plus } from 'lucide-react';
+
+interface Patient {
+  id: string;
+  full_name: string;
+  patient_id: string;
+}
+
+interface AddTestReportFormProps {
+  onReportAdded: () => void;
+}
+
+export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const { profile } = useAuth();
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState({
+    patient_id: '',
+    test_type: '',
+    test_date: '',
+    status: 'pending',
+    results: ''
+  });
+
+  useEffect(() => {
+    if (open) {
+      fetchPatients();
+    }
+  }, [open]);
+
+  const fetchPatients = async () => {
+    try {
+      const { data } = await supabase
+        .from('patients')
+        .select('id, full_name, patient_id')
+        .order('full_name');
+      setPatients(data || []);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch patients",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const results = formData.results ? JSON.parse(formData.results) : null;
+      
+      const { error } = await supabase
+        .from('test_reports')
+        .insert({
+          patient_id: formData.patient_id,
+          test_type: formData.test_type,
+          test_date: formData.test_date,
+          status: formData.status,
+          results,
+          lab_id: profile?.lab_id,
+          created_by: profile?.user_id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Test report added successfully",
+      });
+
+      setFormData({
+        patient_id: '',
+        test_type: '',
+        test_date: '',
+        status: 'pending',
+        results: ''
+      });
+      setOpen(false);
+      onReportAdded();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Test Report
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Add New Test Report</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="patient_id">Patient</Label>
+            <Select value={formData.patient_id} onValueChange={(value) => setFormData({ ...formData, patient_id: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select patient" />
+              </SelectTrigger>
+              <SelectContent>
+                {patients.map((patient) => (
+                  <SelectItem key={patient.id} value={patient.id}>
+                    {patient.full_name} ({patient.patient_id})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="test_type">Test Type</Label>
+            <Input
+              id="test_type"
+              value={formData.test_type}
+              onChange={(e) => setFormData({ ...formData, test_type: e.target.value })}
+              placeholder="e.g., Blood Test, X-Ray, MRI"
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="test_date">Test Date</Label>
+            <Input
+              id="test_date"
+              type="date"
+              value={formData.test_date}
+              onChange={(e) => setFormData({ ...formData, test_date: e.target.value })}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="results">Results (JSON format)</Label>
+            <Textarea
+              id="results"
+              value={formData.results}
+              onChange={(e) => setFormData({ ...formData, results: e.target.value })}
+              placeholder='{"hemoglobin": "12.5 g/dL", "glucose": "95 mg/dL"}'
+              rows={4}
+            />
+          </div>
+          
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? 'Adding...' : 'Add Test Report'}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
