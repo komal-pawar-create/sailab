@@ -8,10 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Users, TestTube, MessageSquare, LogOut, Building2 } from 'lucide-react';
+import { FileText, Users, TestTube, MessageSquare, LogOut, Building2, Receipt, CreditCard, History } from 'lucide-react';
 import { AddPatientForm } from '@/components/forms/AddPatientForm';
 import { AddTestReportForm } from '@/components/forms/AddTestReportForm';
 import { AddFeedbackForm } from '@/components/forms/AddFeedbackForm';
+import { AddBillForm } from '@/components/forms/AddBillForm';
+import { PaymentForm } from '@/components/forms/PaymentForm';
+import { BillPrint } from '@/components/bills/BillPrint';
+import { LedgerHistory } from '@/components/bills/LedgerHistory';
 
 interface Lab {
   id: string;
@@ -55,6 +59,20 @@ interface Feedback {
   patients?: { full_name: string };
 }
 
+interface Bill {
+  id: string;
+  bill_number: string;
+  bill_date: string;
+  due_date: string;
+  total_amount: number;
+  paid_amount: number;
+  due_amount: number;
+  status: string;
+  items: any;
+  notes?: string;
+  patients?: { full_name: string; patient_id: string } | null;
+}
+
 const Dashboard = () => {
   const { user, profile, signOut, loading } = useAuth();
   const navigate = useNavigate();
@@ -65,10 +83,14 @@ const Dashboard = () => {
   const [testReports, setTestReports] = useState<TestReport[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
   const [stats, setStats] = useState({
     totalPatients: 0,
     totalReports: 0,
     totalDocuments: 0,
+    totalBills: 0,
+    totalRevenue: 0,
+    pendingAmount: 0,
     averageRating: 0
   });
 
@@ -116,15 +138,27 @@ const Dashboard = () => {
         .select('*, patients(full_name)');
       setFeedback(feedbackData || []);
 
+      // Fetch bills
+      const { data: billsData } = await supabase
+        .from('bills')
+        .select('*, patients(full_name, patient_id)');
+      setBills((billsData as any) || []);
+
       // Calculate stats
       const avgRating = feedbackData?.length 
         ? feedbackData.reduce((sum, f) => sum + f.rating, 0) / feedbackData.length 
         : 0;
       
+      const totalRevenue = billsData?.reduce((sum, bill) => sum + bill.total_amount, 0) || 0;
+      const pendingAmount = billsData?.reduce((sum, bill) => sum + bill.due_amount, 0) || 0;
+      
       setStats({
         totalPatients: patientsData?.length || 0,
         totalReports: reportsData?.length || 0,
         totalDocuments: documentsData?.length || 0,
+        totalBills: billsData?.length || 0,
+        totalRevenue,
+        pendingAmount,
         averageRating: Math.round(avgRating * 10) / 10
       });
     } catch (error) {
@@ -153,8 +187,11 @@ const Dashboard = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-500';
+      case 'completed': 
+      case 'paid': return 'bg-green-500';
       case 'pending': return 'bg-yellow-500';
+      case 'partially_paid': return 'bg-orange-500';
+      case 'overdue':
       case 'cancelled': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
@@ -202,7 +239,7 @@ const Dashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
@@ -232,14 +269,34 @@ const Dashboard = () => {
               <div className="text-2xl font-bold">{stats.totalDocuments}</div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Bills</CardTitle>
+              <Receipt className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalBills}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">₹{stats.totalRevenue.toFixed(2)}</div>
+            </CardContent>
+          </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Pending Amount</CardTitle>
+              <History className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.averageRating}</div>
+              <div className="text-2xl font-bold text-red-600">₹{stats.pendingAmount.toFixed(2)}</div>
             </CardContent>
           </Card>
         </div>
@@ -250,7 +307,9 @@ const Dashboard = () => {
             <TabsTrigger value="patients">Patients</TabsTrigger>
             <TabsTrigger value="reports">Test Reports</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="bills">Bills</TabsTrigger>
             <TabsTrigger value="feedback">Feedback</TabsTrigger>
+            <TabsTrigger value="ledger">Ledger</TabsTrigger>
             {profile.role === 'admin' && <TabsTrigger value="labs">Labs</TabsTrigger>}
           </TabsList>
 
@@ -405,6 +464,69 @@ const Dashboard = () => {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="bills">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle>Bills</CardTitle>
+                  <CardDescription>Manage patient bills and payments</CardDescription>
+                </div>
+                <AddBillForm onBillAdded={fetchData} />
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Bill Number</TableHead>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Bill Date</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Total Amount</TableHead>
+                      <TableHead>Paid Amount</TableHead>
+                      <TableHead>Due Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bills.map((bill) => (
+                      <TableRow key={bill.id}>
+                        <TableCell className="font-medium">{bill.bill_number}</TableCell>
+                        <TableCell>{bill.patients?.full_name}</TableCell>
+                        <TableCell>{new Date(bill.bill_date).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(bill.due_date).toLocaleDateString()}</TableCell>
+                        <TableCell>₹{bill.total_amount.toFixed(2)}</TableCell>
+                        <TableCell className="text-green-600">₹{bill.paid_amount.toFixed(2)}</TableCell>
+                        <TableCell className="text-red-600">₹{bill.due_amount.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Badge className={`${getStatusColor(bill.status)} text-white`}>
+                            {bill.status.replace('_', ' ').toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <BillPrint bill={bill} />
+                            {bill.due_amount > 0 && (
+                              <PaymentForm 
+                                billId={bill.id} 
+                                dueAmount={bill.due_amount} 
+                                onPaymentAdded={fetchData} 
+                              />
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="ledger">
+            <LedgerHistory />
           </TabsContent>
 
           {profile.role === 'admin' && (

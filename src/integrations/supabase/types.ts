@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      bill_payments: {
+        Row: {
+          bill_id: string
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          payment_amount: number
+          payment_date: string
+          payment_method: string
+          reference_number: string | null
+        }
+        Insert: {
+          bill_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          payment_amount: number
+          payment_date?: string
+          payment_method?: string
+          reference_number?: string | null
+        }
+        Update: {
+          bill_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          payment_amount?: number
+          payment_date?: string
+          payment_method?: string
+          reference_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_payments_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bills: {
+        Row: {
+          bill_date: string
+          bill_number: string
+          created_at: string
+          created_by: string
+          due_amount: number
+          due_date: string
+          id: string
+          items: Json
+          lab_id: string
+          notes: string | null
+          paid_amount: number | null
+          patient_id: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          bill_date?: string
+          bill_number: string
+          created_at?: string
+          created_by: string
+          due_amount: number
+          due_date: string
+          id?: string
+          items?: Json
+          lab_id: string
+          notes?: string | null
+          paid_amount?: number | null
+          patient_id: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          bill_date?: string
+          bill_number?: string
+          created_at?: string
+          created_by?: string
+          due_amount?: number
+          due_date?: string
+          id?: string
+          items?: Json
+          lab_id?: string
+          notes?: string | null
+          paid_amount?: number | null
+          patient_id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
