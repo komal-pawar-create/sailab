@@ -108,15 +108,51 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
     setLoading(true);
 
     try {
-      // Validate that user has a lab_id
-      if (!profile?.lab_id) {
-        toast({
-          title: "Error",
-          description: "You must be assigned to a lab to create bills. Please contact your administrator.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
+      let labId = profile?.lab_id;
+      let createdBy = profile?.user_id;
+
+      // For admins, get lab_id from selected operator
+      if (profile?.role === 'admin') {
+        if (!selectedOperator) {
+          toast({
+            title: "Error", 
+            description: "Please select an operator to create the bill for.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // Get the selected operator's lab_id
+        const { data: operatorProfile } = await supabase
+          .from('profiles')
+          .select('lab_id')
+          .eq('user_id', selectedOperator)
+          .single();
+          
+        if (!operatorProfile?.lab_id) {
+          toast({
+            title: "Error",
+            description: "Selected operator is not assigned to a lab. Please contact your administrator.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        labId = operatorProfile.lab_id;
+        createdBy = selectedOperator;
+      } else {
+        // For non-admins, validate they have a lab_id
+        if (!profile?.lab_id) {
+          toast({
+            title: "Error",
+            description: "You must be assigned to a lab to create bills. Please contact your administrator.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
       }
 
       const totalAmount = getTotalAmount();
@@ -131,8 +167,8 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
           due_date: formData.due_date,
           items: items as any,
           notes: formData.notes,
-          lab_id: profile?.lab_id,
-          created_by: profile?.role === 'admin' && selectedOperator ? selectedOperator : profile?.user_id
+          lab_id: labId,
+          created_by: createdBy
         });
 
       if (error) throw error;
