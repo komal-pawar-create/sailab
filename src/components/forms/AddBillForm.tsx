@@ -105,8 +105,18 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
     setLoading(true);
 
     try {
+      // Validate that user has a lab_id
+      if (!profile?.lab_id) {
+        toast({
+          title: "Error",
+          description: "You must be assigned to a lab to create bills. Please contact your administrator.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const totalAmount = getTotalAmount();
-      const dueDate = new Date(formData.due_date);
       
       const { error } = await supabase
         .from('bills')
