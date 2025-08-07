@@ -180,11 +180,13 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
                   <SelectValue placeholder="Select patient" />
                 </SelectTrigger>
                 <SelectContent>
-                  {patients.map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      {patient.full_name} ({patient.patient_id})
-                    </SelectItem>
-                  ))}
+                  {patients
+                    .filter(patient => patient.id && patient.id.trim() !== '')
+                    .map((patient) => (
+                      <SelectItem key={patient.id} value={patient.id}>
+                        {patient.full_name} ({patient.patient_id})
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
