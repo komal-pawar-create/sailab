@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus } from 'lucide-react';
+import { OperatorSelect } from './OperatorSelect';
 
 interface Patient {
   id: string;
@@ -34,6 +35,8 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
     status: 'pending',
     results: ''
   });
+
+  const [selectedOperator, setSelectedOperator] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -73,7 +76,7 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
           status: formData.status,
           results,
           lab_id: profile?.lab_id,
-          created_by: profile?.user_id
+          created_by: profile?.role === 'admin' && selectedOperator ? selectedOperator : profile?.user_id
         });
 
       if (error) throw error;
@@ -90,6 +93,7 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
         status: 'pending',
         results: ''
       });
+      setSelectedOperator('');
       setOpen(false);
       onReportAdded();
     } catch (error: any) {
@@ -116,6 +120,11 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
           <DialogTitle>Add New Test Report</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <OperatorSelect 
+            selectedOperator={selectedOperator} 
+            onOperatorChange={setSelectedOperator} 
+          />
+          
           <div className="space-y-2">
             <Label htmlFor="patient_id">Patient</Label>
             <Select value={formData.patient_id} onValueChange={(value) => setFormData({ ...formData, patient_id: value })}>

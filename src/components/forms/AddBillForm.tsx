@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, Trash2 } from 'lucide-react';
+import { OperatorSelect } from './OperatorSelect';
 
 interface Patient {
   id: string;
@@ -44,6 +45,8 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
   const [items, setItems] = useState<BillItem[]>([
     { description: '', quantity: 1, rate: 0, amount: 0 }
   ]);
+
+  const [selectedOperator, setSelectedOperator] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -129,7 +132,7 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
           items: items as any,
           notes: formData.notes,
           lab_id: profile?.lab_id,
-          created_by: profile?.user_id
+          created_by: profile?.role === 'admin' && selectedOperator ? selectedOperator : profile?.user_id
         });
 
       if (error) throw error;
@@ -146,6 +149,7 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
         notes: ''
       });
       setItems([{ description: '', quantity: 1, rate: 0, amount: 0 }]);
+      setSelectedOperator('');
       setOpen(false);
       onBillAdded();
     } catch (error: any) {
@@ -172,6 +176,11 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
           <DialogTitle>Create New Bill</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <OperatorSelect 
+            selectedOperator={selectedOperator} 
+            onOperatorChange={setSelectedOperator} 
+          />
+          
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="patient_id">Patient</Label>

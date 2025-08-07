@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, Star } from 'lucide-react';
+import { OperatorSelect } from './OperatorSelect';
 
 interface Patient {
   id: string;
@@ -33,6 +34,8 @@ export const AddFeedbackForm = ({ onFeedbackAdded }: AddFeedbackFormProps) => {
     message: '',
     rating: 5
   });
+
+  const [selectedOperator, setSelectedOperator] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -69,7 +72,7 @@ export const AddFeedbackForm = ({ onFeedbackAdded }: AddFeedbackFormProps) => {
           message: formData.message,
           rating: formData.rating,
           lab_id: profile?.lab_id,
-          created_by: profile?.user_id
+          created_by: profile?.role === 'admin' && selectedOperator ? selectedOperator : profile?.user_id
         });
 
       if (error) throw error;
@@ -85,6 +88,7 @@ export const AddFeedbackForm = ({ onFeedbackAdded }: AddFeedbackFormProps) => {
         message: '',
         rating: 5
       });
+      setSelectedOperator('');
       setOpen(false);
       onFeedbackAdded();
     } catch (error: any) {
@@ -111,6 +115,11 @@ export const AddFeedbackForm = ({ onFeedbackAdded }: AddFeedbackFormProps) => {
           <DialogTitle>Add New Feedback</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <OperatorSelect 
+            selectedOperator={selectedOperator} 
+            onOperatorChange={setSelectedOperator} 
+          />
+          
           <div className="space-y-2">
             <Label htmlFor="patient_id">Patient (Optional)</Label>
             <Select value={formData.patient_id} onValueChange={(value) => setFormData({ ...formData, patient_id: value })}>

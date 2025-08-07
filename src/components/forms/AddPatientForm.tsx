@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus } from 'lucide-react';
+import { OperatorSelect } from './OperatorSelect';
 
 interface AddPatientFormProps {
   onPatientAdded: () => void;
@@ -28,6 +29,8 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
     email: ''
   });
 
+  const [selectedOperator, setSelectedOperator] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -43,7 +46,7 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
           phone: formData.phone,
           email: formData.email,
           lab_id: profile?.lab_id,
-          created_by: profile?.user_id
+          created_by: profile?.role === 'admin' && selectedOperator ? selectedOperator : profile?.user_id
         });
 
       if (error) throw error;
@@ -61,6 +64,7 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
         phone: '',
         email: ''
       });
+      setSelectedOperator('');
       setOpen(false);
       onPatientAdded();
     } catch (error: any) {
@@ -87,6 +91,11 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
           <DialogTitle>Add New Patient</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <OperatorSelect 
+            selectedOperator={selectedOperator} 
+            onOperatorChange={setSelectedOperator} 
+          />
+          
           <div className="space-y-2">
             <Label htmlFor="patient_id">Patient ID</Label>
             <Input
