@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,25 +16,18 @@ interface Patient {
   patient_id: string;
 }
 
-interface AddTestReportFormProps {
-  onReportAdded: () => void;
+interface AddDocumentFormProps {
+  onDocumentAdded: () => void;
 }
 
-export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => {
+export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const { profile } = useAuth();
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
-    patient_id: '',
-    test_type: '',
-    test_date: '',
-    status: 'pending',
-    results: ''
-  });
-
+  const [selectedPatient, setSelectedPatient] = useState('');
   const [selectedOperator, setSelectedOperator] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<Array<{path: string, name: string}>>([]);
 
@@ -71,15 +62,35 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
     setLoading(true);
 
     try {
+      if (!selectedPatient) {
+        toast({
+          title: "Error",
+          description: "Please select a patient",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (uploadedFiles.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please upload at least one file",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       let labId = profile?.lab_id;
-      let createdBy = profile?.user_id;
+      let uploadedBy = profile?.user_id;
 
       // For admins, get lab_id from selected operator
       if (profile?.role === 'admin') {
         if (!selectedOperator) {
           toast({
             title: "Error", 
-            description: "Please select an operator to create the test report for.",
+            description: "Please select an operator to upload documents for.",
             variant: "destructive",
           });
           setLoading(false);
@@ -103,76 +114,43 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
         }
         
         labId = operatorProfile.lab_id;
-        createdBy = selectedOperator;
+        uploadedBy = selectedOperator;
       } else if (!profile?.lab_id) {
         toast({
           title: "Error",
-          description: "You must be assigned to a lab to create test reports.",
+          description: "You must be assigned to a lab to upload documents.",
           variant: "destructive",
         });
         setLoading(false);
         return;
       }
 
-      const results = formData.results ? JSON.parse(formData.results) : null;
-      
-      const { data: reportData, error } = await supabase
-        .from('test_reports')
-        .insert({
-          patient_id: formData.patient_id,
-          test_type: formData.test_type,
-          test_date: formData.test_date,
-          status: formData.status,
-          results,
-          lab_id: labId,
-          created_by: createdBy
-        })
-        .select()
-        .single();
+      // Save uploaded files as documents
+      const documentInserts = uploadedFiles.map(file => ({
+        patient_id: selectedPatient,
+        file_name: file.name,
+        file_path: file.path,
+        file_type: file.name.split('.').pop() || 'unknown',
+        lab_id: labId,
+        uploaded_by: uploadedBy
+      }));
+
+      const { error } = await supabase
+        .from('documents')
+        .insert(documentInserts);
 
       if (error) throw error;
 
-      // Save uploaded files as documents
-      if (uploadedFiles.length > 0 && reportData) {
-        const documentInserts = uploadedFiles.map(file => ({
-          patient_id: formData.patient_id,
-          file_name: file.name,
-          file_path: file.path,
-          file_type: file.name.split('.').pop() || 'unknown',
-          lab_id: labId,
-          uploaded_by: createdBy
-        }));
-
-        const { error: documentsError } = await supabase
-          .from('documents')
-          .insert(documentInserts);
-
-        if (documentsError) {
-          console.error('Error saving documents:', documentsError);
-          toast({
-            title: "Warning",
-            description: "Test report created but some files failed to save",
-            variant: "destructive",
-          });
-        }
-      }
-
       toast({
         title: "Success",
-        description: "Test report added successfully",
+        description: `${uploadedFiles.length} document(s) uploaded successfully`,
       });
 
-      setFormData({
-        patient_id: '',
-        test_type: '',
-        test_date: '',
-        status: 'pending',
-        results: ''
-      });
+      setSelectedPatient('');
       setSelectedOperator('');
       setUploadedFiles([]);
       setOpen(false);
-      onReportAdded();
+      onDocumentAdded();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -189,12 +167,12 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Add Test Report
+          Upload Documents
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Test Report</DialogTitle>
+          <DialogTitle>Upload Patient Documents</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <OperatorSelect 
@@ -204,7 +182,7 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
           
           <div className="space-y-2">
             <Label htmlFor="patient_id">Patient</Label>
-            <Select value={formData.patient_id} onValueChange={(value) => setFormData({ ...formData, patient_id: value })}>
+            <Select value={selectedPatient} onValueChange={setSelectedPatient}>
               <SelectTrigger>
                 <SelectValue placeholder="Select patient" />
               </SelectTrigger>
@@ -218,62 +196,15 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
             </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="test_type">Test Type</Label>
-            <Input
-              id="test_type"
-              value={formData.test_type}
-              onChange={(e) => setFormData({ ...formData, test_type: e.target.value })}
-              placeholder="e.g., Blood Test, X-Ray, MRI"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="test_date">Test Date</Label>
-            <Input
-              id="test_date"
-              type="date"
-              value={formData.test_date}
-              onChange={(e) => setFormData({ ...formData, test_date: e.target.value })}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
           <FileUpload
             onFileUploaded={handleFileUploaded}
-            accept="image/*,.pdf,.doc,.docx"
+            accept="image/*,.pdf,.doc,.docx,.txt"
             maxSize={10}
-            label="Upload Test Images/Documents"
+            label="Upload Patient Documents"
           />
           
-          <div className="space-y-2">
-            <Label htmlFor="results">Results (JSON format)</Label>
-            <Textarea
-              id="results"
-              value={formData.results}
-              onChange={(e) => setFormData({ ...formData, results: e.target.value })}
-              placeholder='{"hemoglobin": "12.5 g/dL", "glucose": "95 mg/dL"}'
-              rows={4}
-            />
-          </div>
-          
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Adding...' : 'Add Test Report'}
+          <Button type="submit" disabled={loading || uploadedFiles.length === 0} className="w-full">
+            {loading ? 'Uploading...' : `Upload ${uploadedFiles.length} Document(s)`}
           </Button>
         </form>
       </DialogContent>
