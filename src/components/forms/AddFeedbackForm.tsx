@@ -48,8 +48,9 @@ export const AddFeedbackForm = ({ onFeedbackAdded }: AddFeedbackFormProps) => {
       const { data } = await supabase
         .from('patients')
         .select('id, full_name, patient_id')
+        .not('id', 'eq', '')
         .order('full_name');
-      setPatients(data || []);
+      setPatients((data || []).filter(p => p.id && p.id.trim() !== ''));
     } catch (error) {
       toast({
         title: "Error",
@@ -67,7 +68,7 @@ export const AddFeedbackForm = ({ onFeedbackAdded }: AddFeedbackFormProps) => {
       const { error } = await supabase
         .from('feedback')
         .insert({
-          patient_id: formData.patient_id || null,
+          patient_id: formData.patient_id === 'anonymous' || formData.patient_id === '' ? null : formData.patient_id,
           feedback_type: formData.feedback_type,
           message: formData.message,
           rating: formData.rating,
@@ -127,12 +128,14 @@ export const AddFeedbackForm = ({ onFeedbackAdded }: AddFeedbackFormProps) => {
                 <SelectValue placeholder="Select patient (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Anonymous</SelectItem>
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.full_name} ({patient.patient_id})
-                  </SelectItem>
-                ))}
+                <SelectItem value="anonymous">Anonymous</SelectItem>
+                {patients
+                  .filter((patient) => patient.id && patient.id.trim() !== '')
+                  .map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.full_name} ({patient.patient_id})
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
