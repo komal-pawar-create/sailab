@@ -13,6 +13,7 @@ import { AddPatientForm } from '@/components/forms/AddPatientForm';
 import { AddTestReportForm } from '@/components/forms/AddTestReportForm';
 import { AddFeedbackForm } from '@/components/forms/AddFeedbackForm';
 import { AddBillForm } from '@/components/forms/AddBillForm';
+import { AddDocumentForm } from '@/components/forms/AddDocumentForm';
 import { PaymentForm } from '@/components/forms/PaymentForm';
 import { BillPrint } from '@/components/bills/BillPrint';
 import { LedgerHistory } from '@/components/bills/LedgerHistory';
@@ -395,9 +396,12 @@ const Dashboard = () => {
 
           <TabsContent value="documents">
             <Card>
-              <CardHeader>
-                <CardTitle>Documents</CardTitle>
-                <CardDescription>Manage patient documents and files</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle>Documents</CardTitle>
+                  <CardDescription>Manage patient documents and files</CardDescription>
+                </div>
+                <AddDocumentForm onDocumentAdded={fetchData} />
               </CardHeader>
               <CardContent>
                 <Table>
