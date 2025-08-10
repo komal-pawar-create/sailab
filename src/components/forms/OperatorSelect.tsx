@@ -30,9 +30,11 @@ export const OperatorSelect = ({ selectedOperator, onOperatorChange }: OperatorS
         .from('profiles')
         .select('id, user_id, full_name, role')
         .in('role', ['operator_1', 'operator_2', 'operator_3'])
+        .not('user_id', 'eq', '')
         .order('full_name');
       
-      setOperators(data || []);
+      // Filter out any records with empty user_id
+      setOperators((data || []).filter(op => op.user_id && op.user_id.trim() !== ''));
     } catch (error) {
       console.error('Error fetching operators:', error);
     }

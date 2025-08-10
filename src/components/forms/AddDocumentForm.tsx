@@ -42,8 +42,11 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
       const { data } = await supabase
         .from('patients')
         .select('id, full_name, patient_id')
+        .not('id', 'eq', '')
         .order('full_name');
-      setPatients(data || []);
+      
+      // Filter out any records with empty id
+      setPatients((data || []).filter(patient => patient.id && patient.id.trim() !== ''));
     } catch (error) {
       toast({
         title: "Error",
