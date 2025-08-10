@@ -213,22 +213,43 @@ export type Database = {
       }
       labs: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
           created_at: string
           id: string
           location: string | null
           name: string
+          phone: string | null
+          postal_code: string | null
+          state: string | null
+          updated_at: string
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
           created_at?: string
           id?: string
           location?: string | null
           name: string
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          updated_at?: string
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
           created_at?: string
           id?: string
           location?: string | null
           name?: string
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
