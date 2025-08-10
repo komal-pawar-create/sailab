@@ -35,23 +35,42 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
     if (open) {
       fetchPatients();
     }
-  }, [open]);
+  }, [open, selectedOperator]);
 
   const fetchPatients = async () => {
     try {
-      const { data } = await supabase
+      // Determine target lab for filtering (respecting RLS)
+      let targetLabId: string | null = null;
+
+      if (profile?.role === 'admin' && selectedOperator) {
+        const { data: operatorProfile } = await supabase
+          .from('profiles')
+          .select('lab_id')
+          .eq('user_id', selectedOperator)
+          .maybeSingle();
+        targetLabId = operatorProfile?.lab_id ?? null;
+      } else if (profile?.role !== 'admin') {
+        targetLabId = profile?.lab_id ?? null;
+      }
+
+      let query = supabase
         .from('patients')
         .select('id, full_name, patient_id')
-        .not('id', 'eq', '')
         .order('full_name');
-      
-      // Filter out any records with empty id
-      setPatients((data || []).filter(patient => patient.id && patient.id.trim() !== ''));
+
+      if (targetLabId) {
+        query = query.eq('lab_id', targetLabId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      setPatients((data || []).filter((patient) => patient.id && patient.id.trim() !== ''));
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to fetch patients",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to fetch patients',
+        variant: 'destructive',
       });
     }
   };
