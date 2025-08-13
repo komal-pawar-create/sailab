@@ -253,6 +253,57 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_followups: {
+        Row: {
+          assigned_to: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          details: string | null
+          due_at: string
+          id: string
+          lab_id: string
+          patient_id: string
+          priority: string
+          remind_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          details?: string | null
+          due_at: string
+          id?: string
+          lab_id: string
+          patient_id: string
+          priority?: string
+          remind_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          details?: string | null
+          due_at?: string
+          id?: string
+          lab_id?: string
+          patient_id?: string
+          priority?: string
+          remind_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           age: number | null

@@ -14,9 +14,11 @@ import { AddTestReportForm } from '@/components/forms/AddTestReportForm';
 import { AddFeedbackForm } from '@/components/forms/AddFeedbackForm';
 import { AddBillForm } from '@/components/forms/AddBillForm';
 import { AddDocumentForm } from '@/components/forms/AddDocumentForm';
+import { AddFollowupForm } from '@/components/forms/AddFollowupForm';
 import { PaymentForm } from '@/components/forms/PaymentForm';
 import { BillPrint } from '@/components/bills/BillPrint';
 import { LedgerHistory } from '@/components/bills/LedgerHistory';
+import { useFollowupReminders } from '@/hooks/useFollowupReminders';
 
 interface Lab {
   id: string;
@@ -85,6 +87,7 @@ const Dashboard = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
+  const [followups, setFollowups] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalPatients: 0,
     totalReports: 0,
@@ -94,6 +97,9 @@ const Dashboard = () => {
     pendingAmount: 0,
     averageRating: 0
   });
+
+  // Enable follow-up reminders
+  useFollowupReminders();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -144,6 +150,18 @@ const Dashboard = () => {
         .from('bills')
         .select('*, patients(full_name, patient_id)');
       setBills((billsData as any) || []);
+
+      // Fetch followups
+      const { data: followupsData } = await supabase
+        .from('patient_followups')
+        .select(`
+          *,
+          patients!inner(full_name, patient_id),
+          assigned_to_profile:profiles!patient_followups_assigned_to_fkey(full_name),
+          created_by_profile:profiles!patient_followups_created_by_fkey(full_name)
+        `)
+        .order('due_at', { ascending: true });
+      setFollowups(followupsData || []);
 
       // Calculate stats
       const avgRating = feedbackData?.length 
@@ -308,6 +326,7 @@ const Dashboard = () => {
             <TabsTrigger value="patients">Patients</TabsTrigger>
             <TabsTrigger value="reports">Test Reports</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="followups">Follow-ups</TabsTrigger>
             <TabsTrigger value="bills">Bills</TabsTrigger>
             <TabsTrigger value="feedback">Feedback</TabsTrigger>
             <TabsTrigger value="ledger">Ledger</TabsTrigger>
@@ -420,6 +439,92 @@ const Dashboard = () => {
                         <TableCell>{doc.file_name}</TableCell>
                         <TableCell>{doc.file_type}</TableCell>
                         <TableCell>{(doc.file_size / 1024 / 1024).toFixed(2)} MB</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="followups">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle>Follow-up Tasks</CardTitle>
+                  <CardDescription>Manage patient follow-up reminders and tasks</CardDescription>
+                </div>
+                <AddFollowupForm onFollowupAdded={fetchData} />
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Assigned To</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {followups.map((followup) => (
+                      <TableRow key={followup.id}>
+                        <TableCell>
+                          {followup.patients?.full_name} ({followup.patients?.patient_id})
+                        </TableCell>
+                        <TableCell className="font-medium">{followup.title}</TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            followup.priority === 'high' ? 'destructive' :
+                            followup.priority === 'medium' ? 'default' : 'secondary'
+                          }>
+                            {followup.priority}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(followup.due_at).toLocaleString()}
+                        </TableCell>
+                        <TableCell>{followup.assigned_to_profile?.full_name}</TableCell>
+                        <TableCell>
+                          <Badge variant={followup.status === 'completed' ? 'default' : 'outline'}>
+                            {followup.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {followup.status === 'open' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={async () => {
+                                try {
+                                  await supabase
+                                    .from('patient_followups')
+                                    .update({ 
+                                      status: 'completed', 
+                                      completed_at: new Date().toISOString() 
+                                    })
+                                    .eq('id', followup.id);
+                                  fetchData();
+                                  toast({
+                                    title: "Success",
+                                    description: "Follow-up completed",
+                                  });
+                                } catch (error) {
+                                  toast({
+                                    title: "Error",
+                                    description: "Failed to complete follow-up",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                            >
+                              Complete
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
