@@ -114,7 +114,17 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
         return;
       }
 
-      const results = formData.results ? JSON.parse(formData.results) : null;
+      // Handle results field - try to parse as JSON, fallback to plain text
+      let results = null;
+      if (formData.results && formData.results.trim()) {
+        try {
+          // Try to parse as JSON
+          results = JSON.parse(formData.results);
+        } catch {
+          // If not valid JSON, treat as plain text
+          results = { text: formData.results };
+        }
+      }
       
       const { data: reportData, error } = await supabase
         .from('test_reports')
@@ -264,14 +274,17 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
           />
           
           <div className="space-y-2">
-            <Label htmlFor="results">Results (JSON format)</Label>
+            <Label htmlFor="results">Results (Optional)</Label>
             <Textarea
               id="results"
               value={formData.results}
               onChange={(e) => setFormData({ ...formData, results: e.target.value })}
-              placeholder='{"hemoglobin": "12.5 g/dL", "glucose": "95 mg/dL"}'
+              placeholder='Enter test results as plain text or JSON format. Example: "Normal ranges" or {"hemoglobin": "12.5 g/dL"}'
               rows={4}
             />
+            <p className="text-xs text-muted-foreground">
+              You can enter plain text or structured JSON data
+            </p>
           </div>
           
           <Button type="submit" disabled={loading} className="w-full">
