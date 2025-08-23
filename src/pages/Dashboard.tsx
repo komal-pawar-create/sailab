@@ -20,11 +20,19 @@ import { BillPrint } from '@/components/bills/BillPrint';
 import { LedgerHistory } from '@/components/bills/LedgerHistory';
 import { useFollowupReminders } from '@/hooks/useFollowupReminders';
 
-interface Lab {
+interface Branch {
   id: string;
   name: string;
   location: string;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  phone: string;
   created_at: string;
+  labs?: { name: string };
+  organizations?: { name: string };
 }
 
 interface Patient {
@@ -81,7 +89,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [labs, setLabs] = useState<Lab[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [testReports, setTestReports] = useState<TestReport[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -140,11 +148,11 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch labs
-      const { data: labsData } = await supabase
-        .from('labs')
-        .select('*');
-      setLabs(labsData || []);
+      // Fetch branches
+      const { data: branchesData } = await supabase
+        .from('branches')
+        .select('*, labs(*), organizations(*)');
+      setBranches(branchesData || []);
 
       // Fetch patients
       const { data: patientsData } = await supabase
@@ -355,7 +363,7 @@ const Dashboard = () => {
             <TabsTrigger value="bills">Bills</TabsTrigger>
             <TabsTrigger value="feedback">Feedback</TabsTrigger>
             <TabsTrigger value="ledger">Ledger</TabsTrigger>
-            {profile.role === 'admin' && <TabsTrigger value="labs">Labs</TabsTrigger>}
+            {profile.role === 'admin' && <TabsTrigger value="locations">Locations</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="patients">
@@ -664,7 +672,7 @@ const Dashboard = () => {
           </TabsContent>
 
           {profile.role === 'admin' && (
-            <TabsContent value="labs">
+            <TabsContent value="locations">
               <Card>
                 <CardHeader>
                   <CardTitle>Laboratory Locations</CardTitle>
@@ -674,17 +682,28 @@ const Dashboard = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Lab Name</TableHead>
-                        <TableHead>Location</TableHead>
+                        <TableHead>Branch Name</TableHead>
+                        <TableHead>Lab</TableHead>
+                        <TableHead>Address</TableHead>
+                        <TableHead>City</TableHead>
+                        <TableHead>State</TableHead>
+                        <TableHead>Phone</TableHead>
                         <TableHead>Created</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {labs.map((lab) => (
-                        <TableRow key={lab.id}>
-                          <TableCell className="font-medium">{lab.name}</TableCell>
-                          <TableCell>{lab.location}</TableCell>
-                          <TableCell>{new Date(lab.created_at).toLocaleDateString()}</TableCell>
+                      {branches.map((branch) => (
+                        <TableRow key={branch.id}>
+                          <TableCell className="font-medium">{branch.name}</TableCell>
+                          <TableCell>{branch.labs?.name || 'N/A'}</TableCell>
+                          <TableCell>
+                            {branch.address_line1}
+                            {branch.address_line2 && `, ${branch.address_line2}`}
+                          </TableCell>
+                          <TableCell>{branch.city}</TableCell>
+                          <TableCell>{branch.state}</TableCell>
+                          <TableCell>{branch.phone}</TableCell>
+                          <TableCell>{new Date(branch.created_at).toLocaleDateString()}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
