@@ -105,9 +105,10 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
       }
 
       let labId = profile?.lab_id;
+      let branchId = profile?.branch_id;
       let uploadedBy = profile?.user_id;
 
-      // For admins, get lab_id from selected operator
+      // For admins, get lab_id and branch_id from selected operator
       if (profile?.role === 'admin') {
         if (!selectedOperator) {
           toast({
@@ -121,14 +122,14 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
         
         const { data: operatorProfile } = await supabase
           .from('profiles')
-          .select('lab_id')
+          .select('lab_id, branch_id')
           .eq('user_id', selectedOperator)
           .single();
           
-        if (!operatorProfile?.lab_id) {
+        if (!operatorProfile?.lab_id || !operatorProfile?.branch_id) {
           toast({
             title: "Error",
-            description: "Selected operator is not assigned to a lab.",
+            description: "Selected operator is not assigned to a lab or branch.",
             variant: "destructive",
           });
           setLoading(false);
@@ -136,11 +137,12 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
         }
         
         labId = operatorProfile.lab_id;
+        branchId = operatorProfile.branch_id;
         uploadedBy = selectedOperator;
-      } else if (!profile?.lab_id) {
+      } else if (!profile?.lab_id || !profile?.branch_id) {
         toast({
           title: "Error",
-          description: "You must be assigned to a lab to upload documents.",
+          description: "You must be assigned to a lab and branch to upload documents.",
           variant: "destructive",
         });
         setLoading(false);
@@ -154,6 +156,7 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
         file_path: file.path,
         file_type: file.name.split('.').pop() || 'unknown',
         lab_id: labId,
+        branch_id: branchId,
         uploaded_by: uploadedBy
       }));
 
