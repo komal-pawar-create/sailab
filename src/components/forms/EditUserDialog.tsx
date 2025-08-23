@@ -19,10 +19,17 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile } from '@/hooks/useAuth';
+
+interface User {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  branch_id?: string;
+}
 
 interface EditUserDialogProps {
-  user: Profile | null;
+  user: User | null;
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;

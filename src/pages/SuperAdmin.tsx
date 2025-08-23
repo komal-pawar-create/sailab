@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { AddOrganizationForm } from '@/components/forms/AddOrganizationForm';
 import { AddBranchForm } from '@/components/forms/AddBranchForm';
 import { AddUserForm } from '@/components/forms/AddUserForm';
+import EditUserDialog from '@/components/forms/EditUserDialog';
+import { Edit } from 'lucide-react';
 
 interface Organization {
   id: string;
@@ -39,6 +41,7 @@ interface User {
   email: string;
   full_name: string;
   role: string;
+  branch_id?: string;
   branch: {
     name: string;
     organization: {
@@ -54,6 +57,8 @@ export default function SuperAdmin() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     // Redirect if not super admin
