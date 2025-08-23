@@ -671,7 +671,7 @@ const Dashboard = () => {
             <LedgerHistory />
           </TabsContent>
 
-          {profile.role === 'admin' && (
+          {profile.role === 'admin' && branches && (
             <TabsContent value="locations">
               <Card>
                 <CardHeader>
