@@ -22,16 +22,24 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Redirect authenticated users to their appropriate dashboard
   useEffect(() => {
-    // Redirect based on user role
-    if (user && profile) {
-      if (profile.role === 'super_admin') {
-        navigate('/super-admin');
-      } else {
-        navigate('/dashboard');
-      }
+    // Only redirect if auth is not loading and we have a user
+    if (!authLoading && user) {
+      // Give a small delay to ensure profile is loaded
+      const redirectTimer = setTimeout(() => {
+        if (profile?.role === 'super_admin') {
+          console.log('Redirecting super admin to /super-admin');
+          navigate('/super-admin');
+        } else if (profile) {
+          console.log('Redirecting user to /dashboard');
+          navigate('/dashboard');
+        }
+      }, 100);
+      
+      return () => clearTimeout(redirectTimer);
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, authLoading, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,8 +101,20 @@ const Auth = () => {
     }
   };
 
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-primary">Lab Master</CardTitle>
