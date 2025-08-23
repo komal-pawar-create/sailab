@@ -129,15 +129,27 @@ export const AddUserForm = ({ onSuccess }: AddUserFormProps) => {
       return [
         { value: 'super_admin', label: 'Super Admin' },
         { value: 'lab_admin', label: 'Lab Admin' },
-        { value: 'branch_operator', label: 'Branch Operator' }
+        { value: 'branch_operator', label: 'Branch Operator' },
+        { value: 'admin', label: 'Admin' },
+        { value: 'operator_1', label: 'Operator 1' },
+        { value: 'operator_2', label: 'Operator 2' },
+        { value: 'operator_3', label: 'Operator 3' }
       ];
     } else if (profile?.role === 'lab_admin') {
       return [
-        { value: 'lab_admin', label: 'Lab Admin' },
-        { value: 'branch_operator', label: 'Branch Operator' }
+        { value: 'branch_operator', label: 'Branch Operator' },
+        { value: 'admin', label: 'Admin' },
+        { value: 'operator_1', label: 'Operator 1' },
+        { value: 'operator_2', label: 'Operator 2' },
+        { value: 'operator_3', label: 'Operator 3' }
       ];
     }
     return [];
+  };
+
+  const needsBranchAssignment = (role: string) => {
+    // All users except super_admin need branch assignment
+    return role !== 'super_admin';
   };
 
   return (
@@ -195,7 +207,7 @@ export const AddUserForm = ({ onSuccess }: AddUserFormProps) => {
             </div>
           </div>
 
-          {(formData.role === 'lab_admin' || formData.role === 'branch_operator') && (
+          {needsBranchAssignment(formData.role) && (
             <>
               <div>
                 <Label htmlFor="organization">Organization *</Label>
@@ -213,7 +225,7 @@ export const AddUserForm = ({ onSuccess }: AddUserFormProps) => {
                 </Select>
               </div>
 
-              {formData.role === 'branch_operator' && formData.organization_id && (
+              {formData.organization_id && (
                 <div>
                   <Label htmlFor="branch">Branch *</Label>
                   <Select value={formData.branch_id} onValueChange={(value) => handleChange('branch_id', value)}>
@@ -241,8 +253,8 @@ export const AddUserForm = ({ onSuccess }: AddUserFormProps) => {
               !formData.password || 
               !formData.full_name || 
               !formData.role ||
-              (formData.role !== 'super_admin' && !formData.organization_id) ||
-              (formData.role === 'branch_operator' && !formData.branch_id)
+              (needsBranchAssignment(formData.role) && !formData.organization_id) ||
+              (needsBranchAssignment(formData.role) && !formData.branch_id)
             }
           >
             {loading ? 'Creating...' : 'Create User'}

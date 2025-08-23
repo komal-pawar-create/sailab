@@ -88,6 +88,7 @@ const Dashboard = () => {
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [followups, setFollowups] = useState<any[]>([]);
+  const [currentBranch, setCurrentBranch] = useState<any>(null);
   const [stats, setStats] = useState({
     totalPatients: 0,
     totalReports: 0,
@@ -102,16 +103,40 @@ const Dashboard = () => {
   useFollowupReminders();
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
+    if (!loading) {
+      if (!user) {
+        navigate('/auth');
+      } else if (profile?.role === 'super_admin' || profile?.role === 'lab_admin') {
+        navigate('/super-admin');
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, profile, loading, navigate]);
 
   useEffect(() => {
-    if (user && profile) {
+    if (user && profile && profile.role !== 'super_admin' && profile.role !== 'lab_admin') {
+      // Fetch branch details if user has branch_id
+      if (profile.branch_id) {
+        fetchBranchDetails();
+      }
       fetchData();
     }
   }, [user, profile]);
+
+  const fetchBranchDetails = async () => {
+    if (!profile?.branch_id) return;
+    
+    try {
+      const { data: branchData } = await supabase
+        .from('branches')
+        .select('*, organizations(*), labs(*)')
+        .eq('id', profile.branch_id)
+        .single();
+      
+      setCurrentBranch(branchData);
+    } catch (error) {
+      console.error('Error fetching branch details:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
