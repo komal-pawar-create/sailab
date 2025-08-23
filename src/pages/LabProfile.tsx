@@ -45,80 +45,110 @@ export default function LabProfile() {
   const [signaturePreview, setSignaturePreview] = useState<string>('');
 
   useEffect(() => {
-    if (!profile || (profile.role !== 'admin' && profile.role !== 'lab_admin' && profile.role !== 'super_admin')) {
+    if (!profile) return;
+    
+    // Only allow admin or lab_admin roles
+    if (profile.role !== 'admin' && profile.role !== 'lab_admin' && profile.role !== 'super_admin') {
       navigate('/dashboard');
       return;
     }
+    
     fetchLabProfile();
   }, [profile, navigate]);
 
   const fetchLabProfile = async () => {
-    if (!profile?.lab_id) {
-      // If no lab_id, try to fetch any lab in the organization
-      if (profile?.role === 'lab_admin' || profile?.role === 'admin') {
-        try {
-          // Get organization_id from branches
-          const { data: branchData } = await supabase
-            .from('branches')
-            .select('organization_id')
-            .eq('id', profile.branch_id)
-            .single();
-
-          if (branchData?.organization_id) {
-            // Get labs for this organization
-            const { data: labsData } = await supabase
-              .from('labs')
-              .select('*')
-              .eq('organization_id', branchData.organization_id)
-              .limit(1)
-              .single();
-
-            if (labsData) {
-              setLabProfile(labsData);
-              if (labsData.logo_url) {
-                setLogoPreview(labsData.logo_url);
-              }
-              if (labsData.signature_url) {
-                setSignaturePreview(labsData.signature_url);
-              }
-              setLoading(false);
-              return;
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching lab by organization:', error);
+    setLoading(true);
+    
+    try {
+      let labData = null;
+      
+      // First try to get lab by profile.lab_id
+      if (profile?.lab_id) {
+        const { data, error } = await supabase
+          .from('labs')
+          .select('*')
+          .eq('id', profile.lab_id)
+          .single();
+        
+        if (data && !error) {
+          labData = data;
         }
       }
       
-      toast({
-        title: "Error",
-        description: "No lab associated with your account",
-        variant: "destructive",
-      });
-      navigate('/dashboard');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('labs')
-        .select('*')
-        .eq('id', profile.lab_id)
-        .single();
-
-      if (error) throw error;
-
-      setLabProfile(data);
-      if (data.logo_url) {
-        setLogoPreview(data.logo_url);
+      // If no lab found and user has a branch, try to get lab through organization
+      if (!labData && profile?.branch_id) {
+        // Get organization_id from the user's branch
+        const { data: branchData } = await supabase
+          .from('branches')
+          .select('organization_id')
+          .eq('id', profile.branch_id)
+          .single();
+        
+        if (branchData?.organization_id) {
+          // Get any lab in this organization
+          const { data: orgLabData } = await supabase
+            .from('labs')
+            .select('*')
+            .eq('organization_id', branchData.organization_id)
+            .limit(1)
+            .single();
+          
+          if (orgLabData) {
+            labData = orgLabData;
+          }
+        }
       }
-      if (data.signature_url) {
-        setSignaturePreview(data.signature_url);
+      
+      // If still no lab, try to get any lab (for super_admin)
+      if (!labData && profile?.role === 'super_admin') {
+        const { data: anyLabData } = await supabase
+          .from('labs')
+          .select('*')
+          .limit(1)
+          .single();
+        
+        if (anyLabData) {
+          labData = anyLabData;
+        }
+      }
+      
+      if (labData) {
+        setLabProfile(labData);
+        if (labData.logo_url) {
+          setLogoPreview(labData.logo_url);
+        }
+        if (labData.signature_url) {
+          setSignaturePreview(labData.signature_url);
+        }
+      } else {
+        // Create a new lab profile template
+        const newLabTemplate = {
+          id: '',
+          name: 'Lab Name',
+          phone: '',
+          address_line1: '',
+          address_line2: '',
+          city: '',
+          state: '',
+          postal_code: '',
+          logo_url: '',
+          signature_url: '',
+          registration_number: '',
+          gst_number: '',
+          website: '',
+          bank_name: '',
+          bank_account_number: '',
+          bank_ifsc_code: '',
+          footer_text: '',
+          terms_conditions: ''
+        };
+        setLabProfile(newLabTemplate);
       }
     } catch (error: any) {
+      console.error('Error fetching lab profile:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to load lab profile",
         variant: "destructive",
       });
     } finally {
