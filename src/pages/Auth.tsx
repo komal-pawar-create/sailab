@@ -18,7 +18,7 @@ const Auth = () => {
   const [labId, setLabId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { signIn, signUp, user, profile } = useAuth();
+  const { signIn, signUp, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 

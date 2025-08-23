@@ -19,53 +19,82 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    let mounted = true;
+
+    const fetchProfile = async (userId: string) => {
+      try {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
         
-        if (session?.user) {
-          // Fetch user profile
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          setProfile(profileData);
-        } else {
-          setProfile(null);
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          setError(profileError.message);
+          // Continue without profile if it fails
+          return null;
         }
         
-        setLoading(false);
+        return profileData;
+      } catch (err) {
+        console.error('Unexpected error fetching profile:', err);
+        return null;
+      }
+    };
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!mounted) return;
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        setError(null);
+        
+        if (session?.user) {
+          // Use setTimeout to prevent Supabase deadlock
+          setTimeout(() => {
+            fetchProfile(session.user.id).then(profileData => {
+              if (mounted) {
+                setProfile(profileData);
+                setLoading(false);
+              }
+            });
+          }, 0);
+        } else {
+          setProfile(null);
+          setLoading(false);
+        }
       }
     );
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Fetch user profile
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single()
-          .then(({ data: profileData }) => {
+        fetchProfile(session.user.id).then(profileData => {
+          if (mounted) {
             setProfile(profileData);
             setLoading(false);
-          });
+          }
+        });
       } else {
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -105,6 +134,7 @@ export function useAuth() {
     user,
     profile,
     loading,
+    error,
     signIn,
     signUp,
     signOut,
