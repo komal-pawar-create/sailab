@@ -31,6 +31,9 @@ const Auth = () => {
         if (profile?.role === 'super_admin') {
           console.log('Redirecting super admin to /super-admin');
           navigate('/super-admin');
+        } else if (profile?.role === 'lab_admin') {
+          console.log('Redirecting lab admin to /dashboard');
+          navigate('/dashboard');
         } else if (profile) {
           console.log('Redirecting user to /dashboard');
           navigate('/dashboard');
