@@ -280,6 +280,13 @@ const Dashboard = () => {
               <span className="text-sm text-muted-foreground">
                 Welcome, {profile.full_name}
               </span>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/patient-history')}
+              >
+                <History className="h-4 w-4 mr-2" />
+                Patient History
+              </Button>
               {profile.role === 'admin' && (
                 <Button 
                   variant="outline" 

@@ -55,7 +55,57 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
   }, [profile, bill]);
 
   const fetchLabProfile = async () => {
-    if (!profile?.lab_id) return;
+    // Set default lab profile first
+    const defaultLabProfile: LabProfile = {
+      name: 'Lab Name',
+      phone: 'Contact Number',
+      logo_url: undefined,
+      signature_url: undefined,
+      terms_conditions: 'Terms and conditions apply',
+      address_line1: '',
+      address_line2: '',
+      city: '',
+      state: '',
+      postal_code: '',
+      website: '',
+      bank_name: '',
+      bank_account_number: '',
+      bank_ifsc_code: '',
+      registration_number: '',
+      gst_number: ''
+    };
+
+    if (!profile?.lab_id) {
+      // If no lab_id, try to fetch any lab in the organization
+      if (profile?.branch_id) {
+        try {
+          const { data: branchData } = await supabase
+            .from('branches')
+            .select('organization_id')
+            .eq('id', profile.branch_id)
+            .single();
+
+          if (branchData?.organization_id) {
+            const { data: labsData } = await supabase
+              .from('labs')
+              .select('*')
+              .eq('organization_id', branchData.organization_id)
+              .limit(1)
+              .single();
+
+            if (labsData) {
+              setLabProfile({ ...defaultLabProfile, ...labsData });
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching lab by organization:', error);
+        }
+      }
+      
+      setLabProfile(defaultLabProfile);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -65,10 +115,13 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
         .single();
 
       if (!error && data) {
-        setLabProfile(data);
+        setLabProfile({ ...defaultLabProfile, ...data });
+      } else {
+        setLabProfile(defaultLabProfile);
       }
     } catch (error) {
       console.error('Error fetching lab profile:', error);
+      setLabProfile(defaultLabProfile);
     }
   };
 

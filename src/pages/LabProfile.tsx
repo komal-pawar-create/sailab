@@ -54,6 +54,42 @@ export default function LabProfile() {
 
   const fetchLabProfile = async () => {
     if (!profile?.lab_id) {
+      // If no lab_id, try to fetch any lab in the organization
+      if (profile?.role === 'lab_admin' || profile?.role === 'admin') {
+        try {
+          // Get organization_id from branches
+          const { data: branchData } = await supabase
+            .from('branches')
+            .select('organization_id')
+            .eq('id', profile.branch_id)
+            .single();
+
+          if (branchData?.organization_id) {
+            // Get labs for this organization
+            const { data: labsData } = await supabase
+              .from('labs')
+              .select('*')
+              .eq('organization_id', branchData.organization_id)
+              .limit(1)
+              .single();
+
+            if (labsData) {
+              setLabProfile(labsData);
+              if (labsData.logo_url) {
+                setLogoPreview(labsData.logo_url);
+              }
+              if (labsData.signature_url) {
+                setSignaturePreview(labsData.signature_url);
+              }
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching lab by organization:', error);
+        }
+      }
+      
       toast({
         title: "Error",
         description: "No lab associated with your account",
