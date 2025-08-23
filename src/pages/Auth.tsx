@@ -13,12 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState('operator_1');
-  const [labId, setLabId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { signIn, signUp, user, profile, loading: authLoading } = useAuth();
+  const { signIn, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -61,27 +58,7 @@ const Auth = () => {
     setIsLoading(false);
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    const { error } = await signUp(email, password, fullName, role, labId || undefined);
-    
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Account created successfully! Please check your email for verification.",
-      });
-    }
-    
-    setIsLoading(false);
-  };
+  // Sign up functionality removed - only admins can create users
 
   const fillSampleCredentials = (userType: string) => {
     switch (userType) {
@@ -125,9 +102,8 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
             
             <TabsContent value="signin">
@@ -190,71 +166,6 @@ const Auth = () => {
                   </Button>
                 </div>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signupEmail">Email</Label>
-                  <Input
-                    id="signupEmail"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signupPassword">Password</Label>
-                  <Input
-                    id="signupPassword"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="operator_1">Operator 1</SelectItem>
-                      <SelectItem value="operator_2">Operator 2</SelectItem>
-                      <SelectItem value="operator_3">Operator 3</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lab">Lab (Optional)</Label>
-                  <Select value={labId} onValueChange={setLabId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a lab" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="550e8400-e29b-41d4-a716-446655440001">Central Lab</SelectItem>
-                      <SelectItem value="550e8400-e29b-41d4-a716-446655440002">North Branch Lab</SelectItem>
-                      <SelectItem value="550e8400-e29b-41d4-a716-446655440003">West Coast Lab</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
-                </Button>
-              </form>
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -105,7 +105,7 @@ export function useAuth() {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: string, labId?: string, branchId?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role: string, labId?: string, branchId?: string, skipEmailConfirmation: boolean = false) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -117,7 +117,8 @@ export function useAuth() {
           full_name: fullName,
           role,
           lab_id: labId,
-          branch_id: branchId
+          branch_id: branchId,
+          skip_email_confirmation: skipEmailConfirmation
         }
       }
     });

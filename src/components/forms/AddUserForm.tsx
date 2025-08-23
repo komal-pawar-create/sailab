@@ -89,7 +89,8 @@ export const AddUserForm = ({ onSuccess }: AddUserFormProps) => {
         formData.full_name,
         formData.role,
         undefined, // lab_id is not used in new system
-        formData.branch_id
+        formData.branch_id,
+        true // Skip email confirmation for admin-created users
       );
 
       if (error) {
@@ -97,7 +98,7 @@ export const AddUserForm = ({ onSuccess }: AddUserFormProps) => {
         throw new Error(errorMessage);
       }
 
-      toast.success('User created successfully');
+      toast.success('User created successfully! They can sign in immediately without email confirmation.');
       setFormData({
         email: '',
         password: '',

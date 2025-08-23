@@ -255,6 +255,7 @@ export default function SuperAdmin() {
                       <TableHead>Role</TableHead>
                       <TableHead>Branch</TableHead>
                       <TableHead>Organization</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -269,6 +270,18 @@ export default function SuperAdmin() {
                         </TableCell>
                         <TableCell>{user.branch?.name || '-'}</TableCell>
                         <TableCell>{user.branch?.organization?.name || '-'}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingUser(user);
+                              setIsEditDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -278,6 +291,16 @@ export default function SuperAdmin() {
           </TabsContent>
         </Tabs>
       </main>
+      
+      <EditUserDialog
+        user={editingUser}
+        isOpen={isEditDialogOpen}
+        onClose={() => {
+          setIsEditDialogOpen(false);
+          setEditingUser(null);
+        }}
+        onSuccess={fetchData}
+      />
     </div>
   );
 }
