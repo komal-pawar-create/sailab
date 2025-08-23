@@ -46,6 +46,7 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
           phone: formData.phone,
           email: formData.email,
           lab_id: profile?.lab_id,
+          branch_id: profile?.branch_id,
           created_by: profile?.role === 'admin' && selectedOperator ? selectedOperator : profile?.user_id
         });
 
