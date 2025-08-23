@@ -7,8 +7,9 @@ export interface Profile {
   user_id: string;
   email: string;
   full_name: string;
-  role: 'admin' | 'operator_1' | 'operator_2' | 'operator_3';
+  role: 'super_admin' | 'lab_admin' | 'branch_operator' | 'admin' | 'operator_1' | 'operator_2' | 'operator_3';
   lab_id?: string;
+  branch_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -75,7 +76,7 @@ export function useAuth() {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: string, labId?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role: string, labId?: string, branchId?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -86,7 +87,8 @@ export function useAuth() {
         data: {
           full_name: fullName,
           role,
-          lab_id: labId
+          lab_id: labId,
+          branch_id: branchId
         }
       }
     });

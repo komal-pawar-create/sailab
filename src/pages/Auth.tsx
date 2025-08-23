@@ -18,15 +18,20 @@ const Auth = () => {
   const [labId, setLabId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
+    // Redirect based on user role
+    if (user && profile) {
+      if (profile.role === 'super_admin') {
+        navigate('/super-admin');
+      } else {
+        navigate('/dashboard');
+      }
     }
-  }, [user, navigate]);
+  }, [user, profile, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
