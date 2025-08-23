@@ -125,49 +125,56 @@ export default function SuperAdmin() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">Super Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage organizations, branches, and users</p>
+            <h1 className="text-2xl font-bold text-primary">Super Admin Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              Welcome, {profile?.full_name || profile?.email}
+            </p>
           </div>
-          <div className="flex items-center gap-4">
-            <Badge variant="outline">{profile?.role}</Badge>
-            <Button onClick={handleSignOut} variant="outline">
-              Sign Out
-            </Button>
-          </div>
+          <Button onClick={handleSignOut} variant="outline">
+            Sign Out
+          </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
-            <CardHeader>
-              <CardTitle>Total Organizations</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Organizations
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{organizations.length}</div>
+              <div className="text-2xl font-bold">{organizations.length}</div>
             </CardContent>
           </Card>
+
           <Card>
-            <CardHeader>
-              <CardTitle>Total Branches</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Branches
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{branches.length}</div>
+              <div className="text-2xl font-bold">{branches.length}</div>
             </CardContent>
           </Card>
+
           <Card>
-            <CardHeader>
-              <CardTitle>Total Users</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Users
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{users.length}</div>
+              <div className="text-2xl font-bold">{users.length}</div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs defaultValue="organizations" className="space-y-6">
+        <Tabs defaultValue="organizations" className="space-y-4">
           <TabsList>
             <TabsTrigger value="organizations">Organizations</TabsTrigger>
             <TabsTrigger value="branches">Branches</TabsTrigger>
@@ -187,21 +194,18 @@ export default function SuperAdmin() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Description</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Created At</TableHead>
+                      <TableHead>Contact Email</TableHead>
+                      <TableHead>Contact Phone</TableHead>
+                      <TableHead>Created</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {organizations.map((org) => (
                       <TableRow key={org.id}>
                         <TableCell className="font-medium">{org.name}</TableCell>
-                        <TableCell>{org.description}</TableCell>
-                        <TableCell>
-                          <div className="space-y-1 text-sm">
-                            {org.contact_email && <div>{org.contact_email}</div>}
-                            {org.contact_phone && <div>{org.contact_phone}</div>}
-                          </div>
-                        </TableCell>
+                        <TableCell>{org.description || '-'}</TableCell>
+                        <TableCell>{org.contact_email || '-'}</TableCell>
+                        <TableCell>{org.contact_phone || '-'}</TableCell>
                         <TableCell>{new Date(org.created_at).toLocaleDateString()}</TableCell>
                       </TableRow>
                     ))}
