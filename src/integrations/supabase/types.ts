@@ -322,44 +322,74 @@ export type Database = {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          bank_account_number: string | null
+          bank_ifsc_code: string | null
+          bank_name: string | null
           city: string | null
           created_at: string
+          footer_text: string | null
+          gst_number: string | null
           id: string
           location: string | null
+          logo_url: string | null
           name: string
           organization_id: string | null
           phone: string | null
           postal_code: string | null
+          registration_number: string | null
+          signature_url: string | null
           state: string | null
+          terms_conditions: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          bank_account_number?: string | null
+          bank_ifsc_code?: string | null
+          bank_name?: string | null
           city?: string | null
           created_at?: string
+          footer_text?: string | null
+          gst_number?: string | null
           id?: string
           location?: string | null
+          logo_url?: string | null
           name: string
           organization_id?: string | null
           phone?: string | null
           postal_code?: string | null
+          registration_number?: string | null
+          signature_url?: string | null
           state?: string | null
+          terms_conditions?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          bank_account_number?: string | null
+          bank_ifsc_code?: string | null
+          bank_name?: string | null
           city?: string | null
           created_at?: string
+          footer_text?: string | null
+          gst_number?: string | null
           id?: string
           location?: string | null
+          logo_url?: string | null
           name?: string
           organization_id?: string | null
           phone?: string | null
           postal_code?: string | null
+          registration_number?: string | null
+          signature_url?: string | null
           state?: string | null
+          terms_conditions?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {

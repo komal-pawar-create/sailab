@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Users, TestTube, MessageSquare, LogOut, Building2, Receipt, CreditCard, History } from 'lucide-react';
+import { FileText, Users, TestTube, MessageSquare, LogOut, Building2, Receipt, CreditCard, History, Settings } from 'lucide-react';
 import { AddPatientForm } from '@/components/forms/AddPatientForm';
 import { AddTestReportForm } from '@/components/forms/AddTestReportForm';
 import { AddFeedbackForm } from '@/components/forms/AddFeedbackForm';
@@ -280,6 +280,15 @@ const Dashboard = () => {
               <span className="text-sm text-muted-foreground">
                 Welcome, {profile.full_name}
               </span>
+              {profile.role === 'admin' && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/lab-profile')}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Lab Profile
+                </Button>
+              )}
               <Button variant="outline" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
