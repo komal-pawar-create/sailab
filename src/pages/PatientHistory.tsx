@@ -52,12 +52,15 @@ export default function PatientHistory() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (profile?.role === "branch_operator") {
+      // Check if user is a branch operator (operator_1, operator_2, operator_3)
+      const isBranchOperator = profile && ['operator_1', 'operator_2', 'operator_3'].includes(profile.role);
+      
+      if (isBranchOperator && profile?.branch_id) {
+        // Branch operators only see patients from their branch
         query = query.eq("branch_id", profile.branch_id);
-      } else if (profile?.role === "lab_admin") {
-        query = query.eq("lab_id", profile.lab_id);
       }
-
+      // Lab admins will see all organizational data via RLS policies
+      
       const { data, error } = await query;
 
       if (error) throw error;

@@ -148,45 +148,59 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     try {
+      // Check if user is a branch operator
+      const isBranchOperator = profile && ['operator_1', 'operator_2', 'operator_3'].includes(profile.role);
+      
       // Fetch branches
-      const { data: branchesData } = await supabase
-        .from('branches')
-        .select('*, labs(*), organizations(*)');
+      let branchesQuery = supabase.from('branches').select('*, labs(*), organizations(*)');
+      if (isBranchOperator && profile?.branch_id) {
+        branchesQuery = branchesQuery.eq('id', profile.branch_id);
+      }
+      const { data: branchesData } = await branchesQuery;
       setBranches(branchesData || []);
 
       // Fetch patients
-      const { data: patientsData } = await supabase
-        .from('patients')
-        .select('*');
+      let patientsQuery = supabase.from('patients').select('*');
+      if (isBranchOperator && profile?.branch_id) {
+        patientsQuery = patientsQuery.eq('branch_id', profile.branch_id);
+      }
+      const { data: patientsData } = await patientsQuery;
       setPatients(patientsData || []);
 
       // Fetch test reports
-      const { data: reportsData } = await supabase
-        .from('test_reports')
-        .select('*, patients(full_name)');
+      let reportsQuery = supabase.from('test_reports').select('*, patients(full_name)');
+      if (isBranchOperator && profile?.branch_id) {
+        reportsQuery = reportsQuery.eq('branch_id', profile.branch_id);
+      }
+      const { data: reportsData } = await reportsQuery;
       setTestReports(reportsData || []);
 
       // Fetch documents
-      const { data: documentsData } = await supabase
-        .from('documents')
-        .select('*, patients(full_name)');
+      let documentsQuery = supabase.from('documents').select('*, patients(full_name)');
+      if (isBranchOperator && profile?.branch_id) {
+        documentsQuery = documentsQuery.eq('branch_id', profile.branch_id);
+      }
+      const { data: documentsData } = await documentsQuery;
       setDocuments(documentsData || []);
 
       // Fetch feedback
-      const { data: feedbackData } = await supabase
-        .from('feedback')
-        .select('*, patients(full_name)');
+      let feedbackQuery = supabase.from('feedback').select('*, patients(full_name)');
+      if (isBranchOperator && profile?.branch_id) {
+        feedbackQuery = feedbackQuery.eq('branch_id', profile.branch_id);
+      }
+      const { data: feedbackData } = await feedbackQuery;
       setFeedback(feedbackData || []);
 
       // Fetch bills
-      const { data: billsData } = await supabase
-        .from('bills')
-        .select('*, patients(full_name, patient_id)');
+      let billsQuery = supabase.from('bills').select('*, patients(full_name, patient_id)');
+      if (isBranchOperator && profile?.branch_id) {
+        billsQuery = billsQuery.eq('branch_id', profile.branch_id);
+      }
+      const { data: billsData } = await billsQuery;
       setBills((billsData as any) || []);
 
       // Fetch followups
-      const { data: followupsData } = await supabase
-        .from('patient_followups')
+      let followupsQuery = supabase.from('patient_followups')
         .select(`
           *,
           patients!inner(full_name, patient_id),
@@ -194,6 +208,10 @@ const Dashboard = () => {
           created_by_profile:profiles!patient_followups_created_by_fkey(full_name)
         `)
         .order('due_at', { ascending: true });
+      if (isBranchOperator && profile?.branch_id) {
+        followupsQuery = followupsQuery.eq('branch_id', profile.branch_id);
+      }
+      const { data: followupsData } = await followupsQuery;
       setFollowups(followupsData || []);
 
       // Calculate stats
