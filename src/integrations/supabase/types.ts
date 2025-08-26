@@ -673,6 +673,7 @@ export type Database = {
           patient_id: string
           results: Json | null
           status: string
+          technician_name: string | null
           test_date: string
           test_type: string
           updated_at: string
@@ -686,6 +687,7 @@ export type Database = {
           patient_id: string
           results?: Json | null
           status?: string
+          technician_name?: string | null
           test_date: string
           test_type: string
           updated_at?: string
@@ -699,6 +701,7 @@ export type Database = {
           patient_id?: string
           results?: Json | null
           status?: string
+          technician_name?: string | null
           test_date?: string
           test_type?: string
           updated_at?: string
@@ -726,6 +729,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      test_types: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          lab_id: string
+          test_name: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          lab_id: string
+          test_name: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          lab_id?: string
+          test_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
