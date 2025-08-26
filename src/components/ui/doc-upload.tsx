@@ -41,7 +41,7 @@ export const DocUpload = ({ onFileUploaded, patientName, label = "Upload Word Do
       const cleanPatientName = patientName ? patientName.replace(/[^a-zA-Z0-9]/g, '_') : 'UNKNOWN';
       const fileName = `${cleanPatientName}_${timestamp}.${fileExtension}`;
       
-      const filePath = `${profile?.lab_id}/${profile?.branch_id}/${fileName}`;
+      const filePath = `${profile?.user_id}/${profile?.lab_id}/${profile?.branch_id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('lab-files')
