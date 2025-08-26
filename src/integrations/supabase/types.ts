@@ -137,6 +137,7 @@ export type Database = {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          branch_code: string
           city: string | null
           created_at: string
           created_by: string
@@ -153,6 +154,7 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          branch_code: string
           city?: string | null
           created_at?: string
           created_by: string
@@ -169,6 +171,7 @@ export type Database = {
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          branch_code?: string
           city?: string | null
           created_at?: string
           created_by?: string
@@ -330,6 +333,7 @@ export type Database = {
           footer_text: string | null
           gst_number: string | null
           id: string
+          initials: string
           location: string | null
           logo_url: string | null
           name: string
@@ -354,6 +358,7 @@ export type Database = {
           footer_text?: string | null
           gst_number?: string | null
           id?: string
+          initials: string
           location?: string | null
           logo_url?: string | null
           name: string
@@ -378,6 +383,7 @@ export type Database = {
           footer_text?: string | null
           gst_number?: string | null
           id?: string
+          initials?: string
           location?: string | null
           logo_url?: string | null
           name?: string
@@ -504,6 +510,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_patient_followups_branch"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_id_sequences: {
+        Row: {
+          branch_id: string
+          created_at: string | null
+          id: string
+          last_sequence: number
+          sequence_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          branch_id: string
+          created_at?: string | null
+          id?: string
+          last_sequence?: number
+          sequence_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          branch_id?: string
+          created_at?: string | null
+          id?: string
+          last_sequence?: number
+          sequence_date?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_id_sequences_branch_id_fkey"
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
@@ -691,6 +732,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_patient_id: {
+        Args: { p_branch_id: string; p_lab_id: string }
+        Returns: string
+      }
+      get_next_patient_id: {
+        Args: { p_branch_id: string; p_lab_id: string }
+        Returns: string
+      }
       get_user_branch: {
         Args: { user_id: string }
         Returns: string
