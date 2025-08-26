@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { CapitalizedInput } from '@/components/ui/capitalized-input';
+import { CapitalizedTextarea } from '@/components/ui/capitalized-textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -237,25 +237,27 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="bill_number">Bill Number</Label>
-              <Input
+              <Label htmlFor="bill_number">Bill Number *</Label>
+              <CapitalizedInput
                 id="bill_number"
                 value={formData.bill_number}
                 onChange={(e) => setFormData({ ...formData, bill_number: e.target.value })}
                 required
                 readOnly
+                capitalize={false}
               />
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="due_date">Due Date</Label>
-            <Input
+            <Label htmlFor="due_date">Due Date *</Label>
+            <CapitalizedInput
               id="due_date"
               type="date"
               value={formData.due_date}
               onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
               required
+              capitalize={false}
             />
           </div>
 
@@ -271,41 +273,44 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
             {items.map((item, index) => (
               <div key={index} className="grid grid-cols-12 gap-2 items-end">
                 <div className="col-span-5">
-                  <Label>Description</Label>
-                  <Input
+                  <Label>Description *</Label>
+                  <CapitalizedInput
                     value={item.description}
                     onChange={(e) => updateItem(index, 'description', e.target.value)}
-                    placeholder="Item description"
+                    placeholder="ITEM DESCRIPTION"
                     required
                   />
                 </div>
                 <div className="col-span-2">
-                  <Label>Qty</Label>
-                  <Input
+                  <Label>Qty *</Label>
+                  <CapitalizedInput
                     type="number"
                     min="1"
                     value={item.quantity}
                     onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
                     required
+                    capitalize={false}
                   />
                 </div>
                 <div className="col-span-2">
-                  <Label>Rate</Label>
-                  <Input
+                  <Label>Rate *</Label>
+                  <CapitalizedInput
                     type="number"
                     min="0"
                     step="0.01"
                     value={item.rate}
                     onChange={(e) => updateItem(index, 'rate', parseFloat(e.target.value) || 0)}
                     required
+                    capitalize={false}
                   />
                 </div>
                 <div className="col-span-2">
                   <Label>Amount</Label>
-                  <Input
+                  <CapitalizedInput
                     value={item.amount.toFixed(2)}
                     readOnly
                     className="bg-muted"
+                    capitalize={false}
                   />
                 </div>
                 <div className="col-span-1">
@@ -330,13 +335,14 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
+            <Label htmlFor="notes">Notes *</Label>
+            <CapitalizedTextarea
               id="notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Additional notes"
+              placeholder="ADDITIONAL NOTES"
               rows={3}
+              required
             />
           </div>
           

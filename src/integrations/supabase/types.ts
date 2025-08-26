@@ -558,13 +558,13 @@ export type Database = {
           branch_id: string | null
           created_at: string
           created_by: string
-          email: string | null
           full_name: string
           gender: string | null
           id: string
           lab_id: string
+          patient_history: string | null
           patient_id: string
-          phone: string | null
+          phone: string
           updated_at: string
         }
         Insert: {
@@ -572,13 +572,13 @@ export type Database = {
           branch_id?: string | null
           created_at?: string
           created_by: string
-          email?: string | null
           full_name: string
           gender?: string | null
           id?: string
           lab_id: string
+          patient_history?: string | null
           patient_id: string
-          phone?: string | null
+          phone: string
           updated_at?: string
         }
         Update: {
@@ -586,13 +586,13 @@ export type Database = {
           branch_id?: string | null
           created_at?: string
           created_by?: string
-          email?: string | null
           full_name?: string
           gender?: string | null
           id?: string
           lab_id?: string
+          patient_history?: string | null
           patient_id?: string
-          phone?: string | null
+          phone?: string
           updated_at?: string
         }
         Relationships: [

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { CapitalizedInput } from '@/components/ui/capitalized-input';
+import { CapitalizedTextarea } from '@/components/ui/capitalized-textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -27,7 +28,7 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
     age: '',
     gender: '',
     phone: '',
-    email: ''
+    patient_history: ''
   });
 
   const [selectedOperator, setSelectedOperator] = useState('');
@@ -71,11 +72,11 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
         .from('patients')
         .insert({
           patient_id: formData.patient_id,
-          full_name: formData.full_name,
+          full_name: formData.full_name.toUpperCase(),
           age: parseInt(formData.age),
           gender: formData.gender,
           phone: formData.phone,
-          email: formData.email,
+          patient_history: formData.patient_history?.toUpperCase() || null,
           lab_id: profile?.lab_id,
           branch_id: profile?.branch_id,
           created_by: profile?.role === 'admin' && selectedOperator ? selectedOperator : profile?.user_id
@@ -94,7 +95,7 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
         age: '',
         gender: '',
         phone: '',
-        email: ''
+        patient_history: ''
       });
       setSelectedOperator('');
       setOpen(false);
@@ -131,12 +132,13 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
           <div className="space-y-2">
             <Label htmlFor="patient_id">Patient ID (Auto-generated)</Label>
             <div className="relative">
-              <Input
+              <CapitalizedInput
                 id="patient_id"
                 value={formData.patient_id}
                 placeholder={generatingId ? "Generating..." : "Auto-generated"}
                 disabled
                 className="pr-10"
+                capitalize={false}
               />
               {generatingId && (
                 <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
@@ -145,19 +147,19 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="full_name">Full Name</Label>
-            <Input
+            <Label htmlFor="full_name">Full Name *</Label>
+            <CapitalizedInput
               id="full_name"
               value={formData.full_name}
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              placeholder="Enter full name"
+              placeholder="ENTER FULL NAME"
               required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="age">Age</Label>
-            <Input
+            <Label htmlFor="age">Age *</Label>
+            <CapitalizedInput
               id="age"
               type="number"
               value={formData.age}
@@ -168,37 +170,39 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="gender">Gender</Label>
-            <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
+            <Label htmlFor="gender">Gender *</Label>
+            <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })} required>
               <SelectTrigger>
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="male">Male</SelectItem>
-                <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="MALE">MALE</SelectItem>
+                <SelectItem value="FEMALE">FEMALE</SelectItem>
+                <SelectItem value="OTHER">OTHER</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
-            <Input
+            <Label htmlFor="phone">Phone *</Label>
+            <CapitalizedInput
               id="phone"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="Enter phone number"
+              placeholder="ENTER PHONE NUMBER"
+              required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="Enter email address"
+            <Label htmlFor="patient_history">Patient History *</Label>
+            <CapitalizedTextarea
+              id="patient_history"
+              value={formData.patient_history}
+              onChange={(e) => setFormData({ ...formData, patient_history: e.target.value })}
+              placeholder="ENTER PATIENT HISTORY"
+              required
+              className="min-h-[100px]"
             />
           </div>
           

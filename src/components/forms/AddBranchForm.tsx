@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { CapitalizedInput } from '@/components/ui/capitalized-input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -139,20 +139,21 @@ export const AddBranchForm = ({ onSuccess }: AddBranchFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="name">Branch Name *</Label>
-              <Input
+              <CapitalizedInput
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="ENTER BRANCH NAME"
                 required
               />
             </div>
             <div>
               <Label htmlFor="branch_code">Branch Code * (3-4 letters)</Label>
-              <Input
+              <CapitalizedInput
                 id="branch_code"
                 value={formData.branch_code}
                 onChange={(e) => handleChange('branch_code', e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4))}
-                placeholder="e.g., SAN, PUN"
+                placeholder="E.G., SAN, PUN"
                 required
                 maxLength={4}
               />
@@ -188,64 +189,77 @@ export const AddBranchForm = ({ onSuccess }: AddBranchFormProps) => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
+              <Label htmlFor="phone">Phone *</Label>
+              <CapitalizedInput
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
+                placeholder="ENTER PHONE NUMBER"
+                required
               />
             </div>
           </div>
           
           <div>
-            <Label htmlFor="location">Location Description</Label>
-            <Input
+            <Label htmlFor="location">Location Description *</Label>
+            <CapitalizedInput
               id="location"
               value={formData.location}
               onChange={(e) => handleChange('location', e.target.value)}
-              placeholder="Brief description of location"
+              placeholder="BRIEF DESCRIPTION OF LOCATION"
+              required
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="address_line1">Address Line 1</Label>
-              <Input
+              <Label htmlFor="address_line1">Address Line 1 *</Label>
+              <CapitalizedInput
                 id="address_line1"
                 value={formData.address_line1}
                 onChange={(e) => handleChange('address_line1', e.target.value)}
+                placeholder="ENTER ADDRESS LINE 1"
+                required
               />
             </div>
             <div>
-              <Label htmlFor="address_line2">Address Line 2</Label>
-              <Input
+              <Label htmlFor="address_line2">Address Line 2 *</Label>
+              <CapitalizedInput
                 id="address_line2"
                 value={formData.address_line2}
                 onChange={(e) => handleChange('address_line2', e.target.value)}
+                placeholder="ENTER ADDRESS LINE 2"
+                required
               />
             </div>
             <div>
-              <Label htmlFor="city">City</Label>
-              <Input
+              <Label htmlFor="city">City *</Label>
+              <CapitalizedInput
                 id="city"
                 value={formData.city}
                 onChange={(e) => handleChange('city', e.target.value)}
+                placeholder="ENTER CITY"
+                required
               />
             </div>
             <div>
-              <Label htmlFor="state">State</Label>
-              <Input
+              <Label htmlFor="state">State *</Label>
+              <CapitalizedInput
                 id="state"
                 value={formData.state}
                 onChange={(e) => handleChange('state', e.target.value)}
+                placeholder="ENTER STATE"
+                required
               />
             </div>
             <div>
-              <Label htmlFor="postal_code">Postal Code</Label>
-              <Input
+              <Label htmlFor="postal_code">Postal Code *</Label>
+              <CapitalizedInput
                 id="postal_code"
                 value={formData.postal_code}
                 onChange={(e) => handleChange('postal_code', e.target.value)}
+                placeholder="ENTER POSTAL CODE"
+                required
               />
             </div>
           </div>

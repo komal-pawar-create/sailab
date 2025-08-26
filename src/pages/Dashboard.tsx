@@ -42,7 +42,7 @@ interface Patient {
   age: number;
   gender: string;
   phone: string;
-  email: string;
+  patient_history?: string | null;
 }
 
 interface TestReport {
@@ -418,7 +418,7 @@ const Dashboard = () => {
                       <TableHead>Age</TableHead>
                       <TableHead>Gender</TableHead>
                       <TableHead>Phone</TableHead>
-                      <TableHead>Email</TableHead>
+                      <TableHead>Patient History</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -429,7 +429,7 @@ const Dashboard = () => {
                         <TableCell>{patient.age}</TableCell>
                         <TableCell>{patient.gender}</TableCell>
                         <TableCell>{patient.phone}</TableCell>
-                        <TableCell>{patient.email}</TableCell>
+                        <TableCell>{patient.patient_history || '-'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

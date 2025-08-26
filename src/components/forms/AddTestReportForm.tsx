@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { CapitalizedInput } from '@/components/ui/capitalized-input';
+import { CapitalizedTextarea } from '@/components/ui/capitalized-textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -235,24 +235,25 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="test_type">Test Type</Label>
-            <Input
+            <Label htmlFor="test_type">Test Type *</Label>
+            <CapitalizedInput
               id="test_type"
               value={formData.test_type}
               onChange={(e) => setFormData({ ...formData, test_type: e.target.value })}
-              placeholder="e.g., Blood Test, X-Ray, MRI"
+              placeholder="E.G., BLOOD TEST, X-RAY, MRI"
               required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="test_date">Test Date</Label>
-            <Input
+            <Label htmlFor="test_date">Test Date *</Label>
+            <CapitalizedInput
               id="test_date"
               type="date"
               value={formData.test_date}
               onChange={(e) => setFormData({ ...formData, test_date: e.target.value })}
               required
+              capitalize={false}
             />
           </div>
           
@@ -278,13 +279,14 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
           />
           
           <div className="space-y-2">
-            <Label htmlFor="results">Results (Optional)</Label>
-            <Textarea
+            <Label htmlFor="results">Results *</Label>
+            <CapitalizedTextarea
               id="results"
               value={formData.results}
               onChange={(e) => setFormData({ ...formData, results: e.target.value })}
-              placeholder='Enter test results as plain text or JSON format. Example: "Normal ranges" or {"hemoglobin": "12.5 g/dL"}'
+              placeholder='ENTER TEST RESULTS AS PLAIN TEXT OR JSON FORMAT'
               rows={4}
+              required
             />
             <p className="text-xs text-muted-foreground">
               You can enter plain text or structured JSON data
