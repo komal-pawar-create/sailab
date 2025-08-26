@@ -26,6 +26,7 @@ interface AddBranchFormProps {
 export const AddBranchForm = ({ onSuccess }: AddBranchFormProps) => {
   const [formData, setFormData] = useState({
     name: '',
+    branch_code: '',
     organization_id: '',
     lab_id: '',
     location: '',
@@ -99,6 +100,7 @@ export const AddBranchForm = ({ onSuccess }: AddBranchFormProps) => {
       toast.success('Branch created successfully');
       setFormData({
         name: '',
+        branch_code: '',
         organization_id: '',
         lab_id: '',
         location: '',
@@ -142,6 +144,17 @@ export const AddBranchForm = ({ onSuccess }: AddBranchFormProps) => {
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 required
+              />
+            </div>
+            <div>
+              <Label htmlFor="branch_code">Branch Code * (3-4 letters)</Label>
+              <Input
+                id="branch_code"
+                value={formData.branch_code}
+                onChange={(e) => handleChange('branch_code', e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4))}
+                placeholder="e.g., SAN, PUN"
+                required
+                maxLength={4}
               />
             </div>
             <div>
