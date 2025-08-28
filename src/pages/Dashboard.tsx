@@ -114,7 +114,8 @@ const Dashboard = () => {
     if (!loading) {
       if (!user) {
         navigate('/auth');
-      } else if (profile?.role === 'super_admin' || profile?.role === 'lab_admin') {
+      } else if (profile?.role === 'super_admin') {
+        // Only redirect super_admin to /super-admin, not lab_admin
         navigate('/super-admin');
       }
     }

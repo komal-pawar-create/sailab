@@ -61,13 +61,13 @@ export default function SuperAdmin() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
-    // Redirect if not super admin
-    if (profile && profile.role !== 'super_admin') {
+    // Allow both super_admin and lab_admin to access this page
+    if (profile && profile.role !== 'super_admin' && profile.role !== 'lab_admin') {
       navigate('/dashboard');
       return;
     }
     
-    if (profile?.role === 'super_admin') {
+    if (profile?.role === 'super_admin' || profile?.role === 'lab_admin') {
       fetchData();
     }
   }, [profile, navigate]);
