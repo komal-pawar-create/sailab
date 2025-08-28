@@ -68,6 +68,28 @@ export default function DataManagement() {
   });
   const [clearLogs, setClearLogs] = useState<any[]>([]);
 
+  // When patients is selected, all dependent data must be cleared
+  const handleOptionChange = (field: keyof ClearOptions, value: boolean) => {
+    if (field === 'clear_patients' && value) {
+      // If patients is being checked, check all dependent data
+      setClearOptions(prev => ({
+        ...prev,
+        clear_patients: true,
+        clear_payments: true,
+        clear_bills: true,
+        clear_test_reports: true,
+        clear_documents: true,
+        clear_followups: true,
+        clear_feedback: true,
+      }));
+    } else if (field === 'clear_patients' && !value) {
+      // Allow unchecking patients
+      setClearOptions(prev => ({ ...prev, clear_patients: false }));
+    } else {
+      setClearOptions(prev => ({ ...prev, [field]: value }));
+    }
+  };
+
   useEffect(() => {
     checkAuth();
     fetchLabs();
@@ -372,6 +394,14 @@ export default function DataManagement() {
                                   <div className="space-y-4">
                                     <div className="space-y-2">
                                       <Label>Select data to clear:</Label>
+                                      {clearOptions.clear_patients && (
+                                        <Alert className="border-warning bg-warning/10">
+                                          <AlertTriangle className="h-4 w-4 text-warning" />
+                                          <AlertDescription className="text-sm">
+                                            Clearing patients requires clearing all related data (bills, test reports, documents, followups, feedback)
+                                          </AlertDescription>
+                                        </Alert>
+                                      )}
                                       <div className="space-y-2 border rounded-lg p-4">
                                         {Object.entries({
                                           clear_patients: `Patients (${stats.patients || 0})`,
@@ -381,23 +411,28 @@ export default function DataManagement() {
                                           clear_followups: `Follow-ups (${stats.followups || 0})`,
                                           clear_feedback: `Feedback (${stats.feedback || 0})`,
                                           clear_test_types: `Test Types (${stats.test_types || 0})`,
-                                        }).map(([key, label]) => (
-                                          <div key={key} className="flex items-center space-x-2">
-                                            <Checkbox
-                                              id={key}
-                                              checked={clearOptions[key as keyof ClearOptions]}
-                                              onCheckedChange={(checked) =>
-                                                setClearOptions(prev => ({
-                                                  ...prev,
-                                                  [key]: checked as boolean,
-                                                }))
-                                              }
-                                            />
-                                            <Label htmlFor={key} className="text-sm cursor-pointer">
-                                              {label}
-                                            </Label>
-                                          </div>
-                                        ))}
+                                        }).map(([key, label]) => {
+                                          const isDependent = ['clear_bills', 'clear_test_reports', 'clear_documents', 'clear_followups', 'clear_feedback', 'clear_payments'].includes(key);
+                                          const isDisabled = clearOptions.clear_patients && isDependent;
+                                          
+                                          return (
+                                            <div key={key} className="flex items-center space-x-2">
+                                              <Checkbox
+                                                id={key}
+                                                checked={clearOptions[key as keyof ClearOptions]}
+                                                onCheckedChange={(checked) => handleOptionChange(key as keyof ClearOptions, checked as boolean)}
+                                                disabled={isDisabled}
+                                              />
+                                              <Label 
+                                                htmlFor={key} 
+                                                className={`text-sm cursor-pointer ${isDisabled ? 'opacity-50' : ''}`}
+                                              >
+                                                {label}
+                                                {isDisabled && <span className="ml-2 text-xs text-muted-foreground">(required when clearing patients)</span>}
+                                              </Label>
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                     </div>
 
