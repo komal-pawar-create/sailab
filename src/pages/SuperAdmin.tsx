@@ -12,7 +12,7 @@ import { AddOrganizationForm } from '@/components/forms/AddOrganizationForm';
 import { AddBranchForm } from '@/components/forms/AddBranchForm';
 import { AddUserForm } from '@/components/forms/AddUserForm';
 import EditUserDialog from '@/components/forms/EditUserDialog';
-import { Edit } from 'lucide-react';
+import { Edit, Database, Trash2 } from 'lucide-react';
 
 interface Organization {
   id: string;
@@ -132,9 +132,19 @@ export default function SuperAdmin() {
               Welcome, {profile?.full_name || profile?.email}
             </p>
           </div>
-          <Button onClick={handleSignOut} variant="outline">
-            Sign Out
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => navigate('/super-admin/data-management')} 
+              variant="destructive"
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Data Management
+            </Button>
+            <Button onClick={handleSignOut} variant="outline">
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 

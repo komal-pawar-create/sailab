@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import SuperAdmin from "./pages/SuperAdmin";
 import LabProfile from "./pages/LabProfile";
 import PatientHistory from "./pages/PatientHistory";
+import DataManagement from "./pages/DataManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/super-admin" element={<SuperAdmin />} />
+          <Route path="/super-admin/data-management" element={<DataManagement />} />
           <Route path="/lab-profile" element={<LabProfile />} />
           <Route path="/patient-history" element={<PatientHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

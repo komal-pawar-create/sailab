@@ -202,6 +202,36 @@ export type Database = {
           },
         ]
       }
+      data_clear_logs: {
+        Row: {
+          cleared_at: string
+          cleared_by: string
+          deleted_counts: Json
+          id: string
+          lab_id: string
+          lab_name: string
+          options: Json
+        }
+        Insert: {
+          cleared_at?: string
+          cleared_by: string
+          deleted_counts: Json
+          id?: string
+          lab_id: string
+          lab_name: string
+          options: Json
+        }
+        Update: {
+          cleared_at?: string
+          cleared_by?: string
+          deleted_counts?: Json
+          id?: string
+          lab_id?: string
+          lab_name?: string
+          options?: Json
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           branch_id: string | null
@@ -765,6 +795,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clear_lab_data: {
+        Args: {
+          p_clear_bills?: boolean
+          p_clear_documents?: boolean
+          p_clear_feedback?: boolean
+          p_clear_followups?: boolean
+          p_clear_patients?: boolean
+          p_clear_payments?: boolean
+          p_clear_sequences?: boolean
+          p_clear_test_reports?: boolean
+          p_clear_test_types?: boolean
+          p_lab_id: string
+        }
+        Returns: Json
+      }
       generate_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
