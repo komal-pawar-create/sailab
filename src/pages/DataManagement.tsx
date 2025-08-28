@@ -398,7 +398,13 @@ export default function DataManagement() {
                                         <Alert className="border-warning bg-warning/10">
                                           <AlertTriangle className="h-4 w-4 text-warning" />
                                           <AlertDescription className="text-sm">
-                                            Clearing patients requires clearing all related data (bills, test reports, documents, followups, feedback)
+                                            <strong>Important:</strong> Clearing patients will automatically delete ALL related data from ANY lab that references these patients, including:
+                                            <ul className="mt-2 ml-4 list-disc text-xs">
+                                              <li>Test reports from other labs referencing these patients</li>
+                                              <li>Documents from other labs referencing these patients</li>
+                                              <li>Bills and payments from other labs</li>
+                                              <li>Follow-ups and feedback from other labs</li>
+                                            </ul>
                                           </AlertDescription>
                                         </Alert>
                                       )}
