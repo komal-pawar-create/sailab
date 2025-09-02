@@ -158,35 +158,37 @@ export const DocUploadWithLetterhead = ({
 
     setProcessing(true);
     try {
+      // Generate a unique document ID for this upload
+      const documentId = crypto.randomUUID();
+      
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('lab-files')
+        .getPublicUrl(fileData.file_path);
+
       const { data, error } = await supabase.functions.invoke('process-document', {
         body: {
-          documentId: patientId,
+          documentId: documentId,
           letterheadUrl: fileData.letterhead_url,
           logoUrl: fileData.logo_url,
           documentType: 'patient_document',
-          originalFilePath: fileData.file_path,
+          originalFileUrl: publicUrl,
           lab_id: profile.lab_id,
           branch_id: profile.branch_id,
+          fileName: fileData.file_name,
+          hasLetterhead: true
         }
       });
 
       if (error) throw error;
 
-      // Save the template reference in the database
-      if (data?.generatedPdfUrl) {
-        await supabase.from('document_templates').insert({
-          lab_id: profile.lab_id,
-          branch_id: profile.branch_id,
-          original_document_id: patientId,
-          template_type: 'patient_document',
-          template_url: fileData.letterhead_url || '',
-          generated_pdf_url: data.generatedPdfUrl,
-          created_by: profile.user_id,
-          metadata: {
-            original_file: fileData.file_path,
-            patient_name: patientName,
-            logo_url: fileData.logo_url,
-          }
+      console.log('Document processing response:', data);
+
+      // The edge function will handle saving to document_templates
+      if (data?.success) {
+        toast({
+          title: "Processing complete",
+          description: "Document has been processed with letterhead.",
         });
       }
     } catch (error) {

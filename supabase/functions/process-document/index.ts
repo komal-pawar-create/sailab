@@ -14,6 +14,12 @@ serve(async (req) => {
   }
 
   try {
+    // Get the authorization header to extract user info
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header provided');
+    }
+
     const { documentId, letterheadUrl, logoUrl, extractedText, documentType, originalFileUrl, fileName, labId, branchId } = await req.json();
     
     console.log('Processing document:', { documentId, documentType, hasLetterhead: !!letterheadUrl, fileName });
@@ -22,6 +28,17 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get the user from the auth token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error('Auth error:', authError);
+      throw new Error('Failed to authenticate user');
+    }
+
+    console.log('Authenticated user:', user.id);
 
     try {
       // Create a new PDF document
@@ -175,7 +192,7 @@ serve(async (req) => {
           template_type: 'letterhead',
           template_url: letterheadUrl,
           generated_pdf_url: publicUrl,
-          created_by: req.headers.get('x-user-id') || null,
+          created_by: user.id,
           metadata: {
             original_file_name: fileName,
             processed_at: new Date().toISOString(),
