@@ -22,6 +22,7 @@ interface LabProfile {
   postal_code?: string;
   logo_url?: string;
   signature_url?: string;
+  letterhead_url?: string;
   registration_number?: string;
   gst_number?: string;
   website?: string;
@@ -41,8 +42,10 @@ export default function LabProfile() {
   const [labProfile, setLabProfile] = useState<LabProfile | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [signatureFile, setSignatureFile] = useState<File | null>(null);
+  const [letterheadFile, setLetterheadFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [signaturePreview, setSignaturePreview] = useState<string>('');
+  const [letterheadPreview, setLetterheadPreview] = useState<string>('');
 
   useEffect(() => {
     if (!profile) return;
@@ -120,6 +123,9 @@ export default function LabProfile() {
         if (labData.signature_url) {
           setSignaturePreview(labData.signature_url);
         }
+        if (labData.letterhead_url) {
+          setLetterheadPreview(labData.letterhead_url);
+        }
       } else {
         // Create a new lab profile template
         const newLabTemplate = {
@@ -156,7 +162,7 @@ export default function LabProfile() {
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'signature') => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'signature' | 'letterhead') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -187,17 +193,24 @@ export default function LabProfile() {
         setLogoPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-    } else {
+    } else if (type === 'signature') {
       setSignatureFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setSignaturePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    } else if (type === 'letterhead') {
+      setLetterheadFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLetterheadPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const uploadFile = async (file: File, type: 'logo' | 'signature'): Promise<string | null> => {
+  const uploadFile = async (file: File, type: 'logo' | 'signature' | 'letterhead'): Promise<string | null> => {
     if (!profile?.user_id || !labProfile?.id) return null;
 
     const fileExt = file.name.split('.').pop();
@@ -213,6 +226,11 @@ export default function LabProfile() {
         }
       } else if (type === 'signature' && labProfile.signature_url) {
         const oldPath = labProfile.signature_url.split('/').pop();
+        if (oldPath) {
+          await supabase.storage.from('lab-assets').remove([`labs/${labProfile.id}/${oldPath}`]);
+        }
+      } else if (type === 'letterhead' && labProfile.letterhead_url) {
+        const oldPath = labProfile.letterhead_url.split('/').pop();
         if (oldPath) {
           await supabase.storage.from('lab-assets').remove([`labs/${labProfile.id}/${oldPath}`]);
         }
@@ -250,6 +268,7 @@ export default function LabProfile() {
     try {
       let logoUrl = labProfile.logo_url;
       let signatureUrl = labProfile.signature_url;
+      let letterheadUrl = labProfile.letterhead_url;
 
       // Upload new logo if selected
       if (logoFile) {
@@ -263,6 +282,12 @@ export default function LabProfile() {
         if (url) signatureUrl = url;
       }
 
+      // Upload new letterhead if selected
+      if (letterheadFile) {
+        const url = await uploadFile(letterheadFile, 'letterhead');
+        if (url) letterheadUrl = url;
+      }
+
       // Update lab profile
       const { error } = await supabase
         .from('labs')
@@ -270,6 +295,7 @@ export default function LabProfile() {
           ...labProfile,
           logo_url: logoUrl,
           signature_url: signatureUrl,
+          letterhead_url: letterheadUrl,
           updated_at: new Date().toISOString(),
         })
         .eq('id', labProfile.id);
@@ -530,6 +556,48 @@ export default function LabProfile() {
                     />
                     <p className="text-xs text-muted-foreground">Recommended: 150x50px, Max 2MB</p>
                   </div>
+                </div>
+
+                <div className="space-y-4 col-span-2">
+                  <Label>Letterhead Template</Label>
+                  <div className="border-2 border-dashed rounded-lg p-4">
+                    {letterheadPreview ? (
+                      <div className="relative">
+                        <img
+                          src={letterheadPreview}
+                          alt="Letterhead"
+                          className="max-h-64 mx-auto"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute top-0 right-0"
+                          onClick={() => {
+                            setLetterheadPreview('');
+                            setLetterheadFile(null);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <FileText className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">No letterhead template uploaded</p>
+                      </div>
+                    )}
+                  </div>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, 'letterhead')}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Upload your letterhead template. This will be used for generating PDF documents with your branding.
+                    Recommended: A4 size (2480x3508px), Max 5MB
+                  </p>
                 </div>
 
                 <div className="space-y-2">

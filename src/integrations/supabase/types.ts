@@ -143,7 +143,9 @@ export type Database = {
           created_by: string
           id: string
           lab_id: string | null
+          letterhead_url: string | null
           location: string | null
+          logo_url: string | null
           name: string
           organization_id: string
           phone: string | null
@@ -160,7 +162,9 @@ export type Database = {
           created_by: string
           id?: string
           lab_id?: string | null
+          letterhead_url?: string | null
           location?: string | null
+          logo_url?: string | null
           name: string
           organization_id: string
           phone?: string | null
@@ -177,7 +181,9 @@ export type Database = {
           created_by?: string
           id?: string
           lab_id?: string | null
+          letterhead_url?: string | null
           location?: string | null
+          logo_url?: string | null
           name?: string
           organization_id?: string
           phone?: string | null
@@ -229,6 +235,48 @@ export type Database = {
           lab_id?: string
           lab_name?: string
           options?: Json
+        }
+        Relationships: []
+      }
+      document_templates: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          created_by: string
+          generated_pdf_url: string | null
+          id: string
+          lab_id: string
+          metadata: Json | null
+          original_document_id: string | null
+          template_type: string
+          template_url: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          created_by: string
+          generated_pdf_url?: string | null
+          id?: string
+          lab_id: string
+          metadata?: Json | null
+          original_document_id?: string | null
+          template_type: string
+          template_url: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          created_by?: string
+          generated_pdf_url?: string | null
+          id?: string
+          lab_id?: string
+          metadata?: Json | null
+          original_document_id?: string | null
+          template_type?: string
+          template_url?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -397,6 +445,7 @@ export type Database = {
           gst_number: string | null
           id: string
           initials: string
+          letterhead_url: string | null
           location: string | null
           logo_url: string | null
           name: string
@@ -422,6 +471,7 @@ export type Database = {
           gst_number?: string | null
           id?: string
           initials: string
+          letterhead_url?: string | null
           location?: string | null
           logo_url?: string | null
           name: string
@@ -447,6 +497,7 @@ export type Database = {
           gst_number?: string | null
           id?: string
           initials?: string
+          letterhead_url?: string | null
           location?: string | null
           logo_url?: string | null
           name?: string
