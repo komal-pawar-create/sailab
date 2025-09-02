@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus } from 'lucide-react';
 import { OperatorSelect } from './OperatorSelect';
-import { FileUpload } from '@/components/ui/file-upload';
+import { DocUploadWithLetterhead } from '@/components/ui/doc-upload-with-letterhead';
 
 interface Patient {
   id: string;
@@ -29,7 +29,13 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
 
   const [selectedPatient, setSelectedPatient] = useState('');
   const [selectedOperator, setSelectedOperator] = useState('');
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{path: string, name: string}>>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{
+    file_name: string;
+    file_path: string;
+    file_type: string;
+    file_size: number;
+    apply_letterhead?: boolean;
+  }>>([]);
 
   useEffect(() => {
     if (open) {
@@ -75,8 +81,14 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
     }
   };
 
-  const handleFileUploaded = (filePath: string, fileName: string) => {
-    setUploadedFiles(prev => [...prev, { path: filePath, name: fileName }]);
+  const handleFileUploaded = (file: {
+    file_name: string;
+    file_path: string;
+    file_type: string;
+    file_size: number;
+    apply_letterhead?: boolean;
+  }) => {
+    setUploadedFiles(prev => [...prev, file]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,9 +164,10 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
       // Save uploaded files as documents
       const documentInserts = uploadedFiles.map(file => ({
         patient_id: selectedPatient,
-        file_name: file.name,
-        file_path: file.path,
-        file_type: file.name.split('.').pop() || 'unknown',
+        file_name: file.file_name,
+        file_path: file.file_path,
+        file_type: file.file_type,
+        file_size: file.file_size,
         lab_id: labId,
         branch_id: branchId,
         uploaded_by: uploadedBy
@@ -187,6 +200,8 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
     }
   };
 
+  const selectedPatientData = patients.find(p => p.id === selectedPatient);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -195,7 +210,7 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
           Upload Documents
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Upload Patient Documents</DialogTitle>
         </DialogHeader>
@@ -221,11 +236,12 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
             </Select>
           </div>
           
-          <FileUpload
+          <DocUploadWithLetterhead
             onFileUploaded={handleFileUploaded}
-            accept="image/*,.pdf,.doc,.docx,.txt"
-            maxSize={10}
+            patientName={selectedPatientData?.full_name}
+            patientId={selectedPatient}
             label="Upload Patient Documents"
+            maxSize={10}
           />
           
           <Button type="submit" disabled={loading || uploadedFiles.length === 0} className="w-full">

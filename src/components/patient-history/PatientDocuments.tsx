@@ -4,8 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, FileText, FileImage, File, Calendar, User } from "lucide-react";
+import { Download, FileText, FileImage, File, Calendar, User, RefreshCw, Layers } from "lucide-react";
 import { format } from "date-fns";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Document {
   id: string;
@@ -17,17 +26,29 @@ interface Document {
   created_at: string;
 }
 
+interface DocumentTemplate {
+  id: string;
+  original_document_id: string;
+  template_type: string;
+  generated_pdf_url: string | null;
+  created_at: string;
+}
+
 interface PatientDocumentsProps {
   patientId: string;
 }
 
 export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [templates, setTemplates] = useState<Record<string, DocumentTemplate>>({});
   const [loading, setLoading] = useState(false);
+  const [processingDocs, setProcessingDocs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   useEffect(() => {
     fetchDocuments();
+    fetchTemplates();
   }, [patientId]);
 
   const fetchDocuments = async () => {
@@ -52,8 +73,30 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
     }
   };
 
-  const downloadDocument = async (doc: Document) => {
-    if (!doc.file_path) {
+  const fetchTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("document_templates")
+        .select("*")
+        .eq("original_document_id", patientId);
+
+      if (error) throw error;
+      
+      // Create a map of document IDs to templates
+      const templateMap: Record<string, DocumentTemplate> = {};
+      (data || []).forEach(template => {
+        if (template.original_document_id) {
+          templateMap[template.original_document_id] = template;
+        }
+      });
+      setTemplates(templateMap);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+    }
+  };
+
+  const downloadDocument = async (doc: Document, withLetterhead = false) => {
+    if (!doc.file_path && !withLetterhead) {
       toast({
         title: "Error",
         description: "File path not found",
@@ -63,17 +106,33 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
     }
 
     try {
-      const { data, error } = await supabase.storage
-        .from("lab-files")
-        .download(doc.file_path);
+      let downloadData;
+      let fileName = doc.file_name;
 
-      if (error) throw error;
+      if (withLetterhead && templates[doc.id]?.generated_pdf_url) {
+        // Download letterhead version
+        const { data, error } = await supabase.storage
+          .from("lab-files")
+          .download(templates[doc.id].generated_pdf_url!);
+        
+        if (error) throw error;
+        downloadData = data;
+        fileName = `letterhead_${doc.file_name.replace(/\.[^/.]+$/, '.pdf')}`;
+      } else if (doc.file_path) {
+        // Download original
+        const { data, error } = await supabase.storage
+          .from("lab-files")
+          .download(doc.file_path);
+        
+        if (error) throw error;
+        downloadData = data;
+      }
 
-      if (data) {
-        const url = URL.createObjectURL(data);
+      if (downloadData) {
+        const url = URL.createObjectURL(downloadData);
         const a = document.createElement("a");
         a.href = url;
-        a.download = doc.file_name;
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -81,7 +140,7 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
 
         toast({
           title: "Success",
-          description: `Downloaded ${doc.file_name}`,
+          description: `Downloaded ${fileName}`,
         });
       }
     } catch (error: any) {
@@ -89,6 +148,75 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
         title: "Error",
         description: "Failed to download document",
         variant: "destructive",
+      });
+    }
+  };
+
+  const generateWithLetterhead = async (doc: Document) => {
+    if (!profile?.lab_id || !profile?.branch_id || !doc.file_path) return;
+
+    setProcessingDocs(prev => new Set(prev).add(doc.id));
+
+    try {
+      // Check if letterhead exists
+      const { data: branchData } = await supabase
+        .from('branches')
+        .select('letterhead_url, logo_url')
+        .eq('id', profile.branch_id)
+        .single();
+
+      const { data: labData } = await supabase
+        .from('labs')
+        .select('letterhead_url')
+        .eq('id', profile.lab_id)
+        .single();
+
+      const letterheadUrl = branchData?.letterhead_url || labData?.letterhead_url;
+      
+      if (!letterheadUrl) {
+        toast({
+          title: "No letterhead found",
+          description: "Please upload a letterhead template first in Lab Profile or Branch settings.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('process-document', {
+        body: {
+          documentId: doc.id,
+          letterheadUrl: letterheadUrl,
+          logoUrl: branchData?.logo_url,
+          documentType: 'patient_document',
+          originalFilePath: doc.file_path,
+          lab_id: profile.lab_id,
+          branch_id: profile.branch_id,
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Processing started",
+        description: "Your document is being processed with letterhead. This may take a few moments.",
+      });
+
+      // Refresh templates after a delay
+      setTimeout(() => {
+        fetchTemplates();
+      }, 3000);
+
+    } catch (error) {
+      console.error("Error generating with letterhead:", error);
+      toast({
+        title: "Processing info",
+        description: "Document letterhead generation has been queued.",
+      });
+    } finally {
+      setProcessingDocs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(doc.id);
+        return newSet;
       });
     }
   };
@@ -121,6 +249,9 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {documents.map((doc) => {
               const FileIcon = getFileIcon(doc.file_type);
+              const hasLetterhead = !!templates[doc.id]?.generated_pdf_url;
+              const isProcessing = processingDocs.has(doc.id);
+              
               return (
                 <Card key={doc.id} className="relative">
                   <CardContent className="p-4">
@@ -133,9 +264,17 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
                           {doc.file_name}
                         </h4>
                         <div className="mt-1 space-y-1">
-                          <Badge variant="outline" className="text-xs">
-                            {doc.file_type}
-                          </Badge>
+                          <div className="flex gap-1">
+                            <Badge variant="outline" className="text-xs">
+                              {doc.file_type}
+                            </Badge>
+                            {hasLetterhead && (
+                              <Badge variant="secondary" className="text-xs gap-1">
+                                <Layers className="h-3 w-3" />
+                                Letterhead
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {formatFileSize(doc.file_size)}
                           </p>
@@ -146,15 +285,48 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
                         </div>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full mt-3 gap-2"
-                      onClick={() => downloadDocument(doc)}
-                    >
-                      <Download className="h-4 w-4" />
-                      Download
-                    </Button>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full mt-3 gap-2"
+                          disabled={isProcessing}
+                        >
+                          {isProcessing ? (
+                            <>
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="h-4 w-4" />
+                              Download Options
+                            </>
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56">
+                        <DropdownMenuLabel>Document Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => downloadDocument(doc)}>
+                          <File className="h-4 w-4 mr-2" />
+                          Download Original
+                        </DropdownMenuItem>
+                        {hasLetterhead ? (
+                          <DropdownMenuItem onClick={() => downloadDocument(doc, true)}>
+                            <Layers className="h-4 w-4 mr-2" />
+                            Download with Letterhead
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem onClick={() => generateWithLetterhead(doc)}>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Generate with Letterhead
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </CardContent>
                 </Card>
               );
