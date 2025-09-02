@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.53.0";
+import { PDFDocument, rgb } from "https://cdn.skypack.dev/pdf-lib@1.17.1?dts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,51 +14,214 @@ serve(async (req) => {
   }
 
   try {
-    const { documentId, letterheadUrl, logoUrl, extractedText, documentType } = await req.json();
+    const { documentId, letterheadUrl, logoUrl, extractedText, documentType, originalFileUrl, fileName, labId, branchId } = await req.json();
     
-    console.log('Processing document:', { documentId, documentType, hasLetterhead: !!letterheadUrl, hasLogo: !!logoUrl });
+    console.log('Processing document:', { documentId, documentType, hasLetterhead: !!letterheadUrl, fileName });
     
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // For now, we'll return a simple response indicating the document was processed
-    // In a real implementation, we would:
-    // 1. Download the letterhead image
-    // 2. Use a PDF library to create a PDF with the letterhead as background
-    // 3. Add the extracted text on top of the letterhead
-    // 4. Upload the generated PDF to storage
-    // 5. Return the URL of the generated PDF
-    
-    // Placeholder response for now
-    const response = {
-      success: true,
-      message: 'Document processing initiated',
-      documentId,
-      letterheadUrl,
-      logoUrl,
-      extractedText: extractedText ? extractedText.substring(0, 100) + '...' : null,
-      // In production, this would be the actual generated PDF URL
-      generatedPdfUrl: null,
-      note: 'PDF generation with letterhead overlay will be implemented with a proper PDF library'
-    };
-    
-    console.log('Document processing complete:', response);
-    
-    return new Response(
-      JSON.stringify(response),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+    try {
+      // Create a new PDF document
+      const pdfDoc = await PDFDocument.create();
+      
+      // Download letterhead image if provided
+      let letterheadImage;
+      if (letterheadUrl) {
+        console.log('Downloading letterhead from:', letterheadUrl);
+        const letterheadResponse = await fetch(letterheadUrl);
+        const letterheadBytes = await letterheadResponse.arrayBuffer();
+        
+        // Embed the letterhead image
+        if (letterheadUrl.toLowerCase().includes('.png')) {
+          letterheadImage = await pdfDoc.embedPng(letterheadBytes);
+        } else {
+          letterheadImage = await pdfDoc.embedJpg(letterheadBytes);
+        }
       }
-    );
+
+      // Handle different document types
+      if (originalFileUrl && (fileName.toLowerCase().endsWith('.pdf'))) {
+        // If original is a PDF, load it and add letterhead to each page
+        console.log('Processing PDF document');
+        const originalResponse = await fetch(originalFileUrl);
+        const originalPdfBytes = await originalResponse.arrayBuffer();
+        const originalPdfDoc = await PDFDocument.load(originalPdfBytes);
+        
+        const pages = await pdfDoc.copyPages(originalPdfDoc, originalPdfDoc.getPageIndices());
+        
+        for (const page of pages) {
+          pdfDoc.addPage(page);
+          
+          // Add letterhead as background if available
+          if (letterheadImage) {
+            const { width, height } = page.getSize();
+            page.drawImage(letterheadImage, {
+              x: 0,
+              y: 0,
+              width: width,
+              height: height,
+              opacity: 0.3, // Make letterhead semi-transparent
+            });
+          }
+        }
+      } else if (originalFileUrl && (fileName.toLowerCase().match(/\.(jpg|jpeg|png)$/))) {
+        // If original is an image, create a PDF with the image
+        console.log('Processing image document');
+        const originalResponse = await fetch(originalFileUrl);
+        const imageBytes = await originalResponse.arrayBuffer();
+        
+        let embeddedImage;
+        if (fileName.toLowerCase().includes('.png')) {
+          embeddedImage = await pdfDoc.embedPng(imageBytes);
+        } else {
+          embeddedImage = await pdfDoc.embedJpg(imageBytes);
+        }
+        
+        // Create a page with A4 dimensions
+        const page = pdfDoc.addPage([595.28, 841.89]); // A4 size in points
+        
+        // Add letterhead as background if available
+        if (letterheadImage) {
+          const { width, height } = page.getSize();
+          page.drawImage(letterheadImage, {
+            x: 0,
+            y: 0,
+            width: width,
+            height: height,
+            opacity: 0.3,
+          });
+        }
+        
+        // Add the original image, scaled to fit
+        const { width: pageWidth, height: pageHeight } = page.getSize();
+        const imgDims = embeddedImage.scale(0.5);
+        page.drawImage(embeddedImage, {
+          x: (pageWidth - imgDims.width) / 2,
+          y: (pageHeight - imgDims.height) / 2,
+          width: imgDims.width,
+          height: imgDims.height,
+        });
+      } else {
+        // For other document types or when we only have text, create a simple PDF
+        console.log('Creating new PDF with letterhead');
+        const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
+        
+        // Add letterhead as background if available
+        if (letterheadImage) {
+          const { width, height } = page.getSize();
+          page.drawImage(letterheadImage, {
+            x: 0,
+            y: 0,
+            width: width,
+            height: height,
+            opacity: 0.3,
+          });
+        }
+        
+        // Add extracted text if available
+        if (extractedText) {
+          const { width, height } = page.getSize();
+          const fontSize = 12;
+          const margin = 50;
+          
+          page.drawText(extractedText.substring(0, 500), {
+            x: margin,
+            y: height - margin - fontSize,
+            size: fontSize,
+            color: rgb(0, 0, 0),
+            maxWidth: width - 2 * margin,
+          });
+        }
+      }
+
+      // Generate the PDF bytes
+      const pdfBytes = await pdfDoc.save();
+      
+      // Generate unique filename for the processed document
+      const timestamp = Date.now();
+      const processedFileName = `letterhead_${timestamp}_${fileName || 'document'}.pdf`;
+      const storagePath = `processed/${labId}/${branchId}/${processedFileName}`;
+      
+      console.log('Uploading processed PDF to:', storagePath);
+      
+      // Upload the generated PDF to storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('lab-files')
+        .upload(storagePath, pdfBytes, {
+          contentType: 'application/pdf',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Error uploading PDF:', uploadError);
+        throw uploadError;
+      }
+
+      // Get the public URL for the uploaded PDF
+      const { data: { publicUrl } } = supabase.storage
+        .from('lab-files')
+        .getPublicUrl(storagePath);
+
+      // Save the template reference in the database
+      const { data: templateData, error: templateError } = await supabase
+        .from('document_templates')
+        .insert({
+          original_document_id: documentId,
+          lab_id: labId,
+          branch_id: branchId,
+          template_type: 'letterhead',
+          template_url: letterheadUrl,
+          generated_pdf_url: publicUrl,
+          created_by: req.headers.get('x-user-id') || null,
+          metadata: {
+            original_file_name: fileName,
+            processed_at: new Date().toISOString(),
+            has_letterhead: !!letterheadUrl,
+            has_logo: !!logoUrl
+          }
+        })
+        .select()
+        .single();
+
+      if (templateError) {
+        console.error('Error saving template:', templateError);
+        throw templateError;
+      }
+
+      console.log('Document processing complete:', { 
+        templateId: templateData.id,
+        pdfUrl: publicUrl 
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Document processed successfully',
+          documentId,
+          generatedPdfUrl: publicUrl,
+          templateId: templateData.id
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    } catch (processingError) {
+      console.error('Error during PDF processing:', processingError);
+      throw processingError;
+    }
   } catch (error) {
     console.error('Error processing document:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Failed to process document with letterhead'
+      }),
       { 
         status: 400, 
         headers: { 

@@ -75,10 +75,14 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
 
   const fetchTemplates = async () => {
     try {
+      // First get all document IDs for this patient
+      const documentIds = documents.map(doc => doc.id);
+      if (documentIds.length === 0) return;
+
       const { data, error } = await supabase
         .from("document_templates")
         .select("*")
-        .eq("original_document_id", patientId);
+        .in("original_document_id", documentIds);
 
       if (error) throw error;
       
@@ -110,13 +114,11 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
       let fileName = doc.file_name;
 
       if (withLetterhead && templates[doc.id]?.generated_pdf_url) {
-        // Download letterhead version
-        const { data, error } = await supabase.storage
-          .from("lab-files")
-          .download(templates[doc.id].generated_pdf_url!);
+        // Download letterhead version - the URL is already complete
+        const response = await fetch(templates[doc.id].generated_pdf_url!);
         
-        if (error) throw error;
-        downloadData = data;
+        if (!response.ok) throw new Error("Failed to download letterhead version");
+        downloadData = await response.blob();
         fileName = `letterhead_${doc.file_name.replace(/\.[^/.]+$/, '.pdf')}`;
       } else if (doc.file_path) {
         // Download original
@@ -182,35 +184,44 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
         return;
       }
 
+      // Get the original file URL from storage
+      const { data: { publicUrl: originalFileUrl } } = supabase.storage
+        .from('lab-files')
+        .getPublicUrl(doc.file_path);
+
       const { data, error } = await supabase.functions.invoke('process-document', {
         body: {
           documentId: doc.id,
           letterheadUrl: letterheadUrl,
           logoUrl: branchData?.logo_url,
           documentType: 'patient_document',
-          originalFilePath: doc.file_path,
-          lab_id: profile.lab_id,
-          branch_id: profile.branch_id,
+          originalFileUrl,
+          fileName: doc.file_name,
+          labId: profile.lab_id,
+          branchId: profile.branch_id,
         }
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Processing started",
-        description: "Your document is being processed with letterhead. This may take a few moments.",
-      });
+      if (data?.success && data?.generatedPdfUrl) {
+        toast({
+          title: "Document processed successfully",
+          description: "Your document has been generated with letterhead.",
+        });
+        
+        // Refresh templates immediately
+        await fetchTemplates();
+      } else {
+        throw new Error(data?.message || "Failed to process document");
+      }
 
-      // Refresh templates after a delay
-      setTimeout(() => {
-        fetchTemplates();
-      }, 3000);
-
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating with letterhead:", error);
       toast({
-        title: "Processing info",
-        description: "Document letterhead generation has been queued.",
+        title: "Error",
+        description: error.message || "Failed to generate document with letterhead",
+        variant: "destructive",
       });
     } finally {
       setProcessingDocs(prev => {
