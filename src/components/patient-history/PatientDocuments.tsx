@@ -110,40 +110,49 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
     }
 
     try {
-      let downloadData;
       let fileName = doc.file_name;
 
       if (withLetterhead && templates[doc.id]?.generated_pdf_url) {
-        // Download letterhead version - the URL is already complete
-        const response = await fetch(templates[doc.id].generated_pdf_url!);
-        
-        if (!response.ok) throw new Error("Failed to download letterhead version");
-        downloadData = await response.blob();
+        // Download letterhead version using direct link (avoids CORS issues)
         fileName = `letterhead_${doc.file_name.replace(/\.[^/.]+$/, '.pdf')}`;
-      } else if (doc.file_path) {
-        // Download original
-        const { data, error } = await supabase.storage
-          .from("lab-files")
-          .download(doc.file_path);
+        const url = templates[doc.id].generated_pdf_url!;
         
-        if (error) throw error;
-        downloadData = data;
-      }
-
-      if (downloadData) {
-        const url = URL.createObjectURL(downloadData);
+        // Create a direct download link
         const a = document.createElement("a");
         a.href = url;
         a.download = fileName;
+        a.target = "_blank"; // Open in new tab to handle cross-origin downloads
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
 
         toast({
           title: "Success",
           description: `Downloaded ${fileName}`,
         });
+      } else if (doc.file_path) {
+        // Download original using Supabase client (for private files)
+        const { data, error } = await supabase.storage
+          .from("lab-files")
+          .download(doc.file_path);
+        
+        if (error) throw error;
+        
+        if (data) {
+          const url = URL.createObjectURL(data);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          toast({
+            title: "Success",
+            description: `Downloaded ${fileName}`,
+          });
+        }
       }
     } catch (error: any) {
       toast({
