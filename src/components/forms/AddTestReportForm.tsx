@@ -23,6 +23,7 @@ interface Patient {
 interface TestType {
   id: string;
   test_name: string;
+  is_global?: boolean;
 }
 
 interface AddTestReportFormProps {
@@ -67,13 +68,43 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
 
   const fetchTestTypes = async () => {
     try {
-      const { data, error } = await supabase
-        .from('test_types')
-        .select('id, test_name')
-        .order('test_name');
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
 
-      if (error) throw error;
-      setTestTypes(data || []);
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('branch_id, lab_id, role')
+        .eq('user_id', userData.user.id)
+        .single();
+
+      if (!profileData) return;
+
+      // Fetch local test types from the branch
+      const { data: localTestTypes, error: localError } = await supabase
+        .from('test_types')
+        .select('*')
+        .eq('branch_id', profileData.branch_id)
+        .order('test_name', { ascending: true });
+
+      if (localError) console.error('Error fetching local test types:', localError);
+
+      // Fetch global test types
+      const { data: globalTestTypes, error: globalError } = await supabase
+        .from('global_test_types')
+        .select('*')
+        .eq('is_active', true)
+        .order('category', { ascending: true })
+        .order('test_name', { ascending: true });
+
+      if (globalError) console.error('Error fetching global test types:', globalError);
+
+      // Combine and mark global test types
+      const combinedTestTypes = [
+        ...(globalTestTypes || []).map(t => ({ ...t, is_global: true })),
+        ...(localTestTypes || []).map(t => ({ ...t, is_global: false }))
+      ];
+
+      setTestTypes(combinedTestTypes);
     } catch (error) {
       console.error('Error fetching test types:', error);
       toast({
@@ -227,11 +258,26 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
                   <SelectValue placeholder="Select test type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {testTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.test_name}>
-                      {type.test_name}
-                    </SelectItem>
-                  ))}
+                  {testTypes.filter(t => t.is_global).length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Platform Tests</div>
+                      {testTypes.filter(t => t.is_global).map((testType) => (
+                        <SelectItem key={testType.id} value={testType.test_name}>
+                          {testType.test_name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                  {testTypes.filter(t => !t.is_global).length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Branch Tests</div>
+                      {testTypes.filter(t => !t.is_global).map((testType) => (
+                        <SelectItem key={testType.id} value={testType.test_name}>
+                          {testType.test_name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>

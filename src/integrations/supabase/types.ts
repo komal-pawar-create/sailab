@@ -351,6 +351,39 @@ export type Database = {
           },
         ]
       }
+      global_test_types: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          test_name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          test_name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          test_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       labs: {
         Row: {
           address_line1: string | null

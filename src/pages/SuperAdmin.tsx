@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { AddOrganizationForm } from '@/components/forms/AddOrganizationForm';
 import { AddBranchForm } from '@/components/forms/AddBranchForm';
 import { AddUserForm } from '@/components/forms/AddUserForm';
+import { AddTestTypeForm } from '@/components/forms/AddTestTypeForm';
 import EditUserDialog from '@/components/forms/EditUserDialog';
 import { Edit, Database, Trash2 } from 'lucide-react';
 
@@ -189,6 +190,7 @@ export default function SuperAdmin() {
             <TabsTrigger value="organizations">Organizations</TabsTrigger>
             <TabsTrigger value="branches">Branches</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="test-types">Test Types</TabsTrigger>
           </TabsList>
 
           <TabsContent value="organizations" className="space-y-6">
@@ -307,8 +309,12 @@ export default function SuperAdmin() {
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+        </TabsContent>
+        
+        <TabsContent value="test-types" className="space-y-4 overflow-auto">
+          <AddTestTypeForm />
+        </TabsContent>
+      </Tabs>
       </main>
       
       <EditUserDialog
