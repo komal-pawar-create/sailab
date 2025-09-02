@@ -309,6 +309,12 @@ export default function LabProfile() {
 
       setLogoFile(null);
       setSignatureFile(null);
+      setLetterheadFile(null);
+      
+      // Update the preview states with the saved URLs
+      if (logoUrl) setLogoPreview(logoUrl);
+      if (signatureUrl) setSignaturePreview(signatureUrl);
+      if (letterheadUrl) setLetterheadPreview(letterheadUrl);
     } catch (error: any) {
       toast({
         title: "Error",
