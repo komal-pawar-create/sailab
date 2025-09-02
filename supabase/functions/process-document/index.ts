@@ -24,6 +24,29 @@ serve(async (req) => {
     
     console.log('Processing document:', { documentId, documentType, hasLetterhead: !!letterheadUrl, fileName });
     
+    // Check if file type is supported
+    const supportedExtensions = ['.pdf', '.jpg', '.jpeg', '.png'];
+    const fileExtension = fileName.toLowerCase().match(/\.[^.]+$/)?.[0];
+    
+    if (!fileExtension || !supportedExtensions.includes(fileExtension)) {
+      console.warn('Unsupported file type:', fileExtension);
+      return new Response(
+        JSON.stringify({
+          error: 'UNSUPPORTED_FILE_TYPE',
+          message: `File type "${fileExtension || 'unknown'}" is not supported for letterhead processing.`,
+          supportedTypes: supportedExtensions,
+          details: 'Only PDF and image files (JPG, JPEG, PNG) can have letterheads applied. Other document types like Word documents (.docx, .doc) need to be converted to PDF first.'
+        }),
+        { 
+          status: 400, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
+    
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

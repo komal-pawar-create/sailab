@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, FileText, FileImage, File, Calendar, User, RefreshCw, Layers } from "lucide-react";
+import { Download, FileText, FileImage, File, Calendar, User, RefreshCw, Layers, FileWarning } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -227,11 +227,21 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
 
     } catch (error: any) {
       console.error("Error generating with letterhead:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to generate document with letterhead",
-        variant: "destructive",
-      });
+      
+      // Check if it's an unsupported file type error
+      if (error?.error === 'UNSUPPORTED_FILE_TYPE') {
+        toast({
+          title: "Unsupported File Type",
+          description: error.message || "This file type cannot have a letterhead applied. Only PDF and image files (JPG, PNG) are supported.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to generate document with letterhead",
+          variant: "destructive",
+        });
+      }
     } finally {
       setProcessingDocs(prev => {
         const newSet = new Set(prev);
@@ -334,15 +344,27 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
                           <File className="h-4 w-4 mr-2" />
                           Download Original
                         </DropdownMenuItem>
-                        {hasLetterhead ? (
-                          <DropdownMenuItem onClick={() => downloadDocument(doc, true)}>
-                            <Layers className="h-4 w-4 mr-2" />
-                            Download with Letterhead
-                          </DropdownMenuItem>
+                        {/* Only show letterhead option for supported file types */}
+                        {doc.file_type?.toLowerCase().includes('pdf') || 
+                         doc.file_type?.toLowerCase().includes('image') || 
+                         doc.file_type?.toLowerCase().includes('jpg') || 
+                         doc.file_type?.toLowerCase().includes('jpeg') || 
+                         doc.file_type?.toLowerCase().includes('png') ? (
+                          hasLetterhead ? (
+                            <DropdownMenuItem onClick={() => downloadDocument(doc, true)}>
+                              <Layers className="h-4 w-4 mr-2" />
+                              Download with Letterhead
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => generateWithLetterhead(doc)}>
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Generate with Letterhead
+                            </DropdownMenuItem>
+                          )
                         ) : (
-                          <DropdownMenuItem onClick={() => generateWithLetterhead(doc)}>
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Generate with Letterhead
+                          <DropdownMenuItem disabled className="text-muted-foreground">
+                            <FileWarning className="mr-2 h-4 w-4" />
+                            Letterhead not available for this file type
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
