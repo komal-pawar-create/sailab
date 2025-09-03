@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, Trash2 } from 'lucide-react';
 import { OperatorSelect } from './OperatorSelect';
-import BillPrintModal from '../bills/BillPrintModal';
+import BillPrintModal from '@/components/bills/BillPrintModal';
 
 interface Patient {
   id: string;
