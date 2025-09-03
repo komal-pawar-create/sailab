@@ -109,9 +109,10 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
 
     try {
       let labId = profile?.lab_id;
+      let branchId = profile?.branch_id;
       let createdBy = profile?.user_id;
 
-      // For admins, get lab_id from selected operator
+      // For admins, get lab_id and branch_id from selected operator
       if (profile?.role === 'admin') {
         if (!selectedOperator) {
           toast({
@@ -123,10 +124,10 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
           return;
         }
         
-        // Get the selected operator's lab_id
+        // Get the selected operator's lab_id and branch_id
         const { data: operatorProfile } = await supabase
           .from('profiles')
-          .select('lab_id')
+          .select('lab_id, branch_id')
           .eq('user_id', selectedOperator)
           .single();
           
@@ -139,15 +140,36 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
           setLoading(false);
           return;
         }
+
+        if (!operatorProfile?.branch_id) {
+          toast({
+            title: "Error",
+            description: "Selected operator is not assigned to a branch. Please contact your administrator.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
         
         labId = operatorProfile.lab_id;
+        branchId = operatorProfile.branch_id;
         createdBy = selectedOperator;
       } else {
-        // For non-admins, validate they have a lab_id
+        // For non-admins, validate they have a lab_id and branch_id
         if (!profile?.lab_id) {
           toast({
             title: "Error",
             description: "You must be assigned to a lab to create bills. Please contact your administrator.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        if (!profile?.branch_id) {
+          toast({
+            title: "Error",
+            description: "You must be assigned to a branch to create bills. Please contact your administrator.",
             variant: "destructive",
           });
           setLoading(false);
@@ -168,6 +190,7 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
           items: items as any,
           notes: formData.notes,
           lab_id: labId,
+          branch_id: branchId,
           created_by: createdBy
         });
 
