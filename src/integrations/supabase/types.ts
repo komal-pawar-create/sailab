@@ -704,6 +704,7 @@ export type Database = {
       patients: {
         Row: {
           age: number | null
+          age_in_months: number | null
           branch_id: string | null
           created_at: string
           created_by: string
@@ -714,10 +715,13 @@ export type Database = {
           patient_history: string | null
           patient_id: string
           phone: string
+          referred_by_doctor_name: string | null
+          referred_by_doctor_phone: string | null
           updated_at: string
         }
         Insert: {
           age?: number | null
+          age_in_months?: number | null
           branch_id?: string | null
           created_at?: string
           created_by: string
@@ -728,10 +732,13 @@ export type Database = {
           patient_history?: string | null
           patient_id: string
           phone: string
+          referred_by_doctor_name?: string | null
+          referred_by_doctor_phone?: string | null
           updated_at?: string
         }
         Update: {
           age?: number | null
+          age_in_months?: number | null
           branch_id?: string | null
           created_at?: string
           created_by?: string
@@ -742,6 +749,8 @@ export type Database = {
           patient_history?: string | null
           patient_id?: string
           phone?: string
+          referred_by_doctor_name?: string | null
+          referred_by_doctor_phone?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -970,6 +979,10 @@ export type Database = {
       is_super_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      preview_patient_id: {
+        Args: { p_branch_id: string; p_lab_id: string }
+        Returns: string
       }
     }
     Enums: {
