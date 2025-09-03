@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, Trash2 } from 'lucide-react';
 import { OperatorSelect } from './OperatorSelect';
+import BillPrintModal from '../bills/BillPrintModal';
 
 interface Patient {
   id: string;
@@ -32,6 +33,8 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const [createdBill, setCreatedBill] = useState<any>(null);
   const { profile } = useAuth();
   const { toast } = useToast();
 
@@ -179,7 +182,7 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
 
       const totalAmount = getTotalAmount();
       
-      const { error } = await supabase
+      const { data: newBill, error } = await supabase
         .from('bills')
         .insert({
           bill_number: formData.bill_number,
@@ -192,15 +195,29 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
           lab_id: labId,
           branch_id: branchId,
           created_by: createdBy
-        });
+        })
+        .select('*, patients(full_name, patient_id, phone, email, age, gender)')
+        .single();
 
       if (error) throw error;
 
+      // Set the created bill for print preview
+      setCreatedBill({
+        ...newBill,
+        bill_date: new Date().toISOString(),
+        paid_amount: 0,
+        due_amount: totalAmount
+      });
+      
+      // Show print preview instead of closing
+      setShowPrintPreview(true);
+      
       toast({
         title: "Success",
-        description: "Bill created successfully",
+        description: "Bill created successfully. You can now print it.",
       });
 
+      // Reset form data after showing preview
       setFormData({
         patient_id: '',
         bill_number: '',
@@ -209,7 +226,7 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
       });
       setItems([{ description: '', quantity: 1, rate: 0, amount: 0 }]);
       setSelectedOperator('');
-      setOpen(false);
+      generateBillNumber(); // Generate new bill number for next bill
       onBillAdded();
     } catch (error: any) {
       toast({
@@ -222,158 +239,173 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
     }
   };
 
+  const handlePrintPreviewClose = () => {
+    setShowPrintPreview(false);
+    setCreatedBill(null);
+    setOpen(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Bill
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Bill</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <OperatorSelect 
-            selectedOperator={selectedOperator} 
-            onOperatorChange={setSelectedOperator} 
-          />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="patient_id">Patient</Label>
-              <Select value={formData.patient_id} onValueChange={(value) => setFormData({ ...formData, patient_id: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select patient" />
-                </SelectTrigger>
-                <SelectContent>
-                  {patients
-                    .filter(patient => patient.id && patient.id.trim() !== '')
-                    .map((patient) => (
-                      <SelectItem key={patient.id} value={patient.id}>
-                        {patient.full_name} ({patient.patient_id})
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Bill
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Bill</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <OperatorSelect 
+              selectedOperator={selectedOperator} 
+              onOperatorChange={setSelectedOperator} 
+            />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="patient_id">Patient</Label>
+                <Select value={formData.patient_id} onValueChange={(value) => setFormData({ ...formData, patient_id: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select patient" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {patients
+                      .filter(patient => patient.id && patient.id.trim() !== '')
+                      .map((patient) => (
+                        <SelectItem key={patient.id} value={patient.id}>
+                          {patient.full_name} ({patient.patient_id})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="bill_number">Bill Number *</Label>
+                <CapitalizedInput
+                  id="bill_number"
+                  value={formData.bill_number}
+                  onChange={(e) => setFormData({ ...formData, bill_number: e.target.value })}
+                  required
+                  readOnly
+                  capitalize={false}
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="bill_number">Bill Number *</Label>
+              <Label htmlFor="due_date">Due Date *</Label>
               <CapitalizedInput
-                id="bill_number"
-                value={formData.bill_number}
-                onChange={(e) => setFormData({ ...formData, bill_number: e.target.value })}
+                id="due_date"
+                type="date"
+                value={formData.due_date}
+                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 required
-                readOnly
                 capitalize={false}
               />
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="due_date">Due Date *</Label>
-            <CapitalizedInput
-              id="due_date"
-              type="date"
-              value={formData.due_date}
-              onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-              required
-              capitalize={false}
-            />
-          </div>
 
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Label>Bill Items</Label>
-              <Button type="button" onClick={addItem} size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Add Item
-              </Button>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <Label>Bill Items</Label>
+                <Button type="button" onClick={addItem} size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Item
+                </Button>
+              </div>
+              
+              {items.map((item, index) => (
+                <div key={index} className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-5">
+                    <Label>Description *</Label>
+                    <CapitalizedInput
+                      value={item.description}
+                      onChange={(e) => updateItem(index, 'description', e.target.value)}
+                      placeholder="ITEM DESCRIPTION"
+                      required
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label>Qty *</Label>
+                    <CapitalizedInput
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                      required
+                      capitalize={false}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label>Rate *</Label>
+                    <CapitalizedInput
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.rate}
+                      onChange={(e) => updateItem(index, 'rate', parseFloat(e.target.value) || 0)}
+                      required
+                      capitalize={false}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label>Amount</Label>
+                    <CapitalizedInput
+                      value={item.amount.toFixed(2)}
+                      readOnly
+                      className="bg-muted"
+                      capitalize={false}
+                    />
+                  </div>
+                  <div className="col-span-1">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeItem(index)}
+                      disabled={items.length === 1}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end">
+              <div className="text-lg font-semibold">
+                Total: ₹{getTotalAmount().toFixed(2)}
+              </div>
             </div>
             
-            {items.map((item, index) => (
-              <div key={index} className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-5">
-                  <Label>Description *</Label>
-                  <CapitalizedInput
-                    value={item.description}
-                    onChange={(e) => updateItem(index, 'description', e.target.value)}
-                    placeholder="ITEM DESCRIPTION"
-                    required
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label>Qty *</Label>
-                  <CapitalizedInput
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                    required
-                    capitalize={false}
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label>Rate *</Label>
-                  <CapitalizedInput
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={item.rate}
-                    onChange={(e) => updateItem(index, 'rate', parseFloat(e.target.value) || 0)}
-                    required
-                    capitalize={false}
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label>Amount</Label>
-                  <CapitalizedInput
-                    value={item.amount.toFixed(2)}
-                    readOnly
-                    className="bg-muted"
-                    capitalize={false}
-                  />
-                </div>
-                <div className="col-span-1">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => removeItem(index)}
-                    disabled={items.length === 1}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-end">
-            <div className="text-lg font-semibold">
-              Total: ₹{getTotalAmount().toFixed(2)}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes *</Label>
+              <CapitalizedTextarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="ADDITIONAL NOTES"
+                rows={3}
+                required
+              />
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes *</Label>
-            <CapitalizedTextarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="ADDITIONAL NOTES"
-              rows={3}
-              required
-            />
-          </div>
-          
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Creating...' : 'Create Bill'}
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+            
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? 'Creating...' : 'Create Bill'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Print Preview Modal */}
+      <BillPrintModal 
+        bill={createdBill} 
+        open={showPrintPreview} 
+        onOpenChange={handlePrintPreviewClose}
+      />
+    </>
   );
 };
