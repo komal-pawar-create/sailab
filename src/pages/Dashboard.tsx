@@ -176,26 +176,26 @@ const Dashboard = () => {
         reportsQuery = reportsQuery.eq('branch_id', profile.branch_id);
       }
       const { data: reportsData } = await reportsQuery;
-      setTestReports(reportsData || []);
+      setTestReports((reportsData || []).map(r => ({ ...r, patients: r.patients || undefined })));
 
       // Fetch documents
-      let documentsQuery = supabase.from('documents').select('*, patients(full_name)');
+      let documentsQuery = supabase.from('documents').select('*, patients!fk_documents_patient(full_name)');
       if (isBranchOperator && profile?.branch_id) {
         documentsQuery = documentsQuery.eq('branch_id', profile.branch_id);
       }
       const { data: documentsData } = await documentsQuery;
-      setDocuments(documentsData || []);
+      setDocuments((documentsData || []).map(d => ({ ...d, patients: d.patients || undefined })));
 
       // Fetch feedback
-      let feedbackQuery = supabase.from('feedback').select('*, patients(full_name)');
+      let feedbackQuery = supabase.from('feedback').select('*, patients!fk_feedback_patient(full_name)');
       if (isBranchOperator && profile?.branch_id) {
         feedbackQuery = feedbackQuery.eq('branch_id', profile.branch_id);
       }
       const { data: feedbackData } = await feedbackQuery;
-      setFeedback(feedbackData || []);
+      setFeedback((feedbackData || []).map(f => ({ ...f, patients: f.patients || undefined })));
 
       // Fetch bills
-      let billsQuery = supabase.from('bills').select('*, patients(full_name, patient_id)');
+      let billsQuery = supabase.from('bills').select('*, patients!fk_bills_patient(full_name, patient_id)');
       if (isBranchOperator && profile?.branch_id) {
         billsQuery = billsQuery.eq('branch_id', profile.branch_id);
       }
