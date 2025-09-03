@@ -160,8 +160,10 @@ const Dashboard = () => {
       const { data: branchesData } = await branchesQuery;
       setBranches(branchesData || []);
 
-      // Fetch patients
-      let patientsQuery = supabase.from('patients').select('*');
+      // Fetch patients with sorting by created_at DESC (latest first)
+      let patientsQuery = supabase.from('patients')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (isBranchOperator && profile?.branch_id) {
         patientsQuery = patientsQuery.eq('branch_id', profile.branch_id);
       }
