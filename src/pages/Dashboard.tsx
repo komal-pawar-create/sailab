@@ -171,7 +171,7 @@ const Dashboard = () => {
       setPatients(patientsData || []);
 
       // Fetch test reports
-      let reportsQuery = supabase.from('test_reports').select('*, patients(full_name)');
+      let reportsQuery = supabase.from('test_reports').select('*, patients!test_reports_patient_id_fkey(full_name)');
       if (isBranchOperator && profile?.branch_id) {
         reportsQuery = reportsQuery.eq('branch_id', profile.branch_id);
       }
