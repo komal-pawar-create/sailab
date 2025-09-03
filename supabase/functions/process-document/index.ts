@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.53.0";
-import { PDFDocument, rgb } from "https://cdn.skypack.dev/pdf-lib@1.17.1?dts";
+import { PDFDocument, rgb, StandardFonts } from "https://cdn.skypack.dev/pdf-lib@1.17.1?dts";
+import mammoth from "https://esm.sh/mammoth@1.6.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,7 +26,7 @@ serve(async (req) => {
     console.log('Processing document:', { documentId, documentType, hasLetterhead: !!letterheadUrl, fileName });
     
     // Check if file type is supported
-    const supportedExtensions = ['.pdf', '.jpg', '.jpeg', '.png'];
+    const supportedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx'];
     const fileExtension = fileName.toLowerCase().match(/\.[^.]+$/)?.[0];
     
     if (!fileExtension || !supportedExtensions.includes(fileExtension)) {
@@ -35,7 +36,7 @@ serve(async (req) => {
           error: 'UNSUPPORTED_FILE_TYPE',
           message: `File type "${fileExtension || 'unknown'}" is not supported for letterhead processing.`,
           supportedTypes: supportedExtensions,
-          details: 'Only PDF and image files (JPG, JPEG, PNG) can have letterheads applied. Other document types like Word documents (.docx, .doc) need to be converted to PDF first.'
+          details: 'Supported file types: PDF, images (JPG, JPEG, PNG), and Word documents (DOC, DOCX).'
         }),
         { 
           status: 400, 
@@ -82,6 +83,10 @@ serve(async (req) => {
         }
       }
 
+      // Embed standard fonts for text rendering
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
       // Handle different document types
       if (originalFileUrl && (fileName.toLowerCase().endsWith('.pdf'))) {
         // If original is a PDF, load it and add letterhead to each page
@@ -106,6 +111,142 @@ serve(async (req) => {
               opacity: 0.3, // Make letterhead semi-transparent
             });
           }
+        }
+      } else if (originalFileUrl && (fileName.toLowerCase().match(/\.(doc|docx)$/))) {
+        // Handle Word documents
+        console.log('Processing Word document');
+        const originalResponse = await fetch(originalFileUrl);
+        const docBytes = await originalResponse.arrayBuffer();
+        
+        try {
+          // Extract text and HTML from the Word document
+          const result = await mammoth.extractRawText({ arrayBuffer: docBytes });
+          const htmlResult = await mammoth.convertToHtml({ arrayBuffer: docBytes });
+          
+          console.log('Extracted text from Word document, length:', result.value.length);
+          
+          // Process the text content into paragraphs
+          const paragraphs = result.value.split('\n\n').filter(p => p.trim());
+          
+          // Helper function to add a new page with letterhead
+          const addPageWithLetterhead = () => {
+            const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
+            
+            if (letterheadImage) {
+              const { width, height } = page.getSize();
+              page.drawImage(letterheadImage, {
+                x: 0,
+                y: 0,
+                width: width,
+                height: height,
+                opacity: 0.25, // Slightly more subtle for text documents
+              });
+            }
+            
+            return page;
+          };
+          
+          // Start with the first page
+          let currentPage = addPageWithLetterhead();
+          let yPosition = 841.89 - 120; // Start below letterhead area (120pt from top)
+          const leftMargin = 60;
+          const rightMargin = 60;
+          const lineHeight = 18;
+          const fontSize = 11;
+          const titleFontSize = 14;
+          const maxWidth = 595.28 - leftMargin - rightMargin;
+          const bottomMargin = 100;
+          
+          // Process each paragraph
+          for (let i = 0; i < paragraphs.length; i++) {
+            const paragraph = paragraphs[i].trim();
+            
+            if (!paragraph) continue;
+            
+            // Determine if this is a title (simple heuristic: short lines, all caps, or specific patterns)
+            const isTitle = paragraph.length < 50 && 
+                          (paragraph === paragraph.toUpperCase() || 
+                           paragraph.startsWith('Subject:') || 
+                           paragraph.startsWith('RE:') ||
+                           paragraph.startsWith('To:') ||
+                           paragraph.startsWith('From:'));
+            
+            const currentFont = isTitle ? helveticaBoldFont : helveticaFont;
+            const currentFontSize = isTitle ? titleFontSize : fontSize;
+            
+            // Split long paragraphs into lines that fit the page width
+            const words = paragraph.split(' ');
+            let currentLine = '';
+            const lines = [];
+            
+            for (const word of words) {
+              const testLine = currentLine ? `${currentLine} ${word}` : word;
+              const testWidth = currentFont.widthOfTextAtSize(testLine, currentFontSize);
+              
+              if (testWidth > maxWidth) {
+                if (currentLine) {
+                  lines.push(currentLine);
+                  currentLine = word;
+                } else {
+                  // Single word is too long, add it anyway
+                  lines.push(word);
+                  currentLine = '';
+                }
+              } else {
+                currentLine = testLine;
+              }
+            }
+            
+            if (currentLine) {
+              lines.push(currentLine);
+            }
+            
+            // Check if we need a new page
+            const requiredSpace = lines.length * lineHeight + (isTitle ? 30 : 20);
+            if (yPosition - requiredSpace < bottomMargin) {
+              currentPage = addPageWithLetterhead();
+              yPosition = 841.89 - 120;
+            }
+            
+            // Draw the lines
+            for (const line of lines) {
+              currentPage.drawText(line, {
+                x: leftMargin,
+                y: yPosition,
+                size: currentFontSize,
+                font: currentFont,
+                color: rgb(0, 0, 0),
+              });
+              yPosition -= lineHeight;
+            }
+            
+            // Add extra space after paragraphs
+            yPosition -= isTitle ? 15 : 10;
+          }
+          
+        } catch (extractError) {
+          console.error('Error extracting text from Word document:', extractError);
+          // Fallback to creating a simple page with error message
+          const page = pdfDoc.addPage([595.28, 841.89]);
+          
+          if (letterheadImage) {
+            const { width, height } = page.getSize();
+            page.drawImage(letterheadImage, {
+              x: 0,
+              y: 0,
+              width: width,
+              height: height,
+              opacity: 0.25,
+            });
+          }
+          
+          page.drawText('Unable to extract content from Word document.', {
+            x: 60,
+            y: 700,
+            size: 12,
+            font: helveticaFont,
+            color: rgb(0, 0, 0),
+          });
         }
       } else if (originalFileUrl && (fileName.toLowerCase().match(/\.(jpg|jpeg|png)$/))) {
         // If original is an image, create a PDF with the image

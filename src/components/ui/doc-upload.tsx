@@ -95,7 +95,7 @@ export const DocUpload = ({ onFileUploaded, patientName, label = "Upload Word Do
         <input
           id="doc-file-input"
           type="file"
-          accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+          accept=".doc,.docx,.pdf,.jpg,.jpeg,.png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,image/jpeg,image/png"
           onChange={handleFileUpload}
           className="hidden"
         />

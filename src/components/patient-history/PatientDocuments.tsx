@@ -349,7 +349,11 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
                          doc.file_type?.toLowerCase().includes('image') || 
                          doc.file_type?.toLowerCase().includes('jpg') || 
                          doc.file_type?.toLowerCase().includes('jpeg') || 
-                         doc.file_type?.toLowerCase().includes('png') ? (
+                         doc.file_type?.toLowerCase().includes('png') ||
+                         doc.file_type?.toLowerCase().includes('doc') ||
+                         doc.file_type?.toLowerCase().includes('word') ||
+                         doc.file_name?.toLowerCase().endsWith('.doc') ||
+                         doc.file_name?.toLowerCase().endsWith('.docx') ? (
                           hasLetterhead ? (
                             <DropdownMenuItem onClick={() => downloadDocument(doc, true)}>
                               <Layers className="h-4 w-4 mr-2" />
