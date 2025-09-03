@@ -122,7 +122,7 @@ const Dashboard = () => {
   }, [user, profile, loading, navigate]);
 
   useEffect(() => {
-    if (user && profile && profile.role !== 'super_admin' && profile.role !== 'lab_admin') {
+    if (user && profile && profile.role !== 'super_admin') {
       // Fetch branch details if user has branch_id
       if (profile.branch_id) {
         fetchBranchDetails();
