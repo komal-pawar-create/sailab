@@ -988,6 +988,10 @@ export type Database = {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
       }
+      get_email_by_username: {
+        Args: { input_username: string }
+        Returns: string
+      }
       get_next_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
