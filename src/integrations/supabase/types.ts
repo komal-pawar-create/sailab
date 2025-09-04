@@ -151,10 +151,15 @@ export type Database = {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          bank_account_number: string | null
+          bank_ifsc_code: string | null
+          bank_name: string | null
           branch_code: string
           city: string | null
           created_at: string
           created_by: string
+          footer_text: string | null
+          gst_number: string | null
           id: string
           lab_id: string | null
           letterhead_url: string | null
@@ -164,16 +169,25 @@ export type Database = {
           organization_id: string
           phone: string | null
           postal_code: string | null
+          registration_number: string | null
+          signature_url: string | null
           state: string | null
+          terms_conditions: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          bank_account_number?: string | null
+          bank_ifsc_code?: string | null
+          bank_name?: string | null
           branch_code: string
           city?: string | null
           created_at?: string
           created_by: string
+          footer_text?: string | null
+          gst_number?: string | null
           id?: string
           lab_id?: string | null
           letterhead_url?: string | null
@@ -183,16 +197,25 @@ export type Database = {
           organization_id: string
           phone?: string | null
           postal_code?: string | null
+          registration_number?: string | null
+          signature_url?: string | null
           state?: string | null
+          terms_conditions?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          bank_account_number?: string | null
+          bank_ifsc_code?: string | null
+          bank_name?: string | null
           branch_code?: string
           city?: string | null
           created_at?: string
           created_by?: string
+          footer_text?: string | null
+          gst_number?: string | null
           id?: string
           lab_id?: string | null
           letterhead_url?: string | null
@@ -202,8 +225,12 @@ export type Database = {
           organization_id?: string
           phone?: string | null
           postal_code?: string | null
+          registration_number?: string | null
+          signature_url?: string | null
           state?: string | null
+          terms_conditions?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {

@@ -54,33 +54,41 @@ export const DocUploadWithLetterhead = ({
   }, [applyLetterhead, profile?.branch_id]);
 
   const fetchLetterheadAndLogo = async () => {
-    if (!profile?.branch_id || !profile?.lab_id) return;
+    if (!profile?.branch_id) return;
 
     try {
-      // First check branch for letterhead and logo
+      // First check branch for letterhead, logo, and signature
       const { data: branchData } = await supabase
         .from('branches')
-        .select('letterhead_url, logo_url')
+        .select('letterhead_url, logo_url, signature_url')
         .eq('id', profile.branch_id)
         .single();
 
-      if (branchData?.letterhead_url) {
-        setLetterheadUrl(branchData.letterhead_url);
-      } else {
-        // Fallback to lab letterhead
-        const { data: labData } = await supabase
-          .from('labs')
-          .select('letterhead_url')
-          .eq('id', profile.lab_id)
-          .single();
-        
-        if (labData?.letterhead_url) {
-          setLetterheadUrl(labData.letterhead_url);
+      if (branchData) {
+        if (branchData.letterhead_url) {
+          setLetterheadUrl(branchData.letterhead_url);
+        }
+        if (branchData.logo_url) {
+          setLogoUrl(branchData.logo_url);
         }
       }
 
-      if (branchData?.logo_url) {
-        setLogoUrl(branchData.logo_url);
+      // If no letterhead/logo in branch, check lab
+      if ((!branchData?.letterhead_url || !branchData?.logo_url) && profile.lab_id) {
+        const { data: labData } = await supabase
+          .from('labs')
+          .select('letterhead_url, logo_url')
+          .eq('id', profile.lab_id)
+          .single();
+
+        if (labData) {
+          if (!letterheadUrl && labData.letterhead_url) {
+            setLetterheadUrl(labData.letterhead_url);
+          }
+          if (!logoUrl && labData.logo_url) {
+            setLogoUrl(labData.logo_url);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching letterhead and logo:', error);

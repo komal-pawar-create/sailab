@@ -31,16 +31,16 @@ interface LabProfile {
   city?: string;
   state?: string;
   postal_code?: string;
-  logo_url?: string;
-  signature_url?: string;
-  registration_number?: string;
-  gst_number?: string;
-  website?: string;
-  bank_name?: string;
-  bank_account_number?: string;
-  bank_ifsc_code?: string;
-  footer_text?: string;
-  terms_conditions?: string;
+  logo_url?: string | null;
+  signature_url?: string | null;
+  registration_number?: string | null;
+  gst_number?: string | null;
+  website?: string | null;
+  bank_name?: string | null;
+  bank_account_number?: string | null;
+  bank_ifsc_code?: string | null;
+  footer_text?: string | null;
+  terms_conditions?: string | null;
 }
 
 export const BillPrint = ({ bill }: BillPrintProps) => {
@@ -55,12 +55,14 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
   }, [profile, bill]);
 
   const fetchLabProfile = async () => {
+    if (!profile) return;
+
     // Set default lab profile first
     const defaultLabProfile: LabProfile = {
       name: 'Lab Name',
       phone: 'Contact Number',
-      logo_url: undefined,
-      signature_url: undefined,
+      logo_url: null,
+      signature_url: null,
       terms_conditions: 'Terms and conditions apply',
       address_line1: '',
       address_line2: '',
@@ -72,55 +74,83 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
       bank_account_number: '',
       bank_ifsc_code: '',
       registration_number: '',
-      gst_number: ''
+      gst_number: '',
+      footer_text: ''
     };
 
-    if (!profile?.lab_id) {
-      // If no lab_id, try to fetch any lab in the organization
-      if (profile?.branch_id) {
-        try {
-          const { data: branchData } = await supabase
-            .from('branches')
-            .select('organization_id')
-            .eq('id', profile.branch_id)
-            .single();
-
-          if (branchData?.organization_id) {
-            const { data: labsData } = await supabase
-              .from('labs')
-              .select('*')
-              .eq('organization_id', branchData.organization_id)
-              .limit(1)
-              .single();
-
-            if (labsData) {
-              setLabProfile({ ...defaultLabProfile, ...labsData });
-              return;
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching lab by organization:', error);
-        }
-      }
-      
-      setLabProfile(defaultLabProfile);
-      return;
-    }
-
     try {
-      const { data, error } = await supabase
-        .from('labs')
-        .select('*')
-        .eq('id', profile.lab_id)
-        .single();
-
-      if (!error && data) {
-        setLabProfile({ ...defaultLabProfile, ...data });
-      } else {
-        setLabProfile(defaultLabProfile);
+      // First, try to get branch-specific settings
+      let branchData = null;
+      if (profile.branch_id) {
+        const { data } = await supabase
+          .from('branches')
+          .select('*')
+          .eq('id', profile.branch_id)
+          .single();
+        
+        branchData = data;
       }
+
+      // Then, try to fetch lab profile
+      let labData = null;
+      
+      if (profile.lab_id) {
+        const { data } = await supabase
+          .from('labs')
+          .select('*')
+          .eq('id', profile.lab_id)
+          .single();
+        
+        labData = data;
+      }
+
+      // If no lab_id but have branch, try to get lab through branch
+      if (!labData && branchData?.lab_id) {
+        const { data } = await supabase
+          .from('labs')
+          .select('*')
+          .eq('id', branchData.lab_id)
+          .single();
+        
+        labData = data;
+      }
+
+      // If still no lab data and have branch, try to get lab through organization
+      if (!labData && branchData?.organization_id) {
+        const { data } = await supabase
+          .from('labs')
+          .select('*')
+          .eq('organization_id', branchData.organization_id)
+          .limit(1)
+          .single();
+        
+        labData = data;
+      }
+
+      // Merge branch and lab data, with branch data taking priority
+      const mergedProfile: LabProfile = {
+        name: branchData?.name || labData?.name || defaultLabProfile.name,
+        phone: branchData?.phone || labData?.phone || defaultLabProfile.phone,
+        address_line1: branchData?.address_line1 || labData?.address_line1 || defaultLabProfile.address_line1,
+        address_line2: branchData?.address_line2 || labData?.address_line2 || defaultLabProfile.address_line2,
+        city: branchData?.city || labData?.city || defaultLabProfile.city,
+        state: branchData?.state || labData?.state || defaultLabProfile.state,
+        postal_code: branchData?.postal_code || labData?.postal_code || defaultLabProfile.postal_code,
+        logo_url: branchData?.logo_url || labData?.logo_url || defaultLabProfile.logo_url,
+        signature_url: branchData?.signature_url || labData?.signature_url || defaultLabProfile.signature_url,
+        website: branchData?.website || labData?.website || defaultLabProfile.website,
+        registration_number: branchData?.registration_number || labData?.registration_number || defaultLabProfile.registration_number,
+        gst_number: branchData?.gst_number || labData?.gst_number || defaultLabProfile.gst_number,
+        bank_name: branchData?.bank_name || labData?.bank_name || defaultLabProfile.bank_name,
+        bank_account_number: branchData?.bank_account_number || labData?.bank_account_number || defaultLabProfile.bank_account_number,
+        bank_ifsc_code: branchData?.bank_ifsc_code || labData?.bank_ifsc_code || defaultLabProfile.bank_ifsc_code,
+        footer_text: branchData?.footer_text || labData?.footer_text || defaultLabProfile.footer_text,
+        terms_conditions: branchData?.terms_conditions || labData?.terms_conditions || defaultLabProfile.terms_conditions
+      };
+
+      setLabProfile(mergedProfile);
     } catch (error) {
-      console.error('Error fetching lab profile:', error);
+      console.error('Error fetching profile:', error);
       setLabProfile(defaultLabProfile);
     }
   };

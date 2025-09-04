@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import SuperAdmin from "./pages/SuperAdmin";
 import LabProfile from "./pages/LabProfile";
+import BranchSettings from "./pages/BranchSettings";
 import PatientHistory from "./pages/PatientHistory";
 import DataManagement from "./pages/DataManagement";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/super-admin" element={<SuperAdmin />} />
           <Route path="/super-admin/data-management" element={<DataManagement />} />
           <Route path="/lab-profile" element={<LabProfile />} />
+          <Route path="/branch-settings" element={<BranchSettings />} />
           <Route path="/patient-history" element={<PatientHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
