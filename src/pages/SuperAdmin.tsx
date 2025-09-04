@@ -13,6 +13,7 @@ import { AddBranchForm } from '@/components/forms/AddBranchForm';
 import { AddUserForm } from '@/components/forms/AddUserForm';
 import { AddTestTypeForm } from '@/components/forms/AddTestTypeForm';
 import EditUserDialog from '@/components/forms/EditUserDialog';
+import EditBranchDialog from '@/components/forms/EditBranchDialog';
 import { Edit, Database, Trash2 } from 'lucide-react';
 
 interface Organization {
@@ -27,12 +28,17 @@ interface Organization {
 interface Branch {
   id: string;
   name: string;
+  branch_code: string;
   location: string;
   phone: string;
+  organization_id: string;
+  lab_id?: string;
   organization: {
+    id: string;
     name: string;
   };
   lab: {
+    id: string;
     name: string;
   } | null;
 }
@@ -60,6 +66,8 @@ export default function SuperAdmin() {
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [isEditBranchDialogOpen, setIsEditBranchDialogOpen] = useState(false);
 
   useEffect(() => {
     // Allow both super_admin and lab_admin to access this page
@@ -79,8 +87,8 @@ export default function SuperAdmin() {
         supabase.from('organizations').select('*').order('name'),
         supabase.from('branches').select(`
           *,
-          organization:organizations(name),
-          lab:labs(name)
+          organization:organizations(id, name),
+          lab:labs(id, name)
         `).order('name'),
         supabase.from('profiles').select(`
           *,
@@ -92,7 +100,7 @@ export default function SuperAdmin() {
       ]);
 
       setOrganizations(organizationsRes.data || []);
-      setBranches(branchesRes.data || []);
+      setBranches(branchesRes.data as Branch[] || []);
       setUsers(usersRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -243,6 +251,7 @@ export default function SuperAdmin() {
                       <TableHead>Associated Lab</TableHead>
                       <TableHead>Location</TableHead>
                       <TableHead>Phone</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -253,6 +262,18 @@ export default function SuperAdmin() {
                         <TableCell>{branch.lab?.name || '-'}</TableCell>
                         <TableCell>{branch.location || '-'}</TableCell>
                         <TableCell>{branch.phone || '-'}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingBranch(branch);
+                              setIsEditBranchDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -323,6 +344,16 @@ export default function SuperAdmin() {
         onClose={() => {
           setIsEditDialogOpen(false);
           setEditingUser(null);
+        }}
+        onSuccess={fetchData}
+      />
+      
+      <EditBranchDialog
+        branch={editingBranch}
+        isOpen={isEditBranchDialogOpen}
+        onClose={() => {
+          setIsEditBranchDialogOpen(false);
+          setEditingBranch(null);
         }}
         onSuccess={fetchData}
       />
