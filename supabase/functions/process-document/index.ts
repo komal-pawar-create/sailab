@@ -443,7 +443,7 @@ serve(async (req) => {
               y: 0,
               width: width,
               height: height,
-              opacity: 0.3, // Make letterhead semi-transparent
+              opacity: 0.85, // Make letterhead more prominent
             });
           }
         }
@@ -479,7 +479,7 @@ serve(async (req) => {
                 y: 0,
                 width: width,
                 height: height,
-                opacity: 0.15, // Very subtle for text documents
+                opacity: 0.85, // Make letterhead more prominent
               });
             }
             
@@ -536,7 +536,7 @@ serve(async (req) => {
               y: 0,
               width: width,
               height: height,
-              opacity: 0.15,
+              opacity: 0.85, // Make letterhead more prominent
             });
           }
           
@@ -572,7 +572,7 @@ serve(async (req) => {
             y: 0,
             width: width,
             height: height,
-            opacity: 0.3,
+            opacity: 0.85, // Make letterhead more prominent
           });
         }
         
@@ -598,7 +598,7 @@ serve(async (req) => {
             y: 0,
             width: width,
             height: height,
-            opacity: 0.3,
+            opacity: 0.85, // Make letterhead more prominent
           });
         }
         
