@@ -357,8 +357,28 @@ serve(async (req) => {
     console.log('Processing document:', { documentId, documentType, hasLetterhead: !!letterheadUrl, fileName });
     
     // Check if file type is supported
-    const supportedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx'];
+    const supportedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.docx'];
     const fileExtension = fileName.toLowerCase().match(/\.[^.]+$/)?.[0];
+    
+    // Explicitly reject .doc files
+    if (fileExtension === '.doc') {
+      console.warn('DOC file not supported:', fileName);
+      return new Response(
+        JSON.stringify({
+          error: 'DOC_NOT_SUPPORTED',
+          message: '.doc files are not supported. Please convert to .docx (Word 2007 or later) format before uploading.',
+          supportedTypes: supportedExtensions,
+          details: 'The older .doc format cannot be processed. Please use Word to save your document as .docx format.'
+        }),
+        { 
+          status: 400, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
     
     if (!fileExtension || !supportedExtensions.includes(fileExtension)) {
       console.warn('Unsupported file type:', fileExtension);
@@ -367,7 +387,7 @@ serve(async (req) => {
           error: 'UNSUPPORTED_FILE_TYPE',
           message: `File type "${fileExtension || 'unknown'}" is not supported for letterhead processing.`,
           supportedTypes: supportedExtensions,
-          details: 'Supported file types: PDF, images (JPG, JPEG, PNG), and Word documents (DOC, DOCX).'
+          details: 'Supported file types: PDF, images (JPG, JPEG, PNG), and Word documents (DOCX only, not DOC).'
         }),
         { 
           status: 400, 

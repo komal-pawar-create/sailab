@@ -259,21 +259,26 @@ export const DocUploadWithLetterhead = ({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={uploading || processing}
-          onClick={() => document.getElementById('doc-letterhead-input')?.click()}
-        >
-          <FileText className="w-4 h-4 mr-2" />
-          {uploading ? "Uploading..." : processing ? "Processing..." : label}
-        </Button>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={uploading || processing}
+            onClick={() => document.getElementById('doc-letterhead-input')?.click()}
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            {uploading ? "Uploading..." : processing ? "Processing..." : label}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Supported formats: PDF, DOCX (Word 2007+), JPG, PNG. Note: .doc files are not supported - please convert to .docx
+        </p>
         <input
           id="doc-letterhead-input"
           type="file"
-          accept=".doc,.docx,.pdf,.jpg,.jpeg,.png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,image/jpeg,image/png"
+          accept=".docx,.pdf,.jpg,.jpeg,.png,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,image/jpeg,image/png"
           onChange={handleFileUpload}
           className="hidden"
         />
