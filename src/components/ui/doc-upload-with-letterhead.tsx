@@ -275,14 +275,14 @@ export const DocUploadWithLetterhead = ({
         <p className="text-xs text-muted-foreground">
           Supported formats: PDF, DOCX (Word 2007+), JPG, PNG. Note: .doc files are not supported - please convert to .docx
         </p>
-        <input
-          id="doc-letterhead-input"
-          type="file"
-          accept=".docx,.pdf,.jpg,.jpeg,.png,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,image/jpeg,image/png"
-          onChange={handleFileUpload}
-          className="hidden"
-        />
       </div>
+      <input
+        id="doc-letterhead-input"
+        type="file"
+        accept=".docx,.pdf,.jpg,.jpeg,.png,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,image/jpeg,image/png"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
       
       {uploadedFiles.length > 0 && (
         <div className="space-y-1">
