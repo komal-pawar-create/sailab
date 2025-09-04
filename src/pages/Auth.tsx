@@ -67,15 +67,15 @@ const Auth = () => {
         setPassword('admin123');
         break;
       case 'operator1':
-        setUsername('operator1');
+        setUsername('shirsath');
         setPassword('operator123');
         break;
       case 'operator2':
-        setUsername('operator2');
+        setUsername('saanvi');
         setPassword('operator123');
         break;
       case 'operator3':
-        setUsername('operator3');
+        setUsername('sanjeevan');
         setPassword('operator123');
         break;
     }
