@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, DollarSign, Calendar, Star, Activity, Clock } from "lucide-react";
+import { FileText, DollarSign, Calendar, Star, Activity, Clock, UserCheck, Stethoscope } from "lucide-react";
 import { format } from "date-fns";
 
 interface PatientOverviewProps {
@@ -14,7 +15,11 @@ interface PatientOverviewProps {
     phone?: string;
     email?: string;
     age?: number;
+    age_in_months?: number;
     gender?: string;
+    patient_history?: string;
+    referred_by_doctor_name?: string;
+    referred_by_doctor_phone?: string;
     created_at: string;
   };
 }
@@ -265,10 +270,16 @@ export default function PatientOverview({ patient }: PatientOverviewProps) {
                 <span className="font-medium">{patient.email}</span>
               </div>
             )}
-            {patient.age && (
+            {(patient.age_in_months || patient.age) && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Age</span>
-                <span className="font-medium">{patient.age} years</span>
+                <span className="font-medium">
+                  {patient.age_in_months 
+                    ? patient.age_in_months < 24 
+                      ? `${patient.age_in_months} months`
+                      : `${Math.floor(patient.age_in_months / 12)} years`
+                    : `${patient.age} years`}
+                </span>
               </div>
             )}
             {patient.gender && (
@@ -283,6 +294,45 @@ export default function PatientOverview({ patient }: PatientOverviewProps) {
                 {format(new Date(patient.created_at), "PPP")}
               </span>
             </div>
+            
+            {/* Patient History Section */}
+            {patient.patient_history && (
+              <>
+                <Separator className="my-3" />
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">Patient History</span>
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap">{patient.patient_history}</p>
+                </div>
+              </>
+            )}
+            
+            {/* Referral Information */}
+            {(patient.referred_by_doctor_name || patient.referred_by_doctor_phone) && (
+              <>
+                <Separator className="my-3" />
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Stethoscope className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">Referred By</span>
+                  </div>
+                  {patient.referred_by_doctor_name && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Doctor Name</span>
+                      <span className="text-sm font-medium">{patient.referred_by_doctor_name}</span>
+                    </div>
+                  )}
+                  {patient.referred_by_doctor_phone && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Doctor Phone</span>
+                      <span className="text-sm font-medium">{patient.referred_by_doctor_phone}</span>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 

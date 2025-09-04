@@ -24,7 +24,11 @@ interface Patient {
   phone?: string;
   email?: string;
   age?: number;
+  age_in_months?: number;
   gender?: string;
+  patient_history?: string;
+  referred_by_doctor_name?: string;
+  referred_by_doctor_phone?: string;
   lab_id: string;
   branch_id?: string;
   created_at: string;
@@ -131,18 +135,41 @@ export default function PatientHistory() {
             </div>
 
             {selectedPatient && (
-              <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                <User className="h-8 w-8 text-muted-foreground" />
-                <div className="flex-1">
-                  <h3 className="font-semibold">{selectedPatient.full_name}</h3>
-                  <div className="flex gap-4 text-sm text-muted-foreground">
-                    <span>ID: {selectedPatient.patient_id}</span>
-                    {selectedPatient.phone && <span>Phone: {selectedPatient.phone}</span>}
-                    {selectedPatient.email && <span>Email: {selectedPatient.email}</span>}
-                    {selectedPatient.age && <span>Age: {selectedPatient.age}</span>}
-                    {selectedPatient.gender && <span>Gender: {selectedPatient.gender}</span>}
+              <div className="flex flex-col gap-4 p-4 bg-muted rounded-lg">
+                <div className="flex items-center gap-4">
+                  <User className="h-8 w-8 text-muted-foreground" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{selectedPatient.full_name}</h3>
+                    <div className="flex gap-4 text-sm text-muted-foreground">
+                      <span>ID: {selectedPatient.patient_id}</span>
+                      {selectedPatient.phone && <span>Phone: {selectedPatient.phone}</span>}
+                      {selectedPatient.age_in_months ? (
+                        <span>Age: {selectedPatient.age_in_months < 24 
+                          ? `${selectedPatient.age_in_months} months` 
+                          : `${Math.floor(selectedPatient.age_in_months / 12)} years`}
+                        </span>
+                      ) : selectedPatient.age && (
+                        <span>Age: {selectedPatient.age} years</span>
+                      )}
+                      {selectedPatient.gender && <span>Gender: {selectedPatient.gender}</span>}
+                    </div>
                   </div>
                 </div>
+                {selectedPatient.patient_history && (
+                  <div className="text-sm">
+                    <span className="font-medium text-muted-foreground">History:</span>
+                    <p className="mt-1 text-foreground">{selectedPatient.patient_history}</p>
+                  </div>
+                )}
+                {(selectedPatient.referred_by_doctor_name || selectedPatient.referred_by_doctor_phone) && (
+                  <div className="text-sm">
+                    <span className="font-medium text-muted-foreground">Referred by:</span>
+                    <div className="mt-1 text-foreground">
+                      {selectedPatient.referred_by_doctor_name && <p>{selectedPatient.referred_by_doctor_name}</p>}
+                      {selectedPatient.referred_by_doctor_phone && <p>{selectedPatient.referred_by_doctor_phone}</p>}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
