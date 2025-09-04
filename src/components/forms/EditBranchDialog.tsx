@@ -318,14 +318,14 @@ export default function EditBranchDialog({ branch, isOpen, onClose, onSuccess }:
               <div>
                 <Label htmlFor="lab">Associated Lab</Label>
                 <Select
-                  value={formData.lab_id}
-                  onValueChange={(value) => setFormData({ ...formData, lab_id: value })}
+                  value={formData.lab_id || 'none'}
+                  onValueChange={(value) => setFormData({ ...formData, lab_id: value === 'none' ? '' : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select lab (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Lab</SelectItem>
+                    <SelectItem value="none">No Lab</SelectItem>
                     {labs
                       .filter(lab => lab.organization_id === formData.organization_id)
                       .map((lab) => (
