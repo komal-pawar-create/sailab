@@ -196,7 +196,7 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
           branch_id: branchId,
           created_by: createdBy
         })
-        .select('*, patients(full_name, patient_id, phone, email, age, gender)')
+        .select('*, patients(full_name, patient_id, phone, age, gender)')
         .single();
 
       if (error) throw error;
