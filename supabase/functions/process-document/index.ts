@@ -8,6 +8,337 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Medical report field patterns
+const MEDICAL_PATTERNS = {
+  patientName: /(?:PATIENT\s*NAME|NAME|MR\.|MRS\.|MS\.|MASTER)\s*:?\s*(.+?)(?:\n|$)/i,
+  age: /(?:AGE\/SEX|AGE|AGE\/GENDER|SEX\/AGE)\s*:?\s*(.+?)(?:\n|$)/i,
+  patientId: /(?:PATIENT\s*ID|ID|REG\.\s*NO\.?|REGISTRATION|LAB\s*NO\.?)\s*:?\s*(.+?)(?:\n|$)/i,
+  date: /(?:DATE|REPORT\s*DATE|COLLECTION\s*DATE|TEST\s*DATE)\s*:?\s*(.+?)(?:\n|$)/i,
+  referredBy: /(?:REF\.\s*BY\s*DR\.?|REFERRED\s*BY|REF\s*BY|DOCTOR|DR\.?|REF\s*DR\.?)\s*:?\s*(.+?)(?:\n|$)/i,
+  testName: /(?:TEST\s*NAME|INVESTIGATION|TEST|EXAMINATION)\s*:?\s*(.+?)(?:\n|$)/i,
+  specimen: /(?:SPECIMEN|SAMPLE\s*TYPE|SAMPLE)\s*:?\s*(.+?)(?:\n|$)/i,
+  report: /(?:REPORT|TEST\s*REPORT|INVESTIGATION\s*REPORT|FINDINGS)\s*:?\s*(.+?)(?=IMPRESSION|CONCLUSION|COMMENT|NOTE|$)/si,
+  impression: /(?:IMPRESSION|CONCLUSION|COMMENT|DIAGNOSIS|NOTE)\s*:?\s*(.+?)(?=$)/si
+};
+
+// Helper function to detect if text is a medical report
+function isMedicalReport(text: string): boolean {
+  const patterns = Object.values(MEDICAL_PATTERNS);
+  const matches = patterns.filter(pattern => pattern.test(text));
+  return matches.length >= 3; // If at least 3 medical fields are found
+}
+
+// Helper function to parse medical report fields
+function parseMedicalReport(text: string) {
+  const fields: any = {};
+  
+  for (const [key, pattern] of Object.entries(MEDICAL_PATTERNS)) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      fields[key] = match[1].trim().replace(/\s+/g, ' ');
+    }
+  }
+  
+  // Clean up the report and impression to remove redundant patterns
+  if (fields.report) {
+    fields.report = fields.report
+      .replace(/^REPORT\s*:?\s*/i, '')
+      .replace(/^TEST\s*REPORT\s*:?\s*/i, '')
+      .trim();
+  }
+  
+  if (fields.impression) {
+    fields.impression = fields.impression
+      .replace(/^IMPRESSION\s*:?\s*/i, '')
+      .replace(/^CONCLUSION\s*:?\s*/i, '')
+      .replace(/^COMMENT\s*:?\s*/i, '')
+      .trim();
+  }
+  
+  return fields;
+}
+
+// Helper function to draw a bordered box
+async function drawBorderedBox(page: any, x: number, y: number, width: number, height: number, borderWidth = 1) {
+  page.drawRectangle({
+    x,
+    y,
+    width,
+    height,
+    borderColor: rgb(0.2, 0.2, 0.2),
+    borderWidth,
+  });
+}
+
+// Helper function to wrap text with better control
+function wrapText(text: string, font: any, fontSize: number, maxWidth: number): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+  
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const width = font.widthOfTextAtSize(testLine, fontSize);
+    
+    if (width > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+  
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  
+  return lines;
+}
+
+// Helper function to render medical report in professional format
+async function renderMedicalReport(
+  page: any,
+  fields: any,
+  fonts: any,
+  startY: number,
+  pageWidth: number,
+  pageHeight: number
+): Promise<number> {
+  const leftMargin = 45;
+  const rightMargin = pageWidth - 45;
+  const contentWidth = rightMargin - leftMargin;
+  let currentY = startY;
+  
+  // Patient Information Box
+  const boxHeight = 100;
+  const boxY = currentY - boxHeight;
+  
+  // Draw the bordered box for patient info with rounded effect
+  await drawBorderedBox(page, leftMargin, boxY, contentWidth, boxHeight, 1);
+  
+  // Add subtle gray background to header box
+  page.drawRectangle({
+    x: leftMargin,
+    y: boxY,
+    width: contentWidth,
+    height: boxHeight,
+    color: rgb(0.98, 0.98, 0.98),
+    borderColor: rgb(0.3, 0.3, 0.3),
+    borderWidth: 1,
+  });
+  
+  // Render patient details in a structured two-column format
+  const col1X = leftMargin + 10;
+  const col1LabelX = col1X;
+  const col1ValueX = col1X + 90;
+  const col2X = pageWidth / 2;
+  const col2LabelX = col2X;
+  const col2ValueX = col2X + 80;
+  let infoY = currentY - 20;
+  
+  const renderField = (label: string, value: string, labelX: number, valueX: number, y: number, maxLength = 35) => {
+    if (value) {
+      // Label in bold
+      page.drawText(label, {
+        x: labelX,
+        y,
+        size: 10,
+        font: fonts.bold,
+        color: rgb(0.2, 0.2, 0.2),
+      });
+      
+      // Value in regular - truncate if too long
+      const displayValue = value.length > maxLength ? value.substring(0, maxLength) + '...' : value;
+      page.drawText(displayValue, {
+        x: valueX,
+        y,
+        size: 10,
+        font: fonts.regular,
+        color: rgb(0, 0, 0),
+      });
+    }
+  };
+  
+  // Left column
+  renderField("Patient Name:", fields.patientName || "—", col1LabelX, col1ValueX, infoY);
+  renderField("Age/Gender:", fields.age || "—", col1LabelX, col1ValueX, infoY - 20);
+  renderField("Patient ID:", fields.patientId || "—", col1LabelX, col1ValueX, infoY - 40);
+  
+  // Right column
+  renderField("Date:", fields.date || new Date().toLocaleDateString(), col2LabelX, col2ValueX, infoY);
+  renderField("Ref. By Dr:", fields.referredBy || "—", col2LabelX, col2ValueX, infoY - 20);
+  
+  // Test name if available (spanning width)
+  if (fields.testName) {
+    renderField("Test:", fields.testName, col1LabelX, col1ValueX, infoY - 60, 70);
+  }
+  
+  // Specimen if available
+  if (fields.specimen) {
+    renderField("Specimen:", fields.specimen, col2LabelX, col2ValueX, infoY - 60);
+  }
+  
+  currentY = boxY - 25;
+  
+  // Report Section
+  if (fields.report) {
+    // Draw separator line
+    page.drawLine({
+      start: { x: leftMargin, y: currentY },
+      end: { x: rightMargin, y: currentY },
+      thickness: 0.5,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+    
+    currentY -= 20;
+    
+    // Section header
+    page.drawText("REPORT", {
+      x: leftMargin,
+      y: currentY,
+      size: 12,
+      font: fonts.bold,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+    
+    currentY -= 18;
+    
+    // Report content with justified text
+    const reportLines = wrapText(fields.report, fonts.regular, 10, contentWidth);
+    for (const line of reportLines) {
+      if (currentY < 120) break; // Leave space for footer
+      
+      page.drawText(line, {
+        x: leftMargin,
+        y: currentY,
+        size: 10,
+        font: fonts.regular,
+        color: rgb(0, 0, 0),
+        lineHeight: 14,
+      });
+      currentY -= 14;
+    }
+  }
+  
+  // Impression/Conclusion Section
+  if (fields.impression && currentY > 150) {
+    currentY -= 15;
+    
+    // Draw separator line
+    page.drawLine({
+      start: { x: leftMargin, y: currentY },
+      end: { x: rightMargin, y: currentY },
+      thickness: 0.5,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+    
+    currentY -= 20;
+    
+    // Section header
+    page.drawText("IMPRESSION", {
+      x: leftMargin,
+      y: currentY,
+      size: 12,
+      font: fonts.bold,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+    
+    currentY -= 18;
+    
+    // Impression content
+    const impressionLines = wrapText(fields.impression, fonts.regular, 10, contentWidth);
+    for (const line of impressionLines) {
+      if (currentY < 120) break;
+      
+      page.drawText(line, {
+        x: leftMargin,
+        y: currentY,
+        size: 10,
+        font: fonts.regular,
+        color: rgb(0, 0, 0),
+        lineHeight: 14,
+      });
+      currentY -= 14;
+    }
+  }
+  
+  // Add signature line at bottom if space allows
+  if (currentY > 100) {
+    currentY = Math.min(currentY - 30, 150);
+    
+    // Draw signature line
+    page.drawLine({
+      start: { x: rightMargin - 200, y: currentY },
+      end: { x: rightMargin, y: currentY },
+      thickness: 0.5,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+    
+    page.drawText("Authorized Signature", {
+      x: rightMargin - 180,
+      y: currentY - 15,
+      size: 9,
+      font: fonts.regular,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+  }
+  
+  return currentY;
+}
+
+// Helper function to render general document with better formatting
+async function renderGeneralDocument(
+  page: any,
+  text: string,
+  fonts: any,
+  startY: number,
+  pageWidth: number,
+  pageHeight: number
+): Promise<number> {
+  const leftMargin = 45;
+  const rightMargin = pageWidth - 45;
+  const contentWidth = rightMargin - leftMargin;
+  let currentY = startY;
+  
+  // Split text into paragraphs
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+  
+  for (const paragraph of paragraphs) {
+    if (currentY < 100) break; // Leave space for footer
+    
+    // Check if this is a title or header
+    const isTitle = paragraph.length < 100 && 
+                   (paragraph === paragraph.toUpperCase() || 
+                    paragraph.match(/^(Subject|RE|To|From|Date|Ref):/i) ||
+                    paragraph.endsWith(':'));
+    
+    const font = isTitle ? fonts.bold : fonts.regular;
+    const fontSize = isTitle ? 12 : 10;
+    const lineHeight = isTitle ? 18 : 14;
+    
+    // Wrap paragraph text
+    const lines = wrapText(paragraph, font, fontSize, contentWidth);
+    
+    for (const line of lines) {
+      if (currentY < 100) break;
+      
+      page.drawText(line, {
+        x: leftMargin,
+        y: currentY,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 0),
+      });
+      currentY -= lineHeight;
+    }
+    
+    // Add extra space after paragraphs
+    currentY -= isTitle ? 12 : 8;
+  }
+  
+  return currentY;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -86,6 +417,10 @@ serve(async (req) => {
       // Embed standard fonts for text rendering
       const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const fonts = {
+        regular: helveticaFont,
+        bold: helveticaBoldFont
+      };
 
       // Handle different document types
       if (originalFileUrl && (fileName.toLowerCase().endsWith('.pdf'))) {
@@ -113,20 +448,20 @@ serve(async (req) => {
           }
         }
       } else if (originalFileUrl && (fileName.toLowerCase().match(/\.(doc|docx)$/))) {
-        // Handle Word documents
+        // Handle Word documents with enhanced formatting
         console.log('Processing Word document');
         const originalResponse = await fetch(originalFileUrl);
         const docBytes = await originalResponse.arrayBuffer();
         
         try {
-          // Extract text and HTML from the Word document
+          // Extract text from the Word document
           const result = await mammoth.extractRawText({ arrayBuffer: docBytes });
-          const htmlResult = await mammoth.convertToHtml({ arrayBuffer: docBytes });
+          const extractedContent = result.value;
           
-          console.log('Extracted text from Word document, length:', result.value.length);
+          console.log('Extracted text from Word document, length:', extractedContent.length);
           
-          // Process the text content into paragraphs
-          const paragraphs = result.value.split('\n\n').filter(p => p.trim());
+          // Check if this is a medical report
+          const isMedical = isMedicalReport(extractedContent);
           
           // Helper function to add a new page with letterhead
           const addPageWithLetterhead = () => {
@@ -134,12 +469,17 @@ serve(async (req) => {
             
             if (letterheadImage) {
               const { width, height } = page.getSize();
+              // Determine letterhead opacity based on image dimensions
+              const imageAspectRatio = letterheadImage.width / letterheadImage.height;
+              const pageAspectRatio = width / height;
+              
+              // If letterhead is full page size, use it as background
               page.drawImage(letterheadImage, {
                 x: 0,
                 y: 0,
                 width: width,
                 height: height,
-                opacity: 0.25, // Slightly more subtle for text documents
+                opacity: 0.15, // Very subtle for text documents
               });
             }
             
@@ -148,80 +488,40 @@ serve(async (req) => {
           
           // Start with the first page
           let currentPage = addPageWithLetterhead();
-          let yPosition = 841.89 - 120; // Start below letterhead area (120pt from top)
-          const leftMargin = 60;
-          const rightMargin = 60;
-          const lineHeight = 18;
-          const fontSize = 11;
-          const titleFontSize = 14;
-          const maxWidth = 595.28 - leftMargin - rightMargin;
-          const bottomMargin = 100;
+          const pageHeight = 841.89;
+          const topMargin = letterheadImage ? 140 : 80; // More space if letterhead exists
+          let yPosition = pageHeight - topMargin;
           
-          // Process each paragraph
-          for (let i = 0; i < paragraphs.length; i++) {
-            const paragraph = paragraphs[i].trim();
+          if (isMedical) {
+            // Parse medical report fields
+            const fields = parseMedicalReport(extractedContent);
+            console.log('Detected medical report with fields:', Object.keys(fields));
             
-            if (!paragraph) continue;
+            // Render as medical report
+            const finalY = await renderMedicalReport(
+              currentPage,
+              fields,
+              fonts,
+              yPosition,
+              595.28,
+              pageHeight
+            );
             
-            // Determine if this is a title (simple heuristic: short lines, all caps, or specific patterns)
-            const isTitle = paragraph.length < 50 && 
-                          (paragraph === paragraph.toUpperCase() || 
-                           paragraph.startsWith('Subject:') || 
-                           paragraph.startsWith('RE:') ||
-                           paragraph.startsWith('To:') ||
-                           paragraph.startsWith('From:'));
-            
-            const currentFont = isTitle ? helveticaBoldFont : helveticaFont;
-            const currentFontSize = isTitle ? titleFontSize : fontSize;
-            
-            // Split long paragraphs into lines that fit the page width
-            const words = paragraph.split(' ');
-            let currentLine = '';
-            const lines = [];
-            
-            for (const word of words) {
-              const testLine = currentLine ? `${currentLine} ${word}` : word;
-              const testWidth = currentFont.widthOfTextAtSize(testLine, currentFontSize);
-              
-              if (testWidth > maxWidth) {
-                if (currentLine) {
-                  lines.push(currentLine);
-                  currentLine = word;
-                } else {
-                  // Single word is too long, add it anyway
-                  lines.push(word);
-                  currentLine = '';
-                }
-              } else {
-                currentLine = testLine;
-              }
+            // If content overflows, create additional pages
+            if (finalY < 100 && (fields.report || fields.impression)) {
+              // Content doesn't fit, might need second page
+              // For now, we've rendered what fits
             }
-            
-            if (currentLine) {
-              lines.push(currentLine);
-            }
-            
-            // Check if we need a new page
-            const requiredSpace = lines.length * lineHeight + (isTitle ? 30 : 20);
-            if (yPosition - requiredSpace < bottomMargin) {
-              currentPage = addPageWithLetterhead();
-              yPosition = 841.89 - 120;
-            }
-            
-            // Draw the lines
-            for (const line of lines) {
-              currentPage.drawText(line, {
-                x: leftMargin,
-                y: yPosition,
-                size: currentFontSize,
-                font: currentFont,
-                color: rgb(0, 0, 0),
-              });
-              yPosition -= lineHeight;
-            }
-            
-            // Add extra space after paragraphs
-            yPosition -= isTitle ? 15 : 10;
+          } else {
+            // Render as general document with improved formatting
+            await renderGeneralDocument(
+              currentPage,
+              extractedContent,
+              fonts,
+              yPosition,
+              595.28,
+              pageHeight
+            );
           }
           
         } catch (extractError) {
@@ -236,7 +536,7 @@ serve(async (req) => {
               y: 0,
               width: width,
               height: height,
-              opacity: 0.25,
+              opacity: 0.15,
             });
           }
           
