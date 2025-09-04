@@ -95,58 +95,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Sample Credentials Section */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-8">Try the Demo</h2>
-          <p className="text-gray-600 mb-8">
-            Use these sample credentials to explore different user roles and features:
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Admin</CardTitle>
-                <CardDescription>
-                  <code className="text-sm">admin@labmaster.com</code><br />
-                  <code className="text-sm">admin123</code>
-                </CardDescription>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Operator 1</CardTitle>
-                <CardDescription>
-                  <code className="text-sm">operator1@centrallab.com</code><br />
-                  <code className="text-sm">operator123</code>
-                </CardDescription>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Operator 2</CardTitle>
-                <CardDescription>
-                  <code className="text-sm">operator2@northlab.com</code><br />
-                  <code className="text-sm">operator123</code>
-                </CardDescription>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Operator 3</CardTitle>
-                <CardDescription>
-                  <code className="text-sm">operator3@westlab.com</code><br />
-                  <code className="text-sm">operator123</code>
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-          <div className="mt-8">
-            <Button asChild size="lg">
-              <Link to="/auth">Start Demo</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
     </div>
   );
 };

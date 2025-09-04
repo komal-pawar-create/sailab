@@ -60,27 +60,6 @@ const Auth = () => {
 
   // Sign up functionality removed - only admins can create users
 
-  const fillSampleCredentials = (userType: string) => {
-    switch (userType) {
-      case 'admin':
-        setUsername('admin');
-        setPassword('admin123');
-        break;
-      case 'operator1':
-        setUsername('shirsath');
-        setPassword('operator123');
-        break;
-      case 'operator2':
-        setUsername('saanvi');
-        setPassword('operator123');
-        break;
-      case 'operator3':
-        setUsername('sanjeevan');
-        setPassword('operator123');
-        break;
-    }
-  };
-
   // Show loading state while checking authentication
   if (authLoading) {
     return (
@@ -142,40 +121,6 @@ const Auth = () => {
                   {isLoading ? 'Signing In...' : 'Sign In'}
                 </Button>
               </form>
-              
-              <div className="mt-6">
-                <p className="text-sm text-muted-foreground mb-3">Sample Credentials:</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fillSampleCredentials('admin')}
-                  >
-                    Admin
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fillSampleCredentials('operator1')}
-                  >
-                    Operator 1
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fillSampleCredentials('operator2')}
-                  >
-                    Operator 2
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fillSampleCredentials('operator3')}
-                  >
-                    Operator 3
-                  </Button>
-                </div>
-              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
