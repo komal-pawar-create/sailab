@@ -31,6 +31,7 @@ interface LabProfile {
   bank_ifsc_code?: string;
   footer_text?: string;
   terms_conditions?: string;
+  admin_mobile_number?: string;
 }
 
 export default function LabProfile() {
@@ -146,7 +147,8 @@ export default function LabProfile() {
           bank_account_number: '',
           bank_ifsc_code: '',
           footer_text: '',
-          terms_conditions: ''
+          terms_conditions: '',
+          admin_mobile_number: ''
         };
         setLabProfile(newLabTemplate);
       }
@@ -674,11 +676,24 @@ export default function LabProfile() {
           <TabsContent value="settings">
             <Card>
               <CardHeader>
-                <CardTitle>Additional Settings</CardTitle>
-                <CardDescription>Other configuration options</CardDescription>
+                <CardTitle>Security & Recovery Settings</CardTitle>
+                <CardDescription>Configure password recovery options for your organization</CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Additional settings will be available soon.</p>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="adminMobile">Admin Mobile Number (For Password Recovery)</Label>
+                  <Input
+                    id="adminMobile"
+                    type="tel"
+                    value={labProfile.admin_mobile_number || ''}
+                    onChange={(e) => setLabProfile({ ...labProfile, admin_mobile_number: e.target.value })}
+                    placeholder="+91 9876543210"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This mobile number will receive OTP codes when any user in your organization needs to reset their password.
+                    Make sure this is accessible to your lab administrator.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

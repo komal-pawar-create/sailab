@@ -90,6 +90,7 @@ export const AddUserForm = ({ onSuccess }: AddUserFormProps) => {
         formData.role,
         undefined, // lab_id is not used in new system
         formData.branch_id,
+        undefined, // mobile_number - not set during user creation yet
         true // Skip email confirmation for admin-created users
       );
 

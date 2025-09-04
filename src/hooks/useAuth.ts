@@ -7,6 +7,8 @@ export interface Profile {
   user_id: string;
   email: string;
   full_name: string;
+  username?: string;
+  mobile_number?: string;
   role: 'super_admin' | 'lab_admin' | 'branch_operator' | 'admin' | 'operator_1' | 'operator_2' | 'operator_3';
   lab_id?: string;
   branch_id?: string;
@@ -97,15 +99,26 @@ export function useAuth() {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (username: string, password: string) => {
+    // First, get the email associated with the username
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('username', username)
+      .single();
+    
+    if (profileError || !profileData) {
+      return { error: { message: 'Invalid username or password' } };
+    }
+    
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: profileData.email,
       password,
     });
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: string, labId?: string, branchId?: string, skipEmailConfirmation: boolean = false) => {
+  const signUp = async (email: string, password: string, fullName: string, role: string, labId?: string, branchId?: string, mobileNumber?: string, skipEmailConfirmation: boolean = false) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -118,6 +131,7 @@ export function useAuth() {
           role,
           lab_id: labId,
           branch_id: branchId,
+          mobile_number: mobileNumber,
           skip_email_confirmation: skipEmailConfirmation
         }
       }

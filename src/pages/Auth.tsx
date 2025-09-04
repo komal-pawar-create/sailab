@@ -11,7 +11,7 @@ import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -45,7 +45,7 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(username, password);
     
     if (error) {
       toast({
@@ -63,19 +63,19 @@ const Auth = () => {
   const fillSampleCredentials = (userType: string) => {
     switch (userType) {
       case 'admin':
-        setEmail('admin@labmaster.com');
+        setUsername('admin');
         setPassword('admin123');
         break;
       case 'operator1':
-        setEmail('operator1@centrallab.com');
+        setUsername('operator1');
         setPassword('operator123');
         break;
       case 'operator2':
-        setEmail('operator2@northlab.com');
+        setUsername('operator2');
         setPassword('operator123');
         break;
       case 'operator3':
-        setEmail('operator3@westlab.com');
+        setUsername('operator3');
         setPassword('operator123');
         break;
     }
@@ -109,12 +109,13 @@ const Auth = () => {
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="username">Username</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     required
                   />
                 </div>
@@ -123,10 +124,19 @@ const Auth = () => {
                   <Input
                     id="password"
                     type="password"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
+                </div>
+                <div className="text-right">
+                  <a 
+                    href="/forgot-password" 
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot Password?
+                  </a>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Signing In...' : 'Sign In'}

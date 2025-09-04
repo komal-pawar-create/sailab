@@ -464,6 +464,7 @@ export type Database = {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          admin_mobile_number: string | null
           bank_account_number: string | null
           bank_ifsc_code: string | null
           bank_name: string | null
@@ -490,6 +491,7 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          admin_mobile_number?: string | null
           bank_account_number?: string | null
           bank_ifsc_code?: string | null
           bank_name?: string | null
@@ -516,6 +518,7 @@ export type Database = {
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          admin_mobile_number?: string | null
           bank_account_number?: string | null
           bank_ifsc_code?: string | null
           bank_name?: string | null
@@ -594,6 +597,36 @@ export type Database = {
           postal_code?: string | null
           state?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      password_reset_otps: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          mobile_number: string
+          otp_code: string
+          used: boolean | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          mobile_number: string
+          otp_code: string
+          used?: boolean | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          mobile_number?: string
+          otp_code?: string
+          used?: boolean | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -778,9 +811,11 @@ export type Database = {
           full_name: string
           id: string
           lab_id: string | null
+          mobile_number: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
           branch_id?: string | null
@@ -789,9 +824,11 @@ export type Database = {
           full_name: string
           id?: string
           lab_id?: string | null
+          mobile_number?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           branch_id?: string | null
@@ -800,9 +837,11 @@ export type Database = {
           full_name?: string
           id?: string
           lab_id?: string | null
+          mobile_number?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: [
           {
@@ -956,6 +995,16 @@ export type Database = {
       get_user_branch: {
         Args: { user_id: string }
         Returns: string
+      }
+      get_user_by_username: {
+        Args: { p_username: string }
+        Returns: {
+          admin_mobile: string
+          email: string
+          lab_id: string
+          mobile_number: string
+          user_id: string
+        }[]
       }
       get_user_lab: {
         Args: { user_id: string }

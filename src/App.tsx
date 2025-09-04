@@ -10,6 +10,7 @@ import SuperAdmin from "./pages/SuperAdmin";
 import LabProfile from "./pages/LabProfile";
 import PatientHistory from "./pages/PatientHistory";
 import DataManagement from "./pages/DataManagement";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/super-admin" element={<SuperAdmin />} />
           <Route path="/super-admin/data-management" element={<DataManagement />} />
