@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,29 +13,49 @@ import PatientHistory from "./pages/PatientHistory";
 import DataManagement from "./pages/DataManagement";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
+import { InstallPrompt } from "./components/InstallPrompt";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <Toaster />
-    <Sonner />
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/super-admin" element={<SuperAdmin />} />
-        <Route path="/super-admin/data-management" element={<DataManagement />} />
-        <Route path="/lab-profile" element={<LabProfile />} />
-        <Route path="/branch-settings" element={<BranchSettings />} />
-        <Route path="/patient-history" element={<PatientHistory />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('/service-worker.js')
+          .then((registration) => {
+            console.log('ServiceWorker registration successful:', registration);
+          })
+          .catch((error) => {
+            console.log('ServiceWorker registration failed:', error);
+          });
+      });
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Toaster />
+      <Sonner />
+      <InstallPrompt />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/super-admin" element={<SuperAdmin />} />
+          <Route path="/super-admin/data-management" element={<DataManagement />} />
+          <Route path="/lab-profile" element={<LabProfile />} />
+          <Route path="/branch-settings" element={<BranchSettings />} />
+          <Route path="/patient-history" element={<PatientHistory />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
