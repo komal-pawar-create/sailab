@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.53.0";
-import { PDFDocument, rgb, StandardFonts } from "https://cdn.skypack.dev/pdf-lib@1.17.1?dts";
+import { PDFDocument, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
 import mammoth from "https://esm.sh/mammoth@1.6.0";
 
 const corsHeaders = {
@@ -8,17 +8,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Medical report field patterns
+// Medical report field patterns - Updated to capture doctor details and signatures
 const MEDICAL_PATTERNS = {
   patientName: /(?:PATIENT\s*NAME|NAME|MR\.|MRS\.|MS\.|MASTER)\s*:?\s*(.+?)(?:\n|$)/i,
   age: /(?:AGE\/SEX|AGE|AGE\/GENDER|SEX\/AGE)\s*:?\s*(.+?)(?:\n|$)/i,
   patientId: /(?:PATIENT\s*ID|ID|REG\.\s*NO\.?|REGISTRATION|LAB\s*NO\.?)\s*:?\s*(.+?)(?:\n|$)/i,
   date: /(?:DATE|REPORT\s*DATE|COLLECTION\s*DATE|TEST\s*DATE)\s*:?\s*(.+?)(?:\n|$)/i,
-  referredBy: /(?:REF\.\s*BY\s*DR\.?|REFERRED\s*BY|REF\s*BY|DOCTOR|DR\.?|REF\s*DR\.?)\s*:?\s*(.+?)(?:\n|$)/i,
+  referredBy: /(?:REF(?:\.|ERRED)?\s*BY\s*(?:DR\.?|DOCTOR)?|REF\s*DR\.?|REFERRING\s*(?:DR\.?|DOCTOR)?)\s*:?\s*([A-Za-z\s.]+?)(?:\n|$)/i,
   testName: /(?:TEST\s*NAME|INVESTIGATION|TEST|EXAMINATION)\s*:?\s*(.+?)(?:\n|$)/i,
   specimen: /(?:SPECIMEN|SAMPLE\s*TYPE|SAMPLE)\s*:?\s*(.+?)(?:\n|$)/i,
-  report: /(?:REPORT|TEST\s*REPORT|INVESTIGATION\s*REPORT|FINDINGS)\s*:?\s*(.+?)(?=IMPRESSION|CONCLUSION|COMMENT|NOTE|$)/si,
-  impression: /(?:IMPRESSION|CONCLUSION|COMMENT|DIAGNOSIS|NOTE)\s*:?\s*(.+?)(?=$)/si
+  report: /(?:REPORT|TEST\s*REPORT|INVESTIGATION\s*REPORT|FINDINGS)\s*:?\s*(.+?)(?=IMPRESSION|CONCLUSION|COMMENT|DIAGNOSIS|NOTE|DR\.|DOCTOR|Authorized|Disclaimer|CONSULTING|CONSULTANT|$)/si,
+  impression: /(?:IMPRESSION|CONCLUSION|COMMENT|DIAGNOSIS|NOTE)\s*:?\s*(.+?)(?=DR\.|DOCTOR|Authorized|Disclaimer|CONSULTING|CONSULTANT|M\.?B\.?B\.?S|M\.?D|D\.?M\.?R\.?D|$)/si,
+  doctorName: /(?:DR\.|DOCTOR|Dr\.)\s+([A-Z][A-Za-z\s.]+?)(?=\n|M\.?B\.?B\.?S|M\.?D|D\.?M\.?R\.?D|CONSULTING|CONSULTANT|,|$)/i,
+  doctorQualifications: /(?:M\.?B\.?B\.?S\.?|M\.?D\.?|D\.?M\.?R\.?D\.?|F\.?R\.?C\.?S\.?|M\.?R\.?C\.?P\.?|M\.?S\.?|M\.?Ch\.?|D\.?M\.?|D\.?N\.?B\.?)[\s,]*([\w\s,.\(\)]*?)(?=\n|CONSULTING|CONSULTANT|$)/i,
+  doctorDesignation: /(?:CONSULTING|CONSULTANT)\s+([A-Z][A-Za-z\s&]+?)(?:\n|$)/i,
+  disclaimer: /(?:Disclaimer|Note|DISCLAIMER|NOTE)\s*:?\s*(.+?)(?=$)/si,
+  authorizedSignature: /(?:Authorized\s+Signature|Auth\.\s+Sign|AUTHORIZED\s+SIGNATURE)\s*:?\s*(.+?)(?:\n|$)/i
 };
 
 // Helper function to detect if text is a medical report
@@ -52,6 +57,40 @@ function parseMedicalReport(text: string) {
       .replace(/^IMPRESSION\s*:?\s*/i, '')
       .replace(/^CONCLUSION\s*:?\s*/i, '')
       .replace(/^COMMENT\s*:?\s*/i, '')
+      .replace(/^DIAGNOSIS\s*:?\s*/i, '')
+      .replace(/^NOTE\s*:?\s*/i, '')
+      .trim();
+  }
+  
+  // Clean up doctor name
+  if (fields.doctorName) {
+    fields.doctorName = fields.doctorName
+      .replace(/^DR\.\s*/i, '')
+      .replace(/^DOCTOR\s*/i, '')
+      .replace(/^Dr\.\s*/i, '')
+      .trim();
+  }
+  
+  // Clean up qualifications
+  if (fields.doctorQualifications) {
+    fields.doctorQualifications = fields.doctorQualifications.trim();
+  }
+  
+  // Clean up designation
+  if (fields.doctorDesignation) {
+    fields.doctorDesignation = fields.doctorDesignation
+      .replace(/^CONSULTING\s*/i, 'CONSULTING ')
+      .replace(/^CONSULTANT\s*/i, 'CONSULTANT ')
+      .trim();
+  }
+  
+  // Clean up disclaimer
+  if (fields.disclaimer) {
+    fields.disclaimer = fields.disclaimer
+      .replace(/^Disclaimer\s*:?\s*/i, '')
+      .replace(/^Note\s*:?\s*/i, '')
+      .replace(/^DISCLAIMER\s*:?\s*/i, '')
+      .replace(/^NOTE\s*:?\s*/i, '')
       .trim();
   }
   
@@ -102,8 +141,10 @@ async function renderMedicalReport(
   fonts: any,
   startY: number,
   pageWidth: number,
-  pageHeight: number
-): Promise<number> {
+  pageHeight: number,
+  pdfDoc?: any,
+  letterheadImage?: any
+): Promise<{ finalY: number, additionalPages: any[] }> {
   const leftMargin = 45;
   const rightMargin = pageWidth - 45;
   const contentWidth = rightMargin - leftMargin;
@@ -262,28 +303,99 @@ async function renderMedicalReport(
     }
   }
   
-  // Add signature line at bottom if space allows
+  // Add doctor details, signature and disclaimer section
   if (currentY > 100) {
-    currentY = Math.min(currentY - 30, 150);
+    currentY -= 30;
+    
+    // Doctor details section - align to right
+    const signatureX = rightMargin - 200;
+    
+    // Doctor Name
+    if (fields.doctorName) {
+      page.drawText(`DR. ${fields.doctorName}`, {
+        x: signatureX,
+        y: currentY,
+        size: 11,
+        font: fonts.bold,
+        color: rgb(0, 0, 0),
+      });
+      currentY -= 15;
+    }
+    
+    // Qualifications
+    if (fields.doctorQualifications) {
+      page.drawText(fields.doctorQualifications, {
+        x: signatureX,
+        y: currentY,
+        size: 9,
+        font: fonts.regular,
+        color: rgb(0.2, 0.2, 0.2),
+      });
+      currentY -= 13;
+    }
+    
+    // Designation
+    if (fields.doctorDesignation) {
+      page.drawText(fields.doctorDesignation, {
+        x: signatureX,
+        y: currentY,
+        size: 9,
+        font: fonts.regular,
+        color: rgb(0.2, 0.2, 0.2),
+      });
+      currentY -= 15;
+    }
     
     // Draw signature line
     page.drawLine({
-      start: { x: rightMargin - 200, y: currentY },
+      start: { x: signatureX, y: currentY },
       end: { x: rightMargin, y: currentY },
       thickness: 0.5,
       color: rgb(0.5, 0.5, 0.5),
     });
     
-    page.drawText("Authorized Signature", {
-      x: rightMargin - 180,
+    // Authorized Signature text
+    const authText = fields.authorizedSignature || "Authorized Signature";
+    page.drawText(authText, {
+      x: signatureX + 20,
       y: currentY - 15,
       size: 9,
       font: fonts.regular,
       color: rgb(0.5, 0.5, 0.5),
     });
+    
+    currentY -= 30;
+    
+    // Disclaimer at the bottom if present
+    if (fields.disclaimer && currentY > 80) {
+      // Draw separator line before disclaimer
+      page.drawLine({
+        start: { x: leftMargin, y: currentY },
+        end: { x: rightMargin, y: currentY },
+        thickness: 0.3,
+        color: rgb(0.9, 0.9, 0.9),
+      });
+      
+      currentY -= 15;
+      
+      // Disclaimer text - smaller font, italics effect
+      const disclaimerLines = wrapText(fields.disclaimer, fonts.regular, 8, contentWidth);
+      for (const line of disclaimerLines) {
+        if (currentY < 50) break;
+        
+        page.drawText(line, {
+          x: leftMargin,
+          y: currentY,
+          size: 8,
+          font: fonts.regular,
+          color: rgb(0.5, 0.5, 0.5),
+        });
+        currentY -= 10;
+      }
+    }
   }
   
-  return currentY;
+  return { finalY: currentY, additionalPages: [] };
 }
 
 // Helper function to render general document with better formatting
@@ -518,19 +630,20 @@ serve(async (req) => {
             console.log('Detected medical report with fields:', Object.keys(fields));
             
             // Render as medical report
-            const finalY = await renderMedicalReport(
+            const result = await renderMedicalReport(
               currentPage,
               fields,
               fonts,
               yPosition,
               595.28,
-              pageHeight
+              pageHeight,
+              pdfDoc,
+              letterheadImage
             );
             
-            // If content overflows, create additional pages
-            if (finalY < 100 && (fields.report || fields.impression)) {
-              // Content doesn't fit, might need second page
-              // For now, we've rendered what fits
+            // Add any additional pages if content overflowed
+            for (const additionalPage of result.additionalPages) {
+              // Pages are already added to the document
             }
           } else {
             // Render as general document with improved formatting
