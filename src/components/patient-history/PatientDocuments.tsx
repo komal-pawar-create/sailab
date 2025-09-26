@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, FileText, FileImage, File, Calendar, User, RefreshCw, Layers, FileWarning } from "lucide-react";
+import { Download, FileText, FileImage, File, Calendar, User, RefreshCw, Layers, FileWarning, Share } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -36,9 +36,11 @@ interface DocumentTemplate {
 
 interface PatientDocumentsProps {
   patientId: string;
+  patientName?: string;
+  doctorPhone?: string;
 }
 
-export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
+export default function PatientDocuments({ patientId, patientName, doctorPhone }: PatientDocumentsProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [templates, setTemplates] = useState<Record<string, DocumentTemplate>>({});
   const [loading, setLoading] = useState(false);
@@ -264,6 +266,71 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   };
 
+  const shareOnWhatsApp = async (doc: Document) => {
+    if (!doctorPhone) {
+      toast({
+        title: "No doctor phone number",
+        description: "This patient doesn't have a referring doctor's phone number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!templates[doc.id]?.generated_pdf_url) {
+      toast({
+        title: "Letterhead not generated",
+        description: "Please generate the document with letterhead first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Clean and format phone number
+      let cleanPhone = doctorPhone.replace(/[^0-9]/g, '');
+      
+      // Add country code if not present (default to India +91)
+      if (!cleanPhone.startsWith('91') && cleanPhone.length === 10) {
+        cleanPhone = '91' + cleanPhone;
+      }
+
+      // Get lab name
+      const { data: labData } = await supabase
+        .from('labs')
+        .select('name')
+        .eq('id', profile?.lab_id)
+        .single();
+
+      const labName = labData?.name || 'Our Lab';
+      const documentUrl = templates[doc.id].generated_pdf_url;
+      
+      // Create message
+      const message = encodeURIComponent(
+        `Hello Dr.,\n\n` +
+        `Please find the medical document for patient ${patientName || 'your patient'}.\n\n` +
+        `Document: ${doc.file_name}\n` +
+        `Link: ${documentUrl}\n\n` +
+        `Sent from ${labName}`
+      );
+
+      // Open WhatsApp
+      const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
+      window.open(whatsappUrl, '_blank');
+
+      toast({
+        title: "WhatsApp opened",
+        description: "Share the document via WhatsApp",
+      });
+    } catch (error) {
+      console.error("Error sharing on WhatsApp:", error);
+      toast({
+        title: "Error",
+        description: "Failed to share on WhatsApp",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -370,6 +437,15 @@ export default function PatientDocuments({ patientId }: PatientDocumentsProps) {
                             <FileWarning className="mr-2 h-4 w-4" />
                             Letterhead not available for this file type
                           </DropdownMenuItem>
+                        )}
+                        {hasLetterhead && doctorPhone && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => shareOnWhatsApp(doc)}>
+                              <Share className="h-4 w-4 mr-2" />
+                              Share on WhatsApp
+                            </DropdownMenuItem>
+                          </>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>

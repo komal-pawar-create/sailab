@@ -196,7 +196,11 @@ export default function PatientHistory() {
             </TabsContent>
             
             <TabsContent value="documents">
-              <PatientDocuments patientId={selectedPatient.id} />
+              <PatientDocuments 
+                patientId={selectedPatient.id} 
+                patientName={selectedPatient.full_name}
+                doctorPhone={selectedPatient.referred_by_doctor_phone}
+              />
             </TabsContent>
             
             <TabsContent value="bills">
