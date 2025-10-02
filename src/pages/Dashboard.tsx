@@ -50,6 +50,7 @@ interface Patient {
   gender: string;
   phone: string;
   patient_history?: string | null;
+  created_at: string;
 }
 
 interface TestReport {
@@ -59,6 +60,7 @@ interface TestReport {
   status: string;
   results: any;
   patients: { full_name: string };
+  created_at: string;
 }
 
 interface Document {
@@ -67,6 +69,7 @@ interface Document {
   file_type: string;
   file_size: number;
   patients: { full_name: string };
+  created_at: string;
 }
 
 interface Feedback {
@@ -75,6 +78,7 @@ interface Feedback {
   message: string;
   rating: number;
   patients?: { full_name: string };
+  created_at: string;
 }
 
 interface Bill {
@@ -967,7 +971,7 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {bills.map((bill) => (
+                    {filteredBills.map((bill) => (
                       <TableRow key={bill.id}>
                         <TableCell className="font-medium">{bill.bill_number}</TableCell>
                         <TableCell>{bill.patients?.full_name}</TableCell>
