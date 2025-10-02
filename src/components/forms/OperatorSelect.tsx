@@ -40,8 +40,8 @@ export const OperatorSelect = ({ selectedOperator, onOperatorChange }: OperatorS
     }
   };
 
-  // Only show operator selection for admins
-  if (profile?.role !== 'admin') {
+  // Only show operator selection for admins and lab_admins
+  if (!profile?.role || !['admin', 'lab_admin'].includes(profile.role)) {
     return null;
   }
 
