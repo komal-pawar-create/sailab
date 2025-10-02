@@ -51,8 +51,16 @@ export const AddBranchForm = ({ onSuccess }: AddBranchFormProps) => {
       fetchLabs(formData.organization_id);
     } else {
       setLabs([]);
+      setFormData(prev => ({ ...prev, lab_id: '' }));
     }
   }, [formData.organization_id]);
+
+  // Auto-select lab if only one exists
+  useEffect(() => {
+    if (labs.length === 1 && !formData.lab_id) {
+      setFormData(prev => ({ ...prev, lab_id: labs[0].id }));
+    }
+  }, [labs]);
 
   const fetchOrganizations = async () => {
     try {
@@ -87,11 +95,18 @@ export const AddBranchForm = ({ onSuccess }: AddBranchFormProps) => {
 
     setLoading(true);
     try {
+      // Ensure lab_id is provided
+      if (!formData.lab_id) {
+        toast.error('Please select a lab for this branch');
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('branches')
         .insert([{
           ...formData,
-          lab_id: formData.lab_id || null,
+          lab_id: formData.lab_id,
           created_by: user.id
         }]);
 
@@ -174,8 +189,8 @@ export const AddBranchForm = ({ onSuccess }: AddBranchFormProps) => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="lab">Associated Lab (Optional)</Label>
-              <Select value={formData.lab_id} onValueChange={(value) => handleChange('lab_id', value)}>
+              <Label htmlFor="lab">Associated Lab *</Label>
+              <Select value={formData.lab_id} onValueChange={(value) => handleChange('lab_id', value)} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select lab" />
                 </SelectTrigger>
@@ -264,7 +279,7 @@ export const AddBranchForm = ({ onSuccess }: AddBranchFormProps) => {
             </div>
           </div>
 
-          <Button type="submit" disabled={loading || !formData.organization_id}>
+          <Button type="submit" disabled={loading || !formData.organization_id || !formData.lab_id}>
             {loading ? 'Creating...' : 'Create Branch'}
           </Button>
         </form>

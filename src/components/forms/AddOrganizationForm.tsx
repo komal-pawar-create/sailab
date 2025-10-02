@@ -33,16 +33,38 @@ export const AddOrganizationForm = ({ onSuccess }: AddOrganizationFormProps) => 
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      // Create organization
+      const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .insert([{
           ...formData,
           created_by: user.id
+        }])
+        .select()
+        .single();
+
+      if (orgError) throw orgError;
+
+      // Auto-create lab with same name and initials from organization
+      const labInitials = formData.name.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
+      const { error: labError } = await supabase
+        .from('labs')
+        .insert([{
+          name: formData.name,
+          initials: labInitials || 'LAB',
+          organization_id: orgData.id,
+          location: formData.address_line1,
+          address_line1: formData.address_line1,
+          address_line2: formData.address_line2,
+          city: formData.city,
+          state: formData.state,
+          postal_code: formData.postal_code,
+          phone: formData.contact_phone
         }]);
 
-      if (error) throw error;
+      if (labError) throw labError;
 
-      toast.success('Organization created successfully');
+      toast.success('Organization and Lab created successfully');
       setFormData({
         name: '',
         description: '',
@@ -57,7 +79,7 @@ export const AddOrganizationForm = ({ onSuccess }: AddOrganizationFormProps) => 
       onSuccess?.();
     } catch (error: any) {
       console.error('Error creating organization:', error);
-      toast.error('Failed to create organization');
+      toast.error('Failed to create organization and lab');
     } finally {
       setLoading(false);
     }
