@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, Users, TestTube, MessageSquare, LogOut, Building2, Receipt, 
   CreditCard, History, Settings, RefreshCw, Search, Calendar, Clock,
-  CalendarDays, CalendarRange, Upload, Plus
+  CalendarDays, CalendarRange, Upload, Plus, Eye, FileBarChart, AlertCircle
 } from 'lucide-react';
 import { AddPatientForm } from '@/components/forms/AddPatientForm';
 import { AddTestReportForm } from '@/components/forms/AddTestReportForm';
@@ -624,36 +626,152 @@ const Dashboard = () => {
                 <AddPatientForm onPatientAdded={fetchData} />
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Patient ID</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Age</TableHead>
-                      <TableHead>Gender</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Registered</TableHead>
-                      <TableHead>Patient History</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredPatients.map((patient) => (
-                      <TableRow key={patient.id}>
-                        <TableCell className="font-medium">
-                          <Badge variant="outline">{patient.patient_id}</Badge>
-                        </TableCell>
-                        <TableCell>{patient.full_name}</TableCell>
-                        <TableCell>{patient.age}</TableCell>
-                        <TableCell>{patient.gender}</TableCell>
-                        <TableCell>{patient.phone}</TableCell>
-                        <TableCell className="text-muted-foreground text-xs">
-                          {format(new Date(patient.created_at), 'dd/MM/yyyy HH:mm')}
-                        </TableCell>
-                        <TableCell>{patient.patient_history || '-'}</TableCell>
+                <TooltipProvider>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Patient ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Age/Sex</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Recent Study</TableHead>
+                        <TableHead>Referring Doctor</TableHead>
+                        <TableHead>Last Visit</TableHead>
+                        <TableHead className="text-center">Docs</TableHead>
+                        <TableHead className="text-center">Bills</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredPatients.map((patient) => {
+                        // Get recent test report
+                        const recentReport = testReports
+                          .filter(r => r.id && patients.find(p => p.id === r.id))
+                          .sort((a, b) => new Date(b.test_date).getTime() - new Date(a.test_date).getTime())[0];
+                        
+                        // Get document count for this patient
+                        const docCount = documents.filter(d => d.id === patient.id).length;
+                        
+                        // Get bill status for this patient
+                        const patientBills = bills.filter(b => b.patients && b.id === patient.id);
+                        const hasPendingBills = patientBills.some(b => b.status === 'pending' || b.status === 'partially_paid');
+                        const totalDue = patientBills.reduce((sum, b) => sum + (Number(b.due_amount) || 0), 0);
+                        
+                        // Get follow-up priority
+                        const hasEmergency = followups.some(f => 
+                          f.patients?.id === patient.id && 
+                          f.status === 'open' && 
+                          f.priority === 'high'
+                        );
+                        
+                        return (
+                          <TableRow 
+                            key={patient.id}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => navigate(`/patient-history`)}
+                          >
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                {hasEmergency && (
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <AlertCircle className="h-4 w-4 text-destructive animate-pulse" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>Urgent follow-up required</TooltipContent>
+                                  </Tooltip>
+                                )}
+                                <Badge variant="outline">{patient.patient_id}</Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">{patient.full_name}</TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {patient.age ? `${patient.age} YRS` : '—'}
+                                {patient.age && patient.gender ? ' / ' : ''}
+                                {patient.gender ? patient.gender.charAt(0).toUpperCase() : ''}
+                              </div>
+                            </TableCell>
+                            <TableCell>{patient.phone}</TableCell>
+                            <TableCell>
+                              {recentReport ? (
+                                <Badge variant={getStatusColor(recentReport.status) as any} className="text-xs">
+                                  {recentReport.test_type}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">No reports</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {patient.patient_history || '—'}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm text-muted-foreground">
+                                {format(new Date(patient.created_at), 'dd/MM/yyyy')}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {docCount > 0 ? (
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Badge variant="outline" className="gap-1">
+                                      <FileText className="h-3 w-3" />
+                                      {docCount}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{docCount} document(s)</TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {patientBills.length > 0 ? (
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Badge 
+                                      variant={hasPendingBills ? "destructive" : "default"}
+                                      className="gap-1"
+                                    >
+                                      <Receipt className="h-3 w-3" />
+                                      {totalDue > 0 ? `₹${totalDue.toFixed(0)}` : 'Paid'}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {hasPendingBills ? `Pending: ₹${totalDue}` : 'All bills paid'}
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center gap-1">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => navigate('/patient-history')}
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>View History</TooltipContent>
+                                </Tooltip>
+                                
+                                <AddTestReportForm onReportAdded={fetchData} />
+                                <AddBillForm onBillAdded={fetchData} />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TooltipProvider>
               </CardContent>
             </Card>
           </TabsContent>

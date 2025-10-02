@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Download, FileText, Calendar, DollarSign, ClipboardList, User, Search, Clock, Star } from "lucide-react";
+import { Download, FileText, Calendar, DollarSign, ClipboardList, User, Search, Clock, Star, ArrowLeft } from "lucide-react";
 import PatientOverview from "@/components/patient-history/PatientOverview";
 import PatientTestReports from "@/components/patient-history/PatientTestReports";
 import PatientDocuments from "@/components/patient-history/PatientDocuments";
@@ -35,6 +36,7 @@ interface Patient {
 }
 
 export default function PatientHistory() {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,7 +92,17 @@ export default function PatientHistory() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col gap-4">
-        <h1 className="text-3xl font-bold">Patient History</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Patient History</h1>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/dashboard")}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        </div>
         
         {/* Patient Selection */}
         <Card>
