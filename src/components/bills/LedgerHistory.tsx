@@ -36,11 +36,14 @@ export const LedgerHistory = () => {
     type: 'all'
   });
   const { toast } = useToast();
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    fetchLedgerData();
-  }, []);
+    // Only fetch data after profile is fully loaded
+    if (!authLoading && profile?.lab_id) {
+      fetchLedgerData();
+    }
+  }, [authLoading, profile]);
 
   useEffect(() => {
     applyFilters();
@@ -51,11 +54,14 @@ export const LedgerHistory = () => {
     try {
       // Ensure profile and lab_id exist
       if (!profile?.lab_id) {
-        toast({
-          title: "Error",
-          description: "User is not assigned to any lab",
-          variant: "destructive",
-        });
+        // Only show error if auth is fully loaded but lab_id is missing
+        if (!authLoading) {
+          toast({
+            title: "Error",
+            description: "User is not assigned to any lab",
+            variant: "destructive",
+          });
+        }
         setLoading(false);
         return;
       }

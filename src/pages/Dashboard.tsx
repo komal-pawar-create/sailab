@@ -142,14 +142,15 @@ const Dashboard = () => {
   }, [user, profile, loading, navigate]);
 
   useEffect(() => {
-    if (user && profile && profile.role !== 'super_admin') {
+    // Only fetch data after profile is fully loaded
+    if (!loading && user && profile && profile.role !== 'super_admin') {
       // Fetch branch details if user has branch_id
       if (profile.branch_id) {
         fetchBranchDetails();
       }
       fetchData();
     }
-  }, [user, profile]);
+  }, [user, profile, loading]);
 
   const fetchBranchDetails = async () => {
     if (!profile?.branch_id) return;
@@ -171,13 +172,16 @@ const Dashboard = () => {
     try {
       setIsRefreshing(true);
       
-      // Ensure lab_id exists
+      // Ensure profile is loaded and lab_id exists
       if (!profile?.lab_id) {
-        toast({
-          title: "Error",
-          description: "User is not assigned to any lab",
-          variant: "destructive",
-        });
+        // Only show error if profile is fully loaded but lab_id is missing
+        if (!loading) {
+          toast({
+            title: "Error",
+            description: "User is not assigned to any lab",
+            variant: "destructive",
+          });
+        }
         setIsRefreshing(false);
         return;
       }
