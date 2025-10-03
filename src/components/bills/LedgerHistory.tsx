@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { Search, Calendar, Download } from 'lucide-react';
 
 interface LedgerEntry {
@@ -35,6 +36,7 @@ export const LedgerHistory = () => {
     type: 'all'
   });
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   useEffect(() => {
     fetchLedgerData();
@@ -47,8 +49,19 @@ export const LedgerHistory = () => {
   const fetchLedgerData = async () => {
     setLoading(true);
     try {
-      // Fetch bills
-      const { data: billsData } = await supabase
+      // Ensure profile and lab_id exist
+      if (!profile?.lab_id) {
+        toast({
+          title: "Error",
+          description: "User is not assigned to any lab",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Fetch bills - filter by lab_id (and branch_id for branch operators)
+      let billsQuery = supabase
         .from('bills')
         .select(`
           id,
@@ -57,20 +70,35 @@ export const LedgerHistory = () => {
           total_amount,
           patient_id
         `)
-        .order('bill_date', { ascending: false });
+        .eq('lab_id', profile.lab_id);
+      
+      if (profile.role === 'branch_operator' && profile.branch_id) {
+        billsQuery = billsQuery.eq('branch_id', profile.branch_id);
+      }
+      
+      const { data: billsData } = await billsQuery.order('bill_date', { ascending: false });
 
-      // Fetch patients for name mapping
-      const { data: patientsData } = await supabase
+      // Fetch patients for name mapping - filter by lab_id
+      let patientsQuery = supabase
         .from('patients')
-        .select('id, full_name');
+        .select('id, full_name')
+        .eq('lab_id', profile.lab_id);
+      
+      if (profile.role === 'branch_operator' && profile.branch_id) {
+        patientsQuery = patientsQuery.eq('branch_id', profile.branch_id);
+      }
+      
+      const { data: patientsData } = await patientsQuery;
 
       const patientMap = new Map();
       patientsData?.forEach(patient => {
         patientMap.set(patient.id, patient.full_name);
       });
 
-      // Fetch payments
-      const { data: paymentsData } = await supabase
+      // Fetch payments - only for bills in this lab
+      const billIds = billsData?.map(b => b.id) || [];
+      
+      let paymentsQuery = supabase
         .from('bill_payments')
         .select(`
           id,
@@ -79,17 +107,20 @@ export const LedgerHistory = () => {
           payment_method,
           reference_number,
           bill_id
-        `)
-        .order('payment_date', { ascending: false });
+        `);
+      
+      if (billIds.length > 0) {
+        paymentsQuery = paymentsQuery.in('bill_id', billIds);
+      }
+      
+      const { data: paymentsData } = await paymentsQuery.order('payment_date', { ascending: false });
 
-      // Fetch bills for payment mapping
-      const { data: billsForPayments } = await supabase
-        .from('bills')
-        .select('id, bill_number, patient_id');
+      // Fetch bills for payment mapping (already filtered by lab)
+      const billsForPayments = billsData || [];
 
       const billMap = new Map();
-      billsForPayments?.forEach(bill => {
-        billMap.set(bill.id, bill);
+      billsForPayments.forEach(bill => {
+        billMap.set(bill.id, { bill_number: bill.bill_number, patient_id: bill.patient_id });
       });
 
       // Combine and transform data

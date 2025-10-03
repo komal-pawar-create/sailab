@@ -170,20 +170,33 @@ const Dashboard = () => {
   const fetchData = async () => {
     try {
       setIsRefreshing(true);
+      
+      // Ensure lab_id exists
+      if (!profile?.lab_id) {
+        toast({
+          title: "Error",
+          description: "User is not assigned to any lab",
+          variant: "destructive",
+        });
+        setIsRefreshing(false);
+        return;
+      }
+
       // Check if user is a branch operator
       const isBranchOperator = profile && ['operator_1', 'operator_2', 'operator_3'].includes(profile.role);
       
-      // Fetch branches
-      let branchesQuery = supabase.from('branches').select('*, labs(*), organizations(*)');
+      // Fetch branches - filter by lab_id for all users
+      let branchesQuery = supabase.from('branches').select('*, labs(*), organizations(*)').eq('lab_id', profile.lab_id);
       if (isBranchOperator && profile?.branch_id) {
         branchesQuery = branchesQuery.eq('id', profile.branch_id);
       }
       const { data: branchesData } = await branchesQuery;
       setBranches(branchesData || []);
 
-      // Fetch patients with sorting by created_at DESC (latest first)
+      // Fetch patients with sorting by created_at DESC (latest first) - filter by lab_id for ALL users
       let patientsQuery = supabase.from('patients')
         .select('*')
+        .eq('lab_id', profile.lab_id)
         .order('created_at', { ascending: false });
       if (isBranchOperator && profile?.branch_id) {
         patientsQuery = patientsQuery.eq('branch_id', profile.branch_id);
@@ -191,39 +204,39 @@ const Dashboard = () => {
       const { data: patientsData } = await patientsQuery;
       setPatients(patientsData || []);
 
-      // Fetch test reports
-      let reportsQuery = supabase.from('test_reports').select('*, patients!test_reports_patient_id_fkey(full_name)');
+      // Fetch test reports - filter by lab_id for ALL users
+      let reportsQuery = supabase.from('test_reports').select('*, patients!test_reports_patient_id_fkey(full_name)').eq('lab_id', profile.lab_id);
       if (isBranchOperator && profile?.branch_id) {
         reportsQuery = reportsQuery.eq('branch_id', profile.branch_id);
       }
       const { data: reportsData } = await reportsQuery;
       setTestReports((reportsData || []).map(r => ({ ...r, patients: r.patients || undefined })));
 
-      // Fetch documents
-      let documentsQuery = supabase.from('documents').select('*, patients!fk_documents_patient(full_name)');
+      // Fetch documents - filter by lab_id for ALL users
+      let documentsQuery = supabase.from('documents').select('*, patients!fk_documents_patient(full_name)').eq('lab_id', profile.lab_id);
       if (isBranchOperator && profile?.branch_id) {
         documentsQuery = documentsQuery.eq('branch_id', profile.branch_id);
       }
       const { data: documentsData } = await documentsQuery;
       setDocuments((documentsData || []).map(d => ({ ...d, patients: d.patients || undefined })));
 
-      // Fetch feedback
-      let feedbackQuery = supabase.from('feedback').select('*, patients!fk_feedback_patient(full_name)');
+      // Fetch feedback - filter by lab_id for ALL users
+      let feedbackQuery = supabase.from('feedback').select('*, patients!fk_feedback_patient(full_name)').eq('lab_id', profile.lab_id);
       if (isBranchOperator && profile?.branch_id) {
         feedbackQuery = feedbackQuery.eq('branch_id', profile.branch_id);
       }
       const { data: feedbackData } = await feedbackQuery;
       setFeedback((feedbackData || []).map(f => ({ ...f, patients: f.patients || undefined })));
 
-      // Fetch bills
-      let billsQuery = supabase.from('bills').select('*, patients!fk_bills_patient(full_name, patient_id)');
+      // Fetch bills - filter by lab_id for ALL users
+      let billsQuery = supabase.from('bills').select('*, patients!fk_bills_patient(full_name, patient_id)').eq('lab_id', profile.lab_id);
       if (isBranchOperator && profile?.branch_id) {
         billsQuery = billsQuery.eq('branch_id', profile.branch_id);
       }
       const { data: billsData } = await billsQuery;
       setBills((billsData as any) || []);
 
-      // Fetch followups
+      // Fetch followups - filter by lab_id for ALL users
       let followupsQuery = supabase.from('patient_followups')
         .select(`
           *,
@@ -231,6 +244,7 @@ const Dashboard = () => {
           assigned_to_profile:profiles!patient_followups_assigned_to_fkey(full_name),
           created_by_profile:profiles!patient_followups_created_by_fkey(full_name)
         `)
+        .eq('lab_id', profile.lab_id)
         .order('due_at', { ascending: true });
       if (isBranchOperator && profile?.branch_id) {
         followupsQuery = followupsQuery.eq('branch_id', profile.branch_id);
