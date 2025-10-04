@@ -28,9 +28,10 @@ interface TestType {
 
 interface AddTestReportFormProps {
   onReportAdded: () => void;
+  preSelectedPatientId?: string;
 }
 
-export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => {
+export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTestReportFormProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -46,6 +47,16 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
       fetchTestTypes();
     }
   }, [open]);
+
+  // Auto-select patient when preSelectedPatientId changes and patients are loaded
+  useEffect(() => {
+    if (preSelectedPatientId && patients.length > 0) {
+      const patient = patients.find(p => p.id === preSelectedPatientId);
+      if (patient) {
+        setSelectedPatient(patient);
+      }
+    }
+  }, [preSelectedPatientId, patients]);
 
   const fetchPatients = async () => {
     try {
@@ -237,7 +248,12 @@ export const AddTestReportForm = ({ onReportAdded }: AddTestReportFormProps) => 
             
             <div className="space-y-2">
               <Label htmlFor="patient_id">Patient *</Label>
-              <Select name="patient_id" required onValueChange={handlePatientSelect}>
+              <Select 
+                name="patient_id" 
+                required 
+                onValueChange={handlePatientSelect}
+                value={selectedPatient?.id || undefined}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select patient" />
                 </SelectTrigger>

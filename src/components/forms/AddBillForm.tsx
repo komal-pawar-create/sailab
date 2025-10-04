@@ -27,9 +27,10 @@ interface BillItem {
 
 interface AddBillFormProps {
   onBillAdded: () => void;
+  preSelectedPatientId?: string;
 }
 
-export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
+export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -57,6 +58,16 @@ export const AddBillForm = ({ onBillAdded }: AddBillFormProps) => {
       generateBillNumber();
     }
   }, [open]);
+
+  // Auto-select patient when preSelectedPatientId changes and patients are loaded
+  useEffect(() => {
+    if (preSelectedPatientId && patients.length > 0) {
+      const patient = patients.find(p => p.id === preSelectedPatientId);
+      if (patient) {
+        setFormData(prev => ({ ...prev, patient_id: preSelectedPatientId }));
+      }
+    }
+  }, [preSelectedPatientId, patients]);
 
   const fetchPatients = async () => {
     try {

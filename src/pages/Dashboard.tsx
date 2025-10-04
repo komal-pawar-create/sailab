@@ -24,6 +24,7 @@ import { AddFollowupForm } from '@/components/forms/AddFollowupForm';
 import { PaymentForm } from '@/components/forms/PaymentForm';
 import { BillPrint } from '@/components/bills/BillPrint';
 import { LedgerHistory } from '@/components/bills/LedgerHistory';
+import { PatientReportsPreview } from '@/components/patient-history/PatientReportsPreview';
 import { useFollowupReminders } from '@/hooks/useFollowupReminders';
 import { Input } from '@/components/ui/input';
 import { format, isToday, isYesterday, isThisWeek, isThisMonth, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
@@ -117,6 +118,9 @@ const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [previewPatientId, setPreviewPatientId] = useState<string | null>(null);
+  const [previewPatientName, setPreviewPatientName] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
   const [stats, setStats] = useState({
     totalPatients: 0,
     totalReports: 0,
@@ -772,16 +776,26 @@ const Dashboard = () => {
                                       variant="ghost"
                                       size="icon"
                                       className="h-8 w-8"
-                                      onClick={() => navigate('/patient-history')}
+                                      onClick={() => {
+                                        setPreviewPatientId(patient.id);
+                                        setPreviewPatientName(patient.full_name);
+                                        setShowPreview(true);
+                                      }}
                                     >
                                       <Eye className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>View History</TooltipContent>
+                                  <TooltipContent>View Latest Reports</TooltipContent>
                                 </Tooltip>
                                 
-                                <AddTestReportForm onReportAdded={fetchData} />
-                                <AddBillForm onBillAdded={fetchData} />
+                                <AddTestReportForm 
+                                  onReportAdded={fetchData} 
+                                  preSelectedPatientId={patient.id}
+                                />
+                                <AddBillForm 
+                                  onBillAdded={fetchData}
+                                  preSelectedPatientId={patient.id}
+                                />
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1188,6 +1202,14 @@ const Dashboard = () => {
           )}
         </Tabs>
       </div>
+
+      {/* Patient Reports Preview Modal */}
+      <PatientReportsPreview
+        patientId={previewPatientId}
+        patientName={previewPatientName}
+        open={showPreview}
+        onOpenChange={setShowPreview}
+      />
     </div>
   );
 };
