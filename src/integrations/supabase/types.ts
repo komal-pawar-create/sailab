@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          branch_id: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          lab_id: string | null
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_email: string
+          user_id: string
+          user_role: string
+        }
+        Insert: {
+          action: string
+          branch_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          lab_id?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_email: string
+          user_id: string
+          user_role: string
+        }
+        Update: {
+          action?: string
+          branch_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          lab_id?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_email?: string
+          user_id?: string
+          user_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_payments: {
         Row: {
           bill_id: string
@@ -996,6 +1062,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_audit_logs: { Args: never; Returns: undefined }
       clear_lab_data: {
         Args: {
           p_clear_bills?: boolean
@@ -1045,6 +1112,16 @@ export type Database = {
       }
       is_lab_admin: { Args: { user_id: string }; Returns: boolean }
       is_super_admin: { Args: { user_id: string }; Returns: boolean }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_new_data?: Json
+          p_old_data?: Json
+          p_record_id: string
+          p_table_name: string
+        }
+        Returns: string
+      }
       preview_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string

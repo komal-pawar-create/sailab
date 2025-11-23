@@ -143,6 +143,14 @@ export default function SuperAdmin() {
           </div>
           <div className="flex gap-2">
             <Button 
+              onClick={() => navigate('/audit-logs')} 
+              variant="secondary"
+              className="gap-2"
+            >
+              <Database className="h-4 w-4" />
+              Audit Logs
+            </Button>
+            <Button 
               onClick={() => navigate('/super-admin/data-management')} 
               variant="destructive"
               className="gap-2"
