@@ -1023,10 +1023,7 @@ export type Database = {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
       }
-      get_user_branch: {
-        Args: { user_id: string }
-        Returns: string
-      }
+      get_user_branch: { Args: { user_id: string }; Returns: string }
       get_user_by_username: {
         Args: { p_username: string }
         Returns: {
@@ -1037,14 +1034,8 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_user_lab: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      get_user_organization: {
-        Args: { user_id: string }
-        Returns: string
-      }
+      get_user_lab: { Args: { user_id: string }; Returns: string }
+      get_user_organization: { Args: { user_id: string }; Returns: string }
       has_role: {
         Args: {
           required_role: Database["public"]["Enums"]["user_role"]
@@ -1052,14 +1043,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_lab_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_lab_admin: { Args: { user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { user_id: string }; Returns: boolean }
       preview_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
