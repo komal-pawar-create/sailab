@@ -480,6 +480,15 @@ const Dashboard = () => {
                   Lab Profile
                 </Button>
               )}
+              {['admin', 'lab_admin', 'super_admin'].includes(profile.role) && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/audit-logs')}
+                >
+                  <FileBarChart className="h-4 w-4 mr-2" />
+                  Audit Logs
+                </Button>
+              )}
               <Button variant="outline" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
