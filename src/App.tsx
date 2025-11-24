@@ -12,6 +12,7 @@ import BranchSettings from "./pages/BranchSettings";
 import PatientHistory from "./pages/PatientHistory";
 import DataManagement from "./pages/DataManagement";
 import AuditLogs from "./pages/AuditLogs";
+import ApiSettings from "./pages/ApiSettings";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 import { InstallPrompt } from "./components/InstallPrompt";
@@ -49,6 +50,7 @@ const App = () => {
           <Route path="/super-admin" element={<SuperAdmin />} />
           <Route path="/super-admin/data-management" element={<DataManagement />} />
           <Route path="/audit-logs" element={<AuditLogs />} />
+          <Route path="/api-settings" element={<ApiSettings />} />
           <Route path="/lab-profile" element={<LabProfile />} />
           <Route path="/branch-settings" element={<BranchSettings />} />
           <Route path="/patient-history" element={<PatientHistory />} />
