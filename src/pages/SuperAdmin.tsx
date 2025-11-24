@@ -14,7 +14,7 @@ import { AddUserForm } from '@/components/forms/AddUserForm';
 import { AddTestTypeForm } from '@/components/forms/AddTestTypeForm';
 import EditUserDialog from '@/components/forms/EditUserDialog';
 import EditBranchDialog from '@/components/forms/EditBranchDialog';
-import { Edit, Database, Trash2 } from 'lucide-react';
+import { Edit, Database, Trash2, Settings } from 'lucide-react';
 
 interface Organization {
   id: string;
@@ -149,6 +149,14 @@ export default function SuperAdmin() {
             >
               <Database className="h-4 w-4" />
               Audit Logs
+            </Button>
+            <Button 
+              onClick={() => navigate('/api-settings')} 
+              variant="secondary"
+              className="gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              API Settings
             </Button>
             <Button 
               onClick={() => navigate('/super-admin/data-management')} 

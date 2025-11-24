@@ -481,13 +481,22 @@ const Dashboard = () => {
                 </Button>
               )}
               {['admin', 'lab_admin', 'super_admin'].includes(profile.role) && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate('/audit-logs')}
-                >
-                  <FileBarChart className="h-4 w-4 mr-2" />
-                  Audit Logs
-                </Button>
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/audit-logs')}
+                  >
+                    <FileBarChart className="h-4 w-4 mr-2" />
+                    Audit Logs
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/api-settings')}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    API Settings
+                  </Button>
+                </>
               )}
               <Button variant="outline" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
