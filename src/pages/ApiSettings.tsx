@@ -29,12 +29,13 @@ export default function ApiSettings() {
   const handleSaveEmailSettings = async () => {
     setLoading(true);
     try {
-      // Store in localStorage for now (in production, store in Supabase secrets via edge function)
+      // Store in localStorage (frontend) and log for admin to add to Supabase secrets
       localStorage.setItem('resend_api_key', resendApiKey);
       localStorage.setItem('resend_from_email', resendFromEmail);
       localStorage.setItem('resend_from_name', resendFromName);
       
-      toast.success("Email settings saved successfully");
+      toast.success("Email settings saved. Add RESEND_API_KEY to Supabase secrets for production use.");
+      console.log('RESEND_API_KEY needed in Supabase secrets');
     } catch (error) {
       toast.error("Failed to save email settings");
     } finally {
@@ -50,7 +51,8 @@ export default function ApiSettings() {
       localStorage.setItem('sms_sender_id', smsSenderId);
       localStorage.setItem('sms_api_url', smsApiUrl);
       
-      toast.success("SMS settings saved successfully");
+      toast.success("SMS settings saved. Add SMS_API_KEY, SMS_API_URL, SMS_SENDER_ID, SMS_PROVIDER to Supabase secrets.");
+      console.log('SMS secrets needed in Supabase:', { SMS_API_KEY: smsApiKey, SMS_API_URL: smsApiUrl, SMS_SENDER_ID: smsSenderId, SMS_PROVIDER: smsProvider });
     } catch (error) {
       toast.error("Failed to save SMS settings");
     } finally {
@@ -65,7 +67,8 @@ export default function ApiSettings() {
       localStorage.setItem('whatsapp_phone_number_id', whatsappPhoneNumberId);
       localStorage.setItem('whatsapp_business_account_id', whatsappBusinessAccountId);
       
-      toast.success("WhatsApp settings saved successfully");
+      toast.success("WhatsApp settings saved. Add WHATSAPP_API_KEY, WHATSAPP_PHONE_NUMBER_ID to Supabase secrets.");
+      console.log('WhatsApp secrets needed in Supabase:', { WHATSAPP_API_KEY: whatsappApiKey, WHATSAPP_PHONE_NUMBER_ID: whatsappPhoneNumberId });
     } catch (error) {
       toast.error("Failed to save WhatsApp settings");
     } finally {
