@@ -14,7 +14,7 @@ import { AddUserForm } from '@/components/forms/AddUserForm';
 import { AddTestTypeForm } from '@/components/forms/AddTestTypeForm';
 import EditUserDialog from '@/components/forms/EditUserDialog';
 import EditBranchDialog from '@/components/forms/EditBranchDialog';
-import { Edit, Database, Trash2, Settings } from 'lucide-react';
+import { Edit, Database, Trash2, Settings, BarChart3 } from 'lucide-react';
 
 interface Organization {
   id: string;
@@ -142,6 +142,14 @@ export default function SuperAdmin() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              onClick={() => navigate('/analytics')} 
+              variant="secondary"
+              className="gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </Button>
             <Button 
               onClick={() => navigate('/audit-logs')} 
               variant="secondary"
