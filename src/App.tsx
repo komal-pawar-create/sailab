@@ -13,6 +13,7 @@ import PatientHistory from "./pages/PatientHistory";
 import DataManagement from "./pages/DataManagement";
 import AuditLogs from "./pages/AuditLogs";
 import ApiSettings from "./pages/ApiSettings";
+import Analytics from "./pages/Analytics";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 import { InstallPrompt } from "./components/InstallPrompt";
@@ -54,6 +55,7 @@ const App = () => {
           <Route path="/lab-profile" element={<LabProfile />} />
           <Route path="/branch-settings" element={<BranchSettings />} />
           <Route path="/patient-history" element={<PatientHistory />} />
+          <Route path="/analytics" element={<Analytics />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

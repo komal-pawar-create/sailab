@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, Users, TestTube, MessageSquare, LogOut, Building2, Receipt, 
   CreditCard, History, Settings, RefreshCw, Search, Calendar, Clock,
-  CalendarDays, CalendarRange, Upload, Plus, Eye, FileBarChart, AlertCircle
+  CalendarDays, CalendarRange, Upload, Plus, Eye, FileBarChart, AlertCircle, BarChart3
 } from 'lucide-react';
 import { AddPatientForm } from '@/components/forms/AddPatientForm';
 import { AddTestReportForm } from '@/components/forms/AddTestReportForm';
@@ -482,6 +482,13 @@ const Dashboard = () => {
               )}
               {['admin', 'lab_admin', 'super_admin'].includes(profile.role) && (
                 <>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/analytics')}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Analytics
+                  </Button>
                   <Button 
                     variant="outline" 
                     onClick={() => navigate('/audit-logs')}
