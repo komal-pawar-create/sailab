@@ -7,11 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from "recharts";
-import { ArrowLeft, TrendingUp, Users, FileText, DollarSign, Activity } from "lucide-react";
+import { ArrowLeft, TrendingUp, Users, FileText, DollarSign, Activity, Mail, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
-type TimePeriod = "7d" | "30d" | "90d" | "1y";
+type TimePeriod = "7d" | "30d" | "90d" | "1y" | "custom";
 
 interface RevenueData {
   date: string;
@@ -40,6 +42,11 @@ const Analytics = () => {
   const { user, profile } = useAuth();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("30d");
   const [loading, setLoading] = useState(true);
+  const [sendingReport, setSendingReport] = useState(false);
+  
+  // Comparison mode
+  const [comparisonMode, setComparisonMode] = useState(false);
+  const [compareTimePeriod, setCompareTimePeriod] = useState<TimePeriod>("30d");
   
   // Analytics data
   const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
@@ -53,6 +60,12 @@ const Analytics = () => {
   const [totalPatients, setTotalPatients] = useState(0);
   const [totalTests, setTotalTests] = useState(0);
   const [avgBillValue, setAvgBillValue] = useState(0);
+  
+  // Comparison metrics
+  const [compareRevenue, setCompareRevenue] = useState(0);
+  const [comparePatients, setComparePatients] = useState(0);
+  const [compareTests, setCompareTests] = useState(0);
+  const [compareAvgBill, setCompareAvgBill] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -61,6 +74,12 @@ const Analytics = () => {
     }
     fetchAnalytics();
   }, [user, navigate, timePeriod, profile]);
+
+  useEffect(() => {
+    if (comparisonMode) {
+      fetchComparisonData();
+    }
+  }, [comparisonMode, compareTimePeriod, profile]);
 
   const getDateRange = () => {
     const end = new Date();
@@ -214,6 +233,112 @@ const Analytics = () => {
     }
   };
 
+  const fetchComparisonData = async () => {
+    if (!profile?.lab_id) return;
+    
+    try {
+      const { start, end } = getDateRangeForPeriod(compareTimePeriod);
+      
+      let billsQuery = supabase
+        .from("bills")
+        .select("*")
+        .eq("lab_id", profile.lab_id)
+        .gte("created_at", start)
+        .lte("created_at", end);
+
+      let patientsQuery = supabase
+        .from("patients")
+        .select("*")
+        .eq("lab_id", profile.lab_id)
+        .gte("created_at", start)
+        .lte("created_at", end);
+
+      let testsQuery = supabase
+        .from("test_reports")
+        .select("*")
+        .eq("lab_id", profile.lab_id)
+        .gte("created_at", start)
+        .lte("created_at", end);
+
+      if (profile.role === "branch_operator" && profile.branch_id) {
+        billsQuery = billsQuery.eq("branch_id", profile.branch_id);
+        patientsQuery = patientsQuery.eq("branch_id", profile.branch_id);
+        testsQuery = testsQuery.eq("branch_id", profile.branch_id);
+      }
+
+      const [billsResult, patientsResult, testsResult] = await Promise.all([
+        billsQuery,
+        patientsQuery,
+        testsQuery,
+      ]);
+
+      if (billsResult.error) throw billsResult.error;
+      if (patientsResult.error) throw patientsResult.error;
+      if (testsResult.error) throw testsResult.error;
+
+      setCompareRevenue(billsResult.data.reduce((sum, bill) => sum + Number(bill.total_amount), 0));
+      setComparePatients(patientsResult.data.length);
+      setCompareTests(testsResult.data.length);
+      setCompareAvgBill(
+        billsResult.data.length > 0
+          ? billsResult.data.reduce((sum, bill) => sum + Number(bill.total_amount), 0) / billsResult.data.length
+          : 0
+      );
+    } catch (error: any) {
+      console.error("Error fetching comparison data:", error);
+      toast.error("Failed to load comparison data");
+    }
+  };
+
+  const getDateRangeForPeriod = (period: TimePeriod) => {
+    const end = new Date();
+    const start = new Date();
+    
+    switch (period) {
+      case "7d":
+        start.setDate(end.getDate() - 7);
+        break;
+      case "30d":
+        start.setDate(end.getDate() - 30);
+        break;
+      case "90d":
+        start.setDate(end.getDate() - 90);
+        break;
+      case "1y":
+        start.setFullYear(end.getFullYear() - 1);
+        break;
+    }
+    
+    return { start: start.toISOString(), end: end.toISOString() };
+  };
+
+  const sendAnalyticsReport = async (reportType: 'weekly' | 'monthly') => {
+    setSendingReport(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-analytics-report', {
+        body: { 
+          reportType,
+          labId: profile?.lab_id,
+          organizationId: profile?.role === 'lab_admin' ? profile.lab_id : undefined
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`${reportType === 'weekly' ? 'Weekly' : 'Monthly'} report sent to all admins`);
+    } catch (error: any) {
+      console.error('Error sending report:', error);
+      toast.error('Failed to send analytics report');
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
+  const calculatePercentageChange = (current: number, previous: number) => {
+    if (previous === 0) return 0;
+    return ((current - previous) / previous) * 100;
+  };
+
   const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
 
   const chartConfig = {
@@ -235,7 +360,7 @@ const Analytics = () => {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-5 w-5" />
@@ -245,18 +370,77 @@ const Analytics = () => {
               <p className="text-muted-foreground">Comprehensive insights into your lab operations</p>
             </div>
           </div>
-          <Select value={timePeriod} onValueChange={(value) => setTimePeriod(value as TimePeriod)}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-4">
+            {(profile?.role === 'super_admin' || profile?.role === 'lab_admin') && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => sendAnalyticsReport('weekly')}
+                  disabled={sendingReport}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Send Weekly Report
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => sendAnalyticsReport('monthly')}
+                  disabled={sendingReport}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Send Monthly Report
+                </Button>
+              </div>
+            )}
+            <Select value={timePeriod} onValueChange={(value) => setTimePeriod(value as TimePeriod)}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Last 7 days</SelectItem>
+                <SelectItem value="30d">Last 30 days</SelectItem>
+                <SelectItem value="90d">Last 90 days</SelectItem>
+                <SelectItem value="1y">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+
+        {/* Comparison Toggle */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Comparison Mode</CardTitle>
+                <CardDescription>Compare metrics across different time periods</CardDescription>
+              </div>
+              <div className="flex items-center gap-4">
+                {comparisonMode && (
+                  <Select value={compareTimePeriod} onValueChange={(value) => setCompareTimePeriod(value as TimePeriod)}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Compare with" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7d">Last 7 days</SelectItem>
+                      <SelectItem value="30d">Last 30 days</SelectItem>
+                      <SelectItem value="90d">Last 90 days</SelectItem>
+                      <SelectItem value="1y">Last year</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="comparison-mode"
+                    checked={comparisonMode}
+                    onCheckedChange={setComparisonMode}
+                  />
+                  <Label htmlFor="comparison-mode">Enable</Label>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
 
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -270,6 +454,15 @@ const Analytics = () => {
               <p className="text-xs text-muted-foreground">
                 Avg: ₹{avgBillValue.toFixed(0)} per bill
               </p>
+              {comparisonMode && (
+                <div className="mt-2 flex items-center gap-2">
+                  <TrendingUp className={`h-3 w-3 ${calculatePercentageChange(totalRevenue, compareRevenue) >= 0 ? 'text-green-500' : 'text-red-500'}`} />
+                  <span className={`text-xs font-medium ${calculatePercentageChange(totalRevenue, compareRevenue) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {calculatePercentageChange(totalRevenue, compareRevenue).toFixed(1)}%
+                  </span>
+                  <span className="text-xs text-muted-foreground">vs comparison period</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -283,6 +476,15 @@ const Analytics = () => {
               <p className="text-xs text-muted-foreground">
                 New registrations
               </p>
+              {comparisonMode && (
+                <div className="mt-2 flex items-center gap-2">
+                  <TrendingUp className={`h-3 w-3 ${calculatePercentageChange(totalPatients, comparePatients) >= 0 ? 'text-green-500' : 'text-red-500'}`} />
+                  <span className={`text-xs font-medium ${calculatePercentageChange(totalPatients, comparePatients) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {calculatePercentageChange(totalPatients, comparePatients).toFixed(1)}%
+                  </span>
+                  <span className="text-xs text-muted-foreground">vs comparison period</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -296,21 +498,39 @@ const Analytics = () => {
               <p className="text-xs text-muted-foreground">
                 Test reports generated
               </p>
+              {comparisonMode && (
+                <div className="mt-2 flex items-center gap-2">
+                  <TrendingUp className={`h-3 w-3 ${calculatePercentageChange(totalTests, compareTests) >= 0 ? 'text-green-500' : 'text-red-500'}`} />
+                  <span className={`text-xs font-medium ${calculatePercentageChange(totalTests, compareTests) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {calculatePercentageChange(totalTests, compareTests).toFixed(1)}%
+                  </span>
+                  <span className="text-xs text-muted-foreground">vs comparison period</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Operational Score</CardTitle>
+              <CardTitle className="text-sm font-medium">Avg Bill Value</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {totalTests > 0 ? ((totalTests / totalPatients) * 100).toFixed(0) : 0}%
+                ₹{avgBillValue.toFixed(0)}
               </div>
               <p className="text-xs text-muted-foreground">
-                Tests per patient ratio
+                Per bill average
               </p>
+              {comparisonMode && (
+                <div className="mt-2 flex items-center gap-2">
+                  <TrendingUp className={`h-3 w-3 ${calculatePercentageChange(avgBillValue, compareAvgBill) >= 0 ? 'text-green-500' : 'text-red-500'}`} />
+                  <span className={`text-xs font-medium ${calculatePercentageChange(avgBillValue, compareAvgBill) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {calculatePercentageChange(avgBillValue, compareAvgBill).toFixed(1)}%
+                  </span>
+                  <span className="text-xs text-muted-foreground">vs comparison period</span>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
