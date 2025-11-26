@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from "recharts";
-import { ArrowLeft, TrendingUp, Users, FileText, DollarSign, Activity, Mail, Calendar, Building2 } from "lucide-react";
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { ArrowLeft, TrendingUp, Users, FileText, DollarSign, Activity, Mail, Calendar, Building2, Sparkles, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type TimePeriod = "7d" | "30d" | "90d" | "1y" | "custom";
 
@@ -54,6 +55,21 @@ interface Branch {
   location: string;
 }
 
+interface PredictionData {
+  date: string;
+  predictedRevenue?: number;
+  predictedPatients?: number;
+  lowerBound: number;
+  upperBound: number;
+}
+
+interface PredictionInsights {
+  keyTrends: string[];
+  confidence: 'high' | 'medium' | 'low';
+  factors: string[];
+  recommendations: string[];
+}
+
 const Analytics = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -70,6 +86,13 @@ const Analytics = () => {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
   const [branchData, setBranchData] = useState<BranchData[]>([]);
+  
+  // Predictive analytics
+  const [showPredictions, setShowPredictions] = useState(false);
+  const [revenuePredictions, setRevenuePredictions] = useState<PredictionData[]>([]);
+  const [patientPredictions, setPatientPredictions] = useState<PredictionData[]>([]);
+  const [predictionInsights, setPredictionInsights] = useState<PredictionInsights | null>(null);
+  const [loadingPredictions, setLoadingPredictions] = useState(false);
   
   // Analytics data
   const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
@@ -449,6 +472,66 @@ const Analytics = () => {
     );
   };
 
+  const generatePredictions = async () => {
+    if (!profile?.lab_id) return;
+    
+    setLoadingPredictions(true);
+    try {
+      // Prepare historical data for AI analysis
+      const historicalData = {
+        revenueData: revenueData.slice(-60), // Last 60 days
+        patientData: patientData.slice(-60),
+        testStatusData,
+        billStatusData,
+        summary: {
+          totalRevenue,
+          totalPatients,
+          totalTests,
+          avgBillValue,
+          collectionRate: totalRevenue > 0 && billStatusData.length > 0
+            ? ((billStatusData.find(b => b.status === 'paid')?.amount || 0) / totalRevenue * 100)
+            : 0
+        }
+      };
+
+      const { data, error } = await supabase.functions.invoke('predict-analytics', {
+        body: { 
+          labId: profile.lab_id,
+          historicalData
+        }
+      });
+
+      if (error) throw error;
+
+      if (!data) {
+        throw new Error('No prediction data received');
+      }
+
+      // Handle rate limit and payment errors
+      if (data.error) {
+        if (data.error.includes('Rate limit')) {
+          toast.error('Rate limit exceeded. Please try again in a moment.');
+        } else if (data.error.includes('Payment required')) {
+          toast.error('AI credits required. Please add credits to your workspace.');
+        } else {
+          toast.error(data.error);
+        }
+        return;
+      }
+
+      setRevenuePredictions(data.revenuePredictions || []);
+      setPatientPredictions(data.patientPredictions || []);
+      setPredictionInsights(data.insights || null);
+      setShowPredictions(true);
+      toast.success('Predictions generated successfully!');
+    } catch (error: any) {
+      console.error('Error generating predictions:', error);
+      toast.error('Failed to generate predictions');
+    } finally {
+      setLoadingPredictions(false);
+    }
+  };
+
   const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
 
   const chartConfig = {
@@ -811,6 +894,143 @@ const Analytics = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Predictive Analytics */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  AI-Powered Predictions
+                </CardTitle>
+                <CardDescription>Forecast future revenue and patient trends using machine learning</CardDescription>
+              </div>
+              <Button
+                onClick={generatePredictions}
+                disabled={loadingPredictions || loading}
+                size="sm"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {loadingPredictions ? 'Generating...' : 'Generate Predictions'}
+              </Button>
+            </div>
+          </CardHeader>
+          {showPredictions && (
+            <CardContent className="space-y-6">
+              {predictionInsights && (
+                <Alert>
+                  <Sparkles className="h-4 w-4" />
+                  <AlertTitle>Prediction Insights (Confidence: {predictionInsights.confidence})</AlertTitle>
+                  <AlertDescription className="space-y-2 mt-2">
+                    <div>
+                      <strong>Key Trends:</strong>
+                      <ul className="list-disc list-inside ml-2">
+                        {predictionInsights.keyTrends.map((trend, i) => (
+                          <li key={i}>{trend}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <strong>Recommendations:</strong>
+                      <ul className="list-disc list-inside ml-2">
+                        {predictionInsights.recommendations.map((rec, i) => (
+                          <li key={i}>{rec}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Revenue Forecast (Next 30 Days)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={revenuePredictions}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="date" stroke="hsl(var(--foreground))" fontSize={10} />
+                          <YAxis stroke="hsl(var(--foreground))" fontSize={12} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Legend />
+                          <Area 
+                            type="monotone" 
+                            dataKey="upperBound" 
+                            stroke="none"
+                            fill="hsl(var(--primary))"
+                            fillOpacity={0.1}
+                            name="Upper Bound"
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="lowerBound" 
+                            stroke="none"
+                            fill="hsl(var(--primary))"
+                            fillOpacity={0.1}
+                            name="Lower Bound"
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="predictedRevenue" 
+                            stroke="hsl(var(--primary))" 
+                            strokeWidth={2}
+                            name="Predicted Revenue (₹)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Patient Forecast (Next 30 Days)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={patientPredictions}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="date" stroke="hsl(var(--foreground))" fontSize={10} />
+                          <YAxis stroke="hsl(var(--foreground))" fontSize={12} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Legend />
+                          <Area 
+                            type="monotone" 
+                            dataKey="upperBound" 
+                            stroke="none"
+                            fill="hsl(var(--secondary))"
+                            fillOpacity={0.1}
+                            name="Upper Bound"
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="lowerBound" 
+                            stroke="none"
+                            fill="hsl(var(--secondary))"
+                            fillOpacity={0.1}
+                            name="Lower Bound"
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="predictedPatients" 
+                            stroke="hsl(var(--secondary))" 
+                            strokeWidth={2}
+                            name="Predicted Patients"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          )}
+        </Card>
 
         {/* Charts */}
         <Tabs defaultValue="revenue" className="space-y-4">
