@@ -7,11 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from "recharts";
-import { ArrowLeft, TrendingUp, Users, FileText, DollarSign, Activity, Mail, Calendar } from "lucide-react";
+import { ArrowLeft, TrendingUp, Users, FileText, DollarSign, Activity, Mail, Calendar, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type TimePeriod = "7d" | "30d" | "90d" | "1y" | "custom";
 
@@ -37,6 +38,22 @@ interface BillStatusData {
   amount: number;
 }
 
+interface BranchData {
+  id: string;
+  name: string;
+  revenue: number;
+  patients: number;
+  tests: number;
+  avgBillValue: number;
+  collectionRate: number;
+}
+
+interface Branch {
+  id: string;
+  name: string;
+  location: string;
+}
+
 const Analytics = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -47,6 +64,12 @@ const Analytics = () => {
   // Comparison mode
   const [comparisonMode, setComparisonMode] = useState(false);
   const [compareTimePeriod, setCompareTimePeriod] = useState<TimePeriod>("30d");
+  
+  // Branch comparison
+  const [branchComparisonMode, setBranchComparisonMode] = useState(false);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
+  const [branchData, setBranchData] = useState<BranchData[]>([]);
   
   // Analytics data
   const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
@@ -73,6 +96,7 @@ const Analytics = () => {
       return;
     }
     fetchAnalytics();
+    fetchBranches();
   }, [user, navigate, timePeriod, profile]);
 
   useEffect(() => {
@@ -80,6 +104,12 @@ const Analytics = () => {
       fetchComparisonData();
     }
   }, [comparisonMode, compareTimePeriod, profile]);
+
+  useEffect(() => {
+    if (branchComparisonMode && selectedBranches.length > 0) {
+      fetchBranchComparison();
+    }
+  }, [branchComparisonMode, selectedBranches, timePeriod]);
 
   const getDateRange = () => {
     const end = new Date();
@@ -339,6 +369,86 @@ const Analytics = () => {
     return ((current - previous) / previous) * 100;
   };
 
+  const fetchBranches = async () => {
+    if (!profile?.lab_id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("branches")
+        .select("id, name, location")
+        .eq("lab_id", profile.lab_id)
+        .order("name");
+
+      if (error) throw error;
+      setBranches(data || []);
+    } catch (error: any) {
+      console.error("Error fetching branches:", error);
+    }
+  };
+
+  const fetchBranchComparison = async () => {
+    if (!profile?.lab_id || selectedBranches.length === 0) return;
+    
+    try {
+      const { start, end } = getDateRange();
+      
+      const branchMetrics = await Promise.all(
+        selectedBranches.map(async (branchId) => {
+          const [billsResult, patientsResult, testsResult] = await Promise.all([
+            supabase
+              .from("bills")
+              .select("*")
+              .eq("lab_id", profile.lab_id)
+              .eq("branch_id", branchId)
+              .gte("created_at", start)
+              .lte("created_at", end),
+            supabase
+              .from("patients")
+              .select("*")
+              .eq("lab_id", profile.lab_id)
+              .eq("branch_id", branchId)
+              .gte("created_at", start)
+              .lte("created_at", end),
+            supabase
+              .from("test_reports")
+              .select("*")
+              .eq("lab_id", profile.lab_id)
+              .eq("branch_id", branchId)
+              .gte("created_at", start)
+              .lte("created_at", end),
+          ]);
+
+          const branch = branches.find(b => b.id === branchId);
+          const revenue = billsResult.data?.reduce((sum, bill) => sum + Number(bill.total_amount), 0) || 0;
+          const paidAmount = billsResult.data?.filter(b => b.status === 'paid').reduce((sum, bill) => sum + Number(bill.total_amount), 0) || 0;
+          
+          return {
+            id: branchId,
+            name: branch?.name || "Unknown",
+            revenue,
+            patients: patientsResult.data?.length || 0,
+            tests: testsResult.data?.length || 0,
+            avgBillValue: billsResult.data?.length ? revenue / billsResult.data.length : 0,
+            collectionRate: revenue > 0 ? (paidAmount / revenue) * 100 : 0,
+          };
+        })
+      );
+
+      setBranchData(branchMetrics);
+    } catch (error: any) {
+      console.error("Error fetching branch comparison:", error);
+      toast.error("Failed to load branch comparison data");
+    }
+  };
+
+  const toggleBranchSelection = (branchId: string) => {
+    setSelectedBranches(prev => 
+      prev.includes(branchId) 
+        ? prev.filter(id => id !== branchId)
+        : [...prev, branchId]
+    );
+  };
+
   const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
 
   const chartConfig = {
@@ -441,6 +551,173 @@ const Analytics = () => {
             </div>
           </CardHeader>
         </Card>
+
+        {/* Branch Comparison */}
+        {branches.length > 1 && (profile?.role === 'lab_admin' || profile?.role === 'super_admin') && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Branch Performance Comparison
+                  </CardTitle>
+                  <CardDescription>Compare metrics across different branches</CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="branch-comparison-mode"
+                    checked={branchComparisonMode}
+                    onCheckedChange={setBranchComparisonMode}
+                  />
+                  <Label htmlFor="branch-comparison-mode">Enable</Label>
+                </div>
+              </div>
+            </CardHeader>
+            {branchComparisonMode && (
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium">Select Branches to Compare</Label>
+                    <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {branches.map((branch) => (
+                        <div key={branch.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={branch.id}
+                            checked={selectedBranches.includes(branch.id)}
+                            onCheckedChange={() => toggleBranchSelection(branch.id)}
+                          />
+                          <Label
+                            htmlFor={branch.id}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {branch.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {selectedBranches.length > 0 && branchData.length > 0 && (
+                    <div className="mt-6 space-y-6">
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {branchData.map((branch) => (
+                          <Card key={branch.id} className="border-2">
+                            <CardHeader>
+                              <CardTitle className="text-lg">{branch.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Revenue</span>
+                                <span className="font-semibold">₹{branch.revenue.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Patients</span>
+                                <span className="font-semibold">{branch.patients}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Tests</span>
+                                <span className="font-semibold">{branch.tests}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Avg Bill</span>
+                                <span className="font-semibold">₹{branch.avgBillValue.toFixed(0)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Collection Rate</span>
+                                <span className="font-semibold">{branch.collectionRate.toFixed(1)}%</span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Revenue Comparison</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ChartContainer config={chartConfig} className="h-[300px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={branchData}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                                  <XAxis dataKey="name" stroke="hsl(var(--foreground))" fontSize={12} />
+                                  <YAxis stroke="hsl(var(--foreground))" fontSize={12} />
+                                  <ChartTooltip content={<ChartTooltipContent />} />
+                                  <Bar dataKey="revenue" fill="hsl(var(--primary))" name="Revenue (₹)" />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </ChartContainer>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Patient & Test Volume</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ChartContainer config={chartConfig} className="h-[300px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={branchData}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                                  <XAxis dataKey="name" stroke="hsl(var(--foreground))" fontSize={12} />
+                                  <YAxis stroke="hsl(var(--foreground))" fontSize={12} />
+                                  <ChartTooltip content={<ChartTooltipContent />} />
+                                  <Legend />
+                                  <Bar dataKey="patients" fill="hsl(var(--primary))" name="Patients" />
+                                  <Bar dataKey="tests" fill="hsl(var(--secondary))" name="Tests" />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </ChartContainer>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Average Bill Value</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ChartContainer config={chartConfig} className="h-[300px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={branchData}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                                  <XAxis dataKey="name" stroke="hsl(var(--foreground))" fontSize={12} />
+                                  <YAxis stroke="hsl(var(--foreground))" fontSize={12} />
+                                  <ChartTooltip content={<ChartTooltipContent />} />
+                                  <Bar dataKey="avgBillValue" fill="hsl(var(--accent))" name="Avg Bill (₹)" />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </ChartContainer>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Collection Rate</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ChartContainer config={chartConfig} className="h-[300px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={branchData}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                                  <XAxis dataKey="name" stroke="hsl(var(--foreground))" fontSize={12} />
+                                  <YAxis stroke="hsl(var(--foreground))" fontSize={12} domain={[0, 100]} />
+                                  <ChartTooltip content={<ChartTooltipContent />} />
+                                  <Bar dataKey="collectionRate" fill="hsl(var(--primary))" name="Collection (%)" />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </ChartContainer>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
 
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
