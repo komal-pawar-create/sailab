@@ -1,0 +1,229 @@
+import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  CommandDialog, 
+  CommandEmpty, 
+  CommandGroup, 
+  CommandInput, 
+  CommandItem, 
+  CommandList,
+  CommandSeparator
+} from '@/components/ui/command';
+import { 
+  LayoutDashboard, 
+  Users, 
+  History, 
+  BarChart3, 
+  Building2, 
+  Settings,
+  ShieldCheck,
+  Database,
+  FileCheck,
+  Search,
+  HelpCircle,
+  LogOut
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface Patient {
+  id: string;
+  patient_id: string;
+  full_name: string;
+  phone: string;
+}
+
+export function CommandPalette() {
+  const [open, setOpen] = useState(false);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [search, setSearch] = useState('');
+  const navigate = useNavigate();
+  const { profile, signOut } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((open) => !open);
+      }
+    };
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, []);
+
+  // Fetch patients when search changes
+  useEffect(() => {
+    if (open && search && profile?.lab_id) {
+      fetchPatients();
+    }
+  }, [search, open, profile?.lab_id]);
+
+  const fetchPatients = async () => {
+    if (!profile?.lab_id) return;
+
+    try {
+      let query = supabase
+        .from('patients')
+        .select('id, patient_id, full_name, phone')
+        .eq('lab_id', profile.lab_id)
+        .limit(5);
+
+      if (search) {
+        query = query.or(`full_name.ilike.%${search}%,patient_id.ilike.%${search}%,phone.ilike.%${search}%`);
+      }
+
+      const { data } = await query;
+      setPatients(data || []);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    }
+  };
+
+  const handleNavigate = useCallback((path: string) => {
+    setOpen(false);
+    navigate(path);
+  }, [navigate]);
+
+  const handlePatientSelect = useCallback((patientId: string) => {
+    setOpen(false);
+    navigate(`/patient-history?id=${patientId}`);
+  }, [navigate]);
+
+  const handleSignOut = async () => {
+    setOpen(false);
+    await signOut();
+    navigate('/auth');
+    toast({
+      title: 'Signed out',
+      description: 'You have been signed out successfully.',
+    });
+  };
+
+  const canAccess = (roles?: string[]) => {
+    if (!roles || !profile) return true;
+    return roles.includes(profile.role);
+  };
+
+  return (
+    <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandInput 
+        placeholder="Search patients, navigate, or run commands..." 
+        value={search}
+        onValueChange={setSearch}
+      />
+      <CommandList>
+        <CommandEmpty>No results found.</CommandEmpty>
+
+        {/* Patients */}
+        {search && patients.length > 0 && (
+          <>
+            <CommandGroup heading="Patients">
+              {patients.map((patient) => (
+                <CommandItem
+                  key={patient.id}
+                  onSelect={() => handlePatientSelect(patient.id)}
+                  className="cursor-pointer"
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  <div className="flex flex-col">
+                    <span>{patient.full_name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {patient.patient_id} • {patient.phone}
+                    </span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
+
+        {/* Navigation */}
+        <CommandGroup heading="Navigation">
+          <CommandItem onSelect={() => handleNavigate('/dashboard')} className="cursor-pointer">
+            <LayoutDashboard className="mr-2 h-4 w-4" />
+            <span>Dashboard</span>
+          </CommandItem>
+          <CommandItem onSelect={() => handleNavigate('/patient-history')} className="cursor-pointer">
+            <History className="mr-2 h-4 w-4" />
+            <span>Patient History</span>
+          </CommandItem>
+          {canAccess(['admin', 'lab_admin', 'super_admin']) && (
+            <CommandItem onSelect={() => handleNavigate('/analytics')} className="cursor-pointer">
+              <BarChart3 className="mr-2 h-4 w-4" />
+              <span>Analytics</span>
+            </CommandItem>
+          )}
+        </CommandGroup>
+
+        {/* Admin */}
+        {canAccess(['admin', 'lab_admin', 'super_admin']) && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Administration">
+              {canAccess(['admin', 'lab_admin']) && (
+                <>
+                  <CommandItem onSelect={() => handleNavigate('/lab-profile')} className="cursor-pointer">
+                    <Building2 className="mr-2 h-4 w-4" />
+                    <span>Lab Profile</span>
+                  </CommandItem>
+                  <CommandItem onSelect={() => handleNavigate('/branch-settings')} className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Branch Settings</span>
+                  </CommandItem>
+                  <CommandItem onSelect={() => handleNavigate('/api-settings')} className="cursor-pointer">
+                    <FileCheck className="mr-2 h-4 w-4" />
+                    <span>API Settings</span>
+                  </CommandItem>
+                </>
+              )}
+              <CommandItem onSelect={() => handleNavigate('/audit-logs')} className="cursor-pointer">
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                <span>Audit Logs</span>
+              </CommandItem>
+            </CommandGroup>
+          </>
+        )}
+
+        {/* Super Admin */}
+        {canAccess(['super_admin']) && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Super Admin">
+              <CommandItem onSelect={() => handleNavigate('/super-admin')} className="cursor-pointer">
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                <span>Super Admin</span>
+              </CommandItem>
+              <CommandItem onSelect={() => handleNavigate('/super-admin/data-management')} className="cursor-pointer">
+                <Database className="mr-2 h-4 w-4" />
+                <span>Data Management</span>
+              </CommandItem>
+            </CommandGroup>
+          </>
+        )}
+
+        {/* Actions */}
+        <CommandSeparator />
+        <CommandGroup heading="Actions">
+          <CommandItem onSelect={handleSignOut} className="cursor-pointer">
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Sign Out</span>
+          </CommandItem>
+        </CommandGroup>
+
+        {/* Help */}
+        <CommandSeparator />
+        <CommandGroup heading="Help">
+          <CommandItem className="cursor-pointer">
+            <HelpCircle className="mr-2 h-4 w-4" />
+            <span>Keyboard Shortcuts</span>
+            <span className="ml-auto text-xs text-muted-foreground">?</span>
+          </CommandItem>
+        </CommandGroup>
+      </CommandList>
+    </CommandDialog>
+  );
+}
