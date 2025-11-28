@@ -14,6 +14,129 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_reminders: {
+        Row: {
+          appointment_id: string
+          error_message: string | null
+          id: string
+          reminder_type: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          appointment_id: string
+          error_message?: string | null
+          id?: string
+          reminder_type: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          appointment_id?: string
+          error_message?: string | null
+          id?: string
+          reminder_type?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reminders_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          appointment_type: string
+          assigned_collector: string | null
+          branch_id: string | null
+          collection_address: string | null
+          collection_latitude: number | null
+          collection_longitude: number | null
+          collection_phone: string | null
+          created_at: string | null
+          created_by: string
+          id: string
+          lab_id: string
+          notes: string | null
+          patient_id: string
+          reminder_sent: boolean | null
+          status: string
+          test_types: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          appointment_type?: string
+          assigned_collector?: string | null
+          branch_id?: string | null
+          collection_address?: string | null
+          collection_latitude?: number | null
+          collection_longitude?: number | null
+          collection_phone?: string | null
+          created_at?: string | null
+          created_by: string
+          id?: string
+          lab_id: string
+          notes?: string | null
+          patient_id: string
+          reminder_sent?: boolean | null
+          status?: string
+          test_types?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          appointment_type?: string
+          assigned_collector?: string | null
+          branch_id?: string | null
+          collection_address?: string | null
+          collection_latitude?: number | null
+          collection_longitude?: number | null
+          collection_phone?: string | null
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          lab_id?: string
+          notes?: string | null
+          patient_id?: string
+          reminder_sent?: boolean | null
+          status?: string
+          test_types?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1057,6 +1180,79 @@ export type Database = {
         }
         Relationships: []
       }
+      walk_in_tokens: {
+        Row: {
+          branch_id: string
+          called_at: string | null
+          completed_at: string | null
+          created_at: string | null
+          created_by: string
+          id: string
+          lab_id: string
+          patient_id: string | null
+          patient_name: string
+          patient_phone: string
+          service_type: string
+          status: string
+          token_date: string
+          token_number: number
+        }
+        Insert: {
+          branch_id: string
+          called_at?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by: string
+          id?: string
+          lab_id: string
+          patient_id?: string | null
+          patient_name: string
+          patient_phone: string
+          service_type?: string
+          status?: string
+          token_date?: string
+          token_number: number
+        }
+        Update: {
+          branch_id?: string
+          called_at?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          lab_id?: string
+          patient_id?: string | null
+          patient_name?: string
+          patient_phone?: string
+          service_type?: string
+          status?: string
+          token_date?: string
+          token_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "walk_in_tokens_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "walk_in_tokens_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "walk_in_tokens_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1089,6 +1285,10 @@ export type Database = {
       get_next_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
+      }
+      get_next_token_number: {
+        Args: { p_branch_id: string; p_token_date: string }
+        Returns: number
       }
       get_user_branch: { Args: { user_id: string }; Returns: string }
       get_user_by_username: {
