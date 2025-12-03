@@ -21,7 +21,9 @@ import {
   FileCheck,
   Search,
   HelpCircle,
-  LogOut
+  LogOut,
+  Pencil,
+  RotateCcw
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -208,6 +210,33 @@ export function CommandPalette() {
         {/* Actions */}
         <CommandSeparator />
         <CommandGroup heading="Actions">
+          <CommandItem 
+            onSelect={() => {
+              setOpen(false);
+              navigate('/dashboard');
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('dashboard-edit-mode'));
+              }, 100);
+            }} 
+            className="cursor-pointer"
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+            <span>Edit Dashboard Layout</span>
+          </CommandItem>
+          <CommandItem 
+            onSelect={() => {
+              setOpen(false);
+              window.dispatchEvent(new CustomEvent('dashboard-reset-layout'));
+              toast({
+                title: "Layout Reset",
+                description: "Dashboard layout has been reset to default",
+              });
+            }} 
+            className="cursor-pointer"
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            <span>Reset Dashboard Layout</span>
+          </CommandItem>
           <CommandItem onSelect={handleSignOut} className="cursor-pointer">
             <LogOut className="mr-2 h-4 w-4" />
             <span>Sign Out</span>

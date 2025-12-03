@@ -3,7 +3,7 @@ import GridLayout, { Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { Button } from "@/components/ui/button";
-import { Lock, Unlock, RotateCcw } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface DashboardLayoutProps {
@@ -25,54 +25,79 @@ export function DashboardLayout({ children, defaultLayout, storageKey, role }: D
     localStorage.setItem(`${storageKey}_${role}`, JSON.stringify(layout));
   }, [layout, storageKey, role]);
 
+  // Listen for custom events from sidebar/command palette
+  useEffect(() => {
+    const handleEditMode = () => {
+      setIsLocked(false);
+      toast({
+        title: "Edit Mode",
+        description: "Drag and resize widgets to customize your dashboard",
+      });
+    };
+
+    const handleResetLayout = () => {
+      setLayout(defaultLayout);
+      localStorage.removeItem(`${storageKey}_${role}`);
+      toast({
+        title: "Layout Reset",
+        description: "Dashboard layout has been reset to default",
+      });
+    };
+
+    window.addEventListener('dashboard-edit-mode', handleEditMode);
+    window.addEventListener('dashboard-reset-layout', handleResetLayout);
+
+    return () => {
+      window.removeEventListener('dashboard-edit-mode', handleEditMode);
+      window.removeEventListener('dashboard-reset-layout', handleResetLayout);
+    };
+  }, [defaultLayout, storageKey, role, toast]);
+
   const handleLayoutChange = (newLayout: Layout[]) => {
     if (!isLocked) {
       setLayout(newLayout);
     }
   };
 
-  const handleReset = () => {
-    setLayout(defaultLayout);
-    localStorage.removeItem(`${storageKey}_${role}`);
+  const handleDoneEditing = () => {
+    setIsLocked(true);
     toast({
-      title: "Layout Reset",
-      description: "Dashboard layout has been reset to default",
+      title: "Layout Saved",
+      description: "Your dashboard layout has been saved",
     });
+  };
+
+  const handleCancelEditing = () => {
+    const saved = localStorage.getItem(`${storageKey}_${role}`);
+    if (saved) {
+      setLayout(JSON.parse(saved));
+    }
+    setIsLocked(true);
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsLocked(!isLocked)}
-        >
-          {isLocked ? (
-            <>
-              <Lock className="h-4 w-4 mr-2" />
-              Unlock Layout
-            </>
-          ) : (
-            <>
-              <Unlock className="h-4 w-4 mr-2" />
-              Lock Layout
-            </>
-          )}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleReset}
-        >
-          <RotateCcw className="h-4 w-4 mr-2" />
-          Reset Layout
-        </Button>
-      </div>
-
+      {/* Edit mode indicator and controls */}
       {!isLocked && (
-        <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 p-3 rounded-lg text-sm border border-blue-500/20">
-          Drag and resize widgets to customize your dashboard. Click "Lock Layout" when done.
+        <div className="bg-primary/10 text-primary p-3 rounded-lg text-sm border border-primary/20 flex items-center justify-between">
+          <span>Drag and resize widgets to customize your dashboard</span>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancelEditing}
+            >
+              <X className="h-4 w-4 mr-1" />
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleDoneEditing}
+            >
+              <Check className="h-4 w-4 mr-1" />
+              Done
+            </Button>
+          </div>
         </div>
       )}
 
