@@ -15,9 +15,10 @@ import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { DashboardWidget } from '@/components/dashboard/DashboardWidget';
+import { DashboardFilters, TimePeriod } from '@/components/dashboard/DashboardFilters';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { format, subDays, startOfWeek, startOfMonth } from 'date-fns';
 import { Layout } from 'react-grid-layout';
 
 interface Stats {
@@ -31,6 +32,10 @@ interface Stats {
   todayPatients: number;
   todayTests: number;
   pendingTests: number;
+  filteredPatients: number;
+  filteredTests: number;
+  filteredRevenue: number;
+  filteredBills: number;
 }
 
 interface RecentItem {
@@ -47,6 +52,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('today');
   const [stats, setStats] = useState<Stats>({
     totalPatients: 0,
     totalReports: 0,
@@ -58,6 +64,10 @@ const Dashboard = () => {
     todayPatients: 0,
     todayTests: 0,
     pendingTests: 0,
+    filteredPatients: 0,
+    filteredTests: 0,
+    filteredRevenue: 0,
+    filteredBills: 0,
   });
 
   const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
@@ -79,7 +89,36 @@ const Dashboard = () => {
     if (!loading && user && profile && profile.role !== 'super_admin') {
       fetchDashboardData();
     }
-  }, [user, profile, loading]);
+  }, [user, profile, loading, timePeriod]);
+
+  const getDateFilter = (period: TimePeriod): string | null => {
+    const now = new Date();
+    switch (period) {
+      case 'today':
+        return format(now, 'yyyy-MM-dd');
+      case 'week':
+        return format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+      case 'month':
+        return format(startOfMonth(now), 'yyyy-MM-dd');
+      case 'all':
+      default:
+        return null;
+    }
+  };
+
+  const getFilterLabel = (period: TimePeriod): string => {
+    switch (period) {
+      case 'today':
+        return "today";
+      case 'week':
+        return "this week";
+      case 'month':
+        return "this month";
+      case 'all':
+      default:
+        return "all time";
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -98,6 +137,7 @@ const Dashboard = () => {
 
       const isBranchOperator = profile && ['operator_1', 'operator_2', 'operator_3'].includes(profile.role);
       const today = new Date().toISOString().split('T')[0];
+      const dateFilter = getDateFilter(timePeriod);
 
       // Fetch all data with branch filtering if needed
       let patientsQuery = supabase.from('patients').select('*').eq('lab_id', profile.lab_id);
@@ -128,6 +168,23 @@ const Dashboard = () => {
         feedbackQuery
       ]);
 
+      // Filter data based on time period
+      const filterByDate = <T extends { created_at?: string; test_date?: string; bill_date?: string }>(
+        data: T[] | null,
+        dateField: 'created_at' | 'test_date' | 'bill_date'
+      ): T[] => {
+        if (!data || !dateFilter) return data || [];
+        return data.filter(item => {
+          const itemDate = item[dateField];
+          if (!itemDate) return false;
+          return itemDate >= dateFilter;
+        });
+      };
+
+      const filteredPatients = filterByDate(patients, 'created_at');
+      const filteredReports = filterByDate(reports, 'test_date');
+      const filteredBills = filterByDate(bills, 'bill_date');
+
       // Calculate stats
       const todayPatients = patients?.filter(p => p.created_at.startsWith(today)).length || 0;
       const todayTests = reports?.filter(r => r.test_date.startsWith(today)).length || 0;
@@ -135,9 +192,10 @@ const Dashboard = () => {
       
       const totalRevenue = bills?.reduce((sum, bill) => sum + bill.total_amount, 0) || 0;
       const pendingAmount = bills?.reduce((sum, bill) => sum + bill.due_amount, 0) || 0;
+      const filteredRevenue = filteredBills.reduce((sum, bill) => sum + bill.total_amount, 0);
       
       const avgRating = feedbacks?.length 
-        ? feedbacks.reduce((sum, f) => sum + f.rating, 0) / feedbacks.length 
+        ? feedbacks.reduce((sum, f) => sum + (f.rating || 0), 0) / feedbacks.length 
         : 0;
 
       setStats({
@@ -151,9 +209,13 @@ const Dashboard = () => {
         todayPatients,
         todayTests,
         pendingTests,
+        filteredPatients: filteredPatients.length,
+        filteredTests: filteredReports.length,
+        filteredRevenue,
+        filteredBills: filteredBills.length,
       });
 
-      // Prepare recent items
+      // Prepare recent items (always show recent regardless of filter)
       const recent: RecentItem[] = [];
       
       patients?.slice(0, 5).forEach(p => {
@@ -234,30 +296,33 @@ const Dashboard = () => {
     return null;
   }
 
+  const filterLabel = getFilterLabel(timePeriod);
+
   const widgets = [
     <QuickActions key="quick-actions" />,
     <StatsWidget 
       key="stats-patients"
-      title="Total Patients"
-      value={stats.totalPatients}
+      title="Patients"
+      value={stats.filteredPatients}
       icon={Users}
-      trend={{ value: 12, isPositive: true }}
-      description={`${stats.todayPatients} registered today`}
+      trend={timePeriod !== 'all' ? { value: Math.round((stats.filteredPatients / Math.max(stats.totalPatients, 1)) * 100), isPositive: true } : undefined}
+      description={timePeriod === 'all' ? `${stats.todayPatients} registered today` : `${stats.totalPatients} total`}
     />,
     <StatsWidget 
       key="stats-tests"
-      title="Total Tests"
-      value={stats.totalReports}
+      title="Tests"
+      value={stats.filteredTests}
       icon={TestTube}
-      trend={{ value: 8, isPositive: true }}
-      description={`${stats.pendingTests} pending`}
+      trend={timePeriod !== 'all' ? { value: Math.round((stats.filteredTests / Math.max(stats.totalReports, 1)) * 100), isPositive: true } : undefined}
+      description={timePeriod === 'all' ? `${stats.pendingTests} pending` : `${stats.totalReports} total`}
     />,
     <StatsWidget 
       key="stats-revenue"
-      title="Total Revenue"
-      value={`₹${stats.totalRevenue.toLocaleString()}`}
+      title="Revenue"
+      value={`₹${stats.filteredRevenue.toLocaleString()}`}
       icon={DollarSign}
-      trend={{ value: 15, isPositive: true }}
+      trend={timePeriod !== 'all' ? { value: Math.round((stats.filteredRevenue / Math.max(stats.totalRevenue, 1)) * 100), isPositive: true } : undefined}
+      description={timePeriod === 'all' ? undefined : `₹${stats.totalRevenue.toLocaleString()} total`}
     />,
     <StatsWidget 
       key="stats-pending"
@@ -327,14 +392,14 @@ const Dashboard = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
             Welcome back, {profile.full_name}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -353,6 +418,14 @@ const Dashboard = () => {
             Analytics
           </Button>
         </div>
+      </div>
+
+      {/* Time Period Filter */}
+      <div className="flex items-center gap-4">
+        <DashboardFilters value={timePeriod} onChange={setTimePeriod} />
+        <span className="text-sm text-muted-foreground hidden sm:inline">
+          Showing stats for {filterLabel}
+        </span>
       </div>
 
       {/* Customizable Dashboard Layout */}
