@@ -18,6 +18,7 @@ interface DashboardData {
   bills: any[];
   followups: any[];
   feedback: any[];
+  payments: any[];
 }
 
 interface PeriodCounts {
@@ -41,6 +42,7 @@ const Dashboard = () => {
     bills: [],
     followups: [],
     feedback: [],
+    payments: [],
   });
   const [patientCounts, setPatientCounts] = useState<PeriodCounts>({ today: 0, week: 0, month: 0, all: 0 });
 
@@ -105,6 +107,7 @@ const Dashboard = () => {
       let billsQuery = supabase.from('bills').select('*, patients(id, full_name, patient_id)').eq('lab_id', profile.lab_id).order('bill_date', { ascending: false });
       let followupsQuery = supabase.from('patient_followups').select('*, patients:patient_id(id, full_name, patient_id)').eq('lab_id', profile.lab_id).order('due_at', { ascending: false });
       let feedbackQuery = supabase.from('feedback').select('*, patients:patient_id(id, full_name, patient_id)').eq('lab_id', profile.lab_id).order('created_at', { ascending: false });
+      let paymentsQuery = supabase.from('bill_payments').select('*, bills(id, bill_number, total_amount, patients(id, full_name, patient_id))').order('payment_date', { ascending: false });
 
       if (isBranchOperator && profile?.branch_id) {
         patientsQuery = patientsQuery.eq('branch_id', profile.branch_id);
@@ -113,6 +116,7 @@ const Dashboard = () => {
         billsQuery = billsQuery.eq('branch_id', profile.branch_id);
         followupsQuery = followupsQuery.eq('branch_id', profile.branch_id);
         feedbackQuery = feedbackQuery.eq('branch_id', profile.branch_id);
+        paymentsQuery = paymentsQuery.eq('branch_id', profile.branch_id);
       }
 
       const [
@@ -121,14 +125,16 @@ const Dashboard = () => {
         { data: documents },
         { data: bills },
         { data: followups },
-        { data: feedbackData }
+        { data: feedbackData },
+        { data: payments }
       ] = await Promise.all([
         patientsQuery,
         reportsQuery,
         documentsQuery,
         billsQuery,
         followupsQuery,
-        feedbackQuery
+        feedbackQuery,
+        paymentsQuery
       ]);
 
       // Calculate patient counts for each period
@@ -141,9 +147,9 @@ const Dashboard = () => {
       });
 
       // Filter data based on time period
-      const filterByDate = <T extends { created_at?: string; test_date?: string; bill_date?: string; due_at?: string }>(
+      const filterByDate = <T extends { created_at?: string; test_date?: string; bill_date?: string; due_at?: string; payment_date?: string }>(
         dataArr: T[] | null,
-        dateField: 'created_at' | 'test_date' | 'bill_date' | 'due_at'
+        dateField: 'created_at' | 'test_date' | 'bill_date' | 'due_at' | 'payment_date'
       ): T[] => {
         if (!dataArr || !dateFilter) return dataArr || [];
         return dataArr.filter(item => {
@@ -160,6 +166,7 @@ const Dashboard = () => {
         bills: filterByDate(bills, 'bill_date'),
         followups: filterByDate(followups, 'due_at'),
         feedback: filterByDate(feedbackData, 'created_at'),
+        payments: filterByDate(payments, 'payment_date'),
       });
 
     } catch (error) {
@@ -247,6 +254,7 @@ const Dashboard = () => {
         bills={data.bills}
         followups={data.followups}
         feedback={data.feedback}
+        payments={data.payments}
         onRefresh={fetchDashboardData}
       />
     </div>

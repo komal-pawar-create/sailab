@@ -1,11 +1,12 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, TestTube, FileText, Receipt, Bell, MessageSquare } from "lucide-react";
+import { Users, TestTube, FileText, Receipt, Bell, MessageSquare, Wallet } from "lucide-react";
 import { PatientsTable } from "./PatientsTable";
 import { ReportsTable } from "./ReportsTable";
 import { DocumentsTable } from "./DocumentsTable";
 import { BillsTable } from "./BillsTable";
 import { FollowupsTable } from "./FollowupsTable";
 import { FeedbackTable } from "./FeedbackTable";
+import { LedgerTable } from "./LedgerTable";
 
 interface DataTabsProps {
   patients: any[];
@@ -14,10 +15,11 @@ interface DataTabsProps {
   bills: any[];
   followups: any[];
   feedback: any[];
+  payments: any[];
   onRefresh: () => void;
 }
 
-export function DataTabs({ patients, reports, documents, bills, followups, feedback, onRefresh }: DataTabsProps) {
+export function DataTabs({ patients, reports, documents, bills, followups, feedback, payments, onRefresh }: DataTabsProps) {
   const tabs = [
     { id: "patients", label: "Patients", icon: Users, count: patients.length },
     { id: "reports", label: "Test Reports", icon: TestTube, count: reports.length },
@@ -25,6 +27,7 @@ export function DataTabs({ patients, reports, documents, bills, followups, feedb
     { id: "bills", label: "Bills", icon: Receipt, count: bills.length },
     { id: "followups", label: "Follow-ups", icon: Bell, count: followups.length },
     { id: "feedback", label: "Feedback", icon: MessageSquare, count: feedback.length },
+    { id: "ledger", label: "Ledger", icon: Wallet, count: payments.length },
   ];
 
   return (
@@ -67,6 +70,10 @@ export function DataTabs({ patients, reports, documents, bills, followups, feedb
 
       <TabsContent value="feedback" className="mt-4">
         <FeedbackTable feedback={feedback} onRefresh={onRefresh} />
+      </TabsContent>
+
+      <TabsContent value="ledger" className="mt-4">
+        <LedgerTable payments={payments} onRefresh={onRefresh} />
       </TabsContent>
     </Tabs>
   );
