@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { RefreshCw, BarChart3 } from 'lucide-react';
 import { useFollowupReminders } from '@/hooks/useFollowupReminders';
-import { DashboardFilters, TimePeriod } from '@/components/dashboard/DashboardFilters';
+import { DashboardFilters, TimePeriod, Branch } from '@/components/dashboard/DashboardFilters';
 import { StatsRow } from '@/components/dashboard/StatsRow';
 import { DataTabs } from '@/components/dashboard/DataTabs';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
@@ -45,8 +45,13 @@ const Dashboard = () => {
     payments: [],
   });
   const [patientCounts, setPatientCounts] = useState<PeriodCounts>({ today: 0, week: 0, month: 0, all: 0 });
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<string>('all');
 
   useFollowupReminders();
+
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin';
+  const isBranchOperator = profile && ['operator_1', 'operator_2', 'operator_3', 'branch_operator'].includes(profile.role);
 
   useEffect(() => {
     if (!loading) {
@@ -58,11 +63,44 @@ const Dashboard = () => {
     }
   }, [user, profile, loading, navigate]);
 
+  // Fetch branches for admin users
+  useEffect(() => {
+    const fetchBranches = async () => {
+      if (!isAdmin || !profile?.branch_id) return;
+      
+      try {
+        // Get organization ID from user's branch
+        const { data: userBranch } = await supabase
+          .from('branches')
+          .select('organization_id')
+          .eq('id', profile.branch_id)
+          .single();
+
+        if (userBranch?.organization_id) {
+          // Fetch all branches in the organization
+          const { data: orgBranches } = await supabase
+            .from('branches')
+            .select('id, name')
+            .eq('organization_id', userBranch.organization_id)
+            .order('name');
+
+          setBranches(orgBranches || []);
+        }
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
+
+    if (!loading && user && profile) {
+      fetchBranches();
+    }
+  }, [user, profile, loading, isAdmin]);
+
   useEffect(() => {
     if (!loading && user && profile && profile.role !== 'super_admin') {
       fetchDashboardData();
     }
-  }, [user, profile, loading, timePeriod]);
+  }, [user, profile, loading, timePeriod, selectedBranch]);
 
   const getDateFilter = (period: TimePeriod): string | null => {
     const now = new Date();
@@ -83,7 +121,7 @@ const Dashboard = () => {
     try {
       setIsRefreshing(true);
       
-      if (!profile?.lab_id) {
+      if (!profile?.lab_id && !isAdmin) {
         if (!loading) {
           toast({
             title: "Error",
@@ -94,29 +132,42 @@ const Dashboard = () => {
         return;
       }
 
-      const isBranchOperator = profile && ['operator_1', 'operator_2', 'operator_3', 'branch_operator'].includes(profile.role);
       const dateFilter = getDateFilter(timePeriod);
       const todayDate = format(new Date(), 'yyyy-MM-dd');
       const weekDate = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
       const monthDate = format(startOfMonth(new Date()), 'yyyy-MM-dd');
 
-      // Build queries with branch filtering if needed
-      let patientsQuery = supabase.from('patients').select('*').eq('lab_id', profile.lab_id).order('created_at', { ascending: false });
-      let reportsQuery = supabase.from('test_reports').select('*, patients(id, full_name, patient_id)').eq('lab_id', profile.lab_id).order('test_date', { ascending: false });
-      let documentsQuery = supabase.from('documents').select('*, patients:patient_id(id, full_name, patient_id)').eq('lab_id', profile.lab_id).order('created_at', { ascending: false });
-      let billsQuery = supabase.from('bills').select('*, patients(id, full_name, patient_id)').eq('lab_id', profile.lab_id).order('bill_date', { ascending: false });
-      let followupsQuery = supabase.from('patient_followups').select('*, patients:patient_id(id, full_name, patient_id)').eq('lab_id', profile.lab_id).order('due_at', { ascending: false });
-      let feedbackQuery = supabase.from('feedback').select('*, patients:patient_id(id, full_name, patient_id)').eq('lab_id', profile.lab_id).order('created_at', { ascending: false });
+      // Get branch IDs for filtering
+      let branchIds: string[] = [];
+      if (isAdmin) {
+        if (selectedBranch === 'all') {
+          // Use all organization branches
+          branchIds = branches.map(b => b.id);
+        } else {
+          branchIds = [selectedBranch];
+        }
+      } else if (isBranchOperator && profile?.branch_id) {
+        branchIds = [profile.branch_id];
+      }
+
+      // Build queries with branch filtering
+      let patientsQuery = supabase.from('patients').select('*').order('created_at', { ascending: false });
+      let reportsQuery = supabase.from('test_reports').select('*, patients(id, full_name, patient_id)').order('test_date', { ascending: false });
+      let documentsQuery = supabase.from('documents').select('*, patients:patient_id(id, full_name, patient_id)').order('created_at', { ascending: false });
+      let billsQuery = supabase.from('bills').select('*, patients(id, full_name, patient_id)').order('bill_date', { ascending: false });
+      let followupsQuery = supabase.from('patient_followups').select('*, patients:patient_id(id, full_name, patient_id)').order('due_at', { ascending: false });
+      let feedbackQuery = supabase.from('feedback').select('*, patients:patient_id(id, full_name, patient_id)').order('created_at', { ascending: false });
       let paymentsQuery = supabase.from('bill_payments').select('*, bills(id, bill_number, total_amount, patients(id, full_name, patient_id))').order('payment_date', { ascending: false });
 
-      if (isBranchOperator && profile?.branch_id) {
-        patientsQuery = patientsQuery.eq('branch_id', profile.branch_id);
-        reportsQuery = reportsQuery.eq('branch_id', profile.branch_id);
-        documentsQuery = documentsQuery.eq('branch_id', profile.branch_id);
-        billsQuery = billsQuery.eq('branch_id', profile.branch_id);
-        followupsQuery = followupsQuery.eq('branch_id', profile.branch_id);
-        feedbackQuery = feedbackQuery.eq('branch_id', profile.branch_id);
-        paymentsQuery = paymentsQuery.eq('branch_id', profile.branch_id);
+      // Apply branch filtering
+      if (branchIds.length > 0) {
+        patientsQuery = patientsQuery.in('branch_id', branchIds);
+        reportsQuery = reportsQuery.in('branch_id', branchIds);
+        documentsQuery = documentsQuery.in('branch_id', branchIds);
+        billsQuery = billsQuery.in('branch_id', branchIds);
+        followupsQuery = followupsQuery.in('branch_id', branchIds);
+        feedbackQuery = feedbackQuery.in('branch_id', branchIds);
+        paymentsQuery = paymentsQuery.in('branch_id', branchIds);
       }
 
       const [
@@ -236,11 +287,15 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Time Period Filter with Count Badges */}
+      {/* Time Period Filter with Branch Dropdown for Admins */}
       <DashboardFilters 
         value={timePeriod} 
         onChange={setTimePeriod}
         counts={patientCounts}
+        branches={branches}
+        selectedBranch={selectedBranch}
+        onBranchChange={setSelectedBranch}
+        showBranchFilter={isAdmin && branches.length > 1}
       />
 
       {/* Stats Row */}
