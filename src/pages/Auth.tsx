@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -110,12 +110,12 @@ const Auth = () => {
                   />
                 </div>
                 <div className="text-right">
-                  <a 
-                    href="/forgot-password" 
+                  <Link 
+                    to="/forgot-password" 
                     className="text-sm text-primary hover:underline"
                   >
                     Forgot Password?
-                  </a>
+                  </Link>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Signing In...' : 'Sign In'}
