@@ -119,6 +119,7 @@ const AppContent = () => {
               <Route path="/lab-profile" element={<LabProfile />} />
               <Route path="/branch-settings" element={<BranchSettings />} />
               <Route path="/patient-history" element={<PatientHistory />} />
+              <Route path="/patient/:patientId" element={<PatientHistory />} />
               <Route path="/analytics" element={<Analytics />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

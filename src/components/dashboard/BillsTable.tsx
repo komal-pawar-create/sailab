@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PaymentForm } from "@/components/forms/PaymentForm";
 import BillPrintModal from "@/components/bills/BillPrintModal";
+import { AddBillForm } from "@/components/forms/AddBillForm";
 
 interface Bill {
   id: string;
@@ -81,10 +82,7 @@ export function BillsTable({ bills, onRefresh }: BillsTableProps) {
             className="pl-9"
           />
         </div>
-        <Button onClick={() => navigate('/index')} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Bill
-        </Button>
+        <AddBillForm onBillAdded={onRefresh} />
       </div>
 
       <div className="border rounded-lg overflow-hidden">
