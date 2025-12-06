@@ -4,8 +4,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Search, Plus } from "lucide-react";
+import { Eye, Search } from "lucide-react";
 import { format } from "date-fns";
+import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
 
 interface Report {
   id: string;
@@ -61,10 +62,7 @@ export function ReportsTable({ reports, onRefresh }: ReportsTableProps) {
             className="pl-9"
           />
         </div>
-        <Button onClick={() => navigate('/index')} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Report
-        </Button>
+        <AddTestReportForm onReportAdded={onRefresh} />
       </div>
 
       <div className="border rounded-lg overflow-hidden">
