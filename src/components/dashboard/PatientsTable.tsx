@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
 import { AddBillForm } from "@/components/forms/AddBillForm";
+import { AddPatientForm } from "@/components/forms/AddPatientForm";
 
 interface Patient {
   id: string;
@@ -69,10 +70,7 @@ export function PatientsTable({ patients, onRefresh }: PatientsTableProps) {
             className="pl-9"
           />
         </div>
-        <Button onClick={() => navigate('/index')} size="sm">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add Patient
-        </Button>
+        <AddPatientForm onPatientAdded={onRefresh} />
       </div>
 
       <div className="border rounded-lg overflow-hidden">
