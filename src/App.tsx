@@ -15,6 +15,7 @@ import AuditLogs from "./pages/AuditLogs";
 import ApiSettings from "./pages/ApiSettings";
 import Analytics from "./pages/Analytics";
 import ForgotPassword from "./pages/ForgotPassword";
+import PublicFeedback from "./pages/PublicFeedback";
 import NotFound from "./pages/NotFound";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -73,8 +74,8 @@ const AppContent = () => {
   const location = useLocation();
   
   // Pages that should not have sidebar
-  const noSidebarPages = ['/auth', '/forgot-password', '/'];
-  const showSidebar = !noSidebarPages.includes(location.pathname);
+  const noSidebarPages = ['/auth', '/forgot-password', '/', '/feedback'];
+  const showSidebar = !noSidebarPages.includes(location.pathname) && !location.pathname.startsWith('/feedback');
 
   useEffect(() => {
     // Register service worker
@@ -98,6 +99,7 @@ const AppContent = () => {
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/feedback" element={<PublicFeedback />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     );
