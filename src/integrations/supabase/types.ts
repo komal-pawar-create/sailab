@@ -582,7 +582,7 @@ export type Database = {
         Row: {
           branch_id: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           feedback_type: string
           id: string
           lab_id: string
@@ -593,7 +593,7 @@ export type Database = {
         Insert: {
           branch_id?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           feedback_type: string
           id?: string
           lab_id: string
@@ -604,7 +604,7 @@ export type Database = {
         Update: {
           branch_id?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           feedback_type?: string
           id?: string
           lab_id?: string

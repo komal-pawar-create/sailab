@@ -4,8 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Search, Star } from "lucide-react";
+import { Eye, Search, Star, Plus, Link as LinkIcon, Copy } from "lucide-react";
 import { format } from "date-fns";
+import { AddFeedbackForm } from "@/components/forms/AddFeedbackForm";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface Feedback {
   id: string;
@@ -28,7 +31,20 @@ interface FeedbackTableProps {
 
 export function FeedbackTable({ feedback, onRefresh }: FeedbackTableProps) {
   const navigate = useNavigate();
+  const { profile } = useAuth();
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
+
+  const copyFeedbackLink = () => {
+    if (!profile?.lab_id) return;
+    const baseUrl = window.location.origin;
+    const feedbackUrl = `${baseUrl}/feedback?lab=${profile.lab_id}${profile.branch_id ? `&branch=${profile.branch_id}` : ''}`;
+    navigator.clipboard.writeText(feedbackUrl);
+    toast({
+      title: "Link copied!",
+      description: "Share this link with patients to collect feedback.",
+    });
+  };
 
   const filteredFeedback = feedback.filter((f) =>
     f.message.toLowerCase().includes(search.toLowerCase()) ||
@@ -74,6 +90,13 @@ export function FeedbackTable({ feedback, onRefresh }: FeedbackTableProps) {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
           />
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={copyFeedbackLink} title="Copy public feedback link">
+            <LinkIcon className="h-4 w-4 mr-2" />
+            Copy Public Link
+          </Button>
+          <AddFeedbackForm onFeedbackAdded={onRefresh} />
         </div>
       </div>
 
