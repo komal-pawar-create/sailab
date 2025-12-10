@@ -327,13 +327,6 @@ export type Database = {
             referencedRelation: "branches"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "fk_bills_patient"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["id"]
-          },
         ]
       }
       branches: {
@@ -569,13 +562,6 @@ export type Database = {
             referencedRelation: "branches"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "fk_documents_patient"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["id"]
-          },
         ]
       }
       feedback: {
@@ -632,13 +618,6 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_feedback_patient"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
             referencedColumns: ["id"]
           },
         ]
@@ -1125,13 +1104,6 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_test_reports_patient"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
             referencedColumns: ["id"]
           },
           {

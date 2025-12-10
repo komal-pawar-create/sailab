@@ -138,15 +138,16 @@ const Dashboard = () => {
       const monthDate = format(startOfMonth(new Date()), 'yyyy-MM-dd');
 
       // Build queries - RLS handles branch-level filtering automatically
-      // For admins, we add explicit branch filtering for cross-branch visibility
-      // For operators, RLS policies already restrict to their branch
+      // Use explicit FK hints to avoid PGRST201 ambiguity errors with duplicate foreign keys
+      console.log('Dashboard: Fetching data for role:', profile?.role, 'branch:', profile?.branch_id, 'lab:', profile?.lab_id);
+      
       let patientsQuery = supabase.from('patients').select('*').order('created_at', { ascending: false });
-      let reportsQuery = supabase.from('test_reports').select('*, patients(id, full_name, patient_id)').order('test_date', { ascending: false });
-      let documentsQuery = supabase.from('documents').select('*, patients:patient_id(id, full_name, patient_id)').order('created_at', { ascending: false });
-      let billsQuery = supabase.from('bills').select('*, patients(id, full_name, patient_id)').order('bill_date', { ascending: false });
-      let followupsQuery = supabase.from('patient_followups').select('*, patients:patient_id(id, full_name, patient_id)').order('due_at', { ascending: false });
-      let feedbackQuery = supabase.from('feedback').select('*, patients:patient_id(id, full_name, patient_id)').order('created_at', { ascending: false });
-      let paymentsQuery = supabase.from('bill_payments').select('*, bills(id, bill_number, total_amount, patients(id, full_name, patient_id))').order('payment_date', { ascending: false });
+      let reportsQuery = supabase.from('test_reports').select('*, patients!test_reports_patient_id_fkey(id, full_name, patient_id)').order('test_date', { ascending: false });
+      let documentsQuery = supabase.from('documents').select('*, patients!documents_patient_id_fkey(id, full_name, patient_id)').order('created_at', { ascending: false });
+      let billsQuery = supabase.from('bills').select('*, patients!bills_patient_id_fkey(id, full_name, patient_id)').order('bill_date', { ascending: false });
+      let followupsQuery = supabase.from('patient_followups').select('*, patients!patient_followups_patient_id_fkey(id, full_name, patient_id)').order('due_at', { ascending: false });
+      let feedbackQuery = supabase.from('feedback').select('*, patients!feedback_patient_id_fkey(id, full_name, patient_id)').order('created_at', { ascending: false });
+      let paymentsQuery = supabase.from('bill_payments').select('*, bills!bill_payments_bill_id_fkey(id, bill_number, total_amount, patients!bills_patient_id_fkey(id, full_name, patient_id))').order('payment_date', { ascending: false });
 
       // Only apply explicit branch filtering for admins who want to filter by specific branch
       // For operators, RLS already handles branch-level access - no need for client-side filtering
