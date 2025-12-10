@@ -139,8 +139,13 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
     fetchBranches();
   }, [organizationId, user?.branch_id]);
 
-  const needsBranchAssignment = (selectedRole: string) => {
+  const needsOrganizationAssignment = (selectedRole: string) => {
     return ['lab_admin', 'branch_operator', 'operator_1', 'operator_2', 'operator_3'].includes(selectedRole);
+  };
+
+  const needsBranchAssignment = (selectedRole: string) => {
+    // Lab admin has access to all branches, so no specific branch needed
+    return ['branch_operator', 'operator_1', 'operator_2', 'operator_3'].includes(selectedRole);
   };
 
   const handleSave = async () => {
@@ -168,6 +173,19 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
           return;
         }
         updateData.branch_id = branchId;
+      } else if (role === 'lab_admin') {
+        // Lab admin needs organization but can access all branches - assign first branch for lab_id derivation
+        if (branches.length > 0) {
+          updateData.branch_id = branches[0].id;
+        } else if (!branchId) {
+          toast({
+            title: "Error",
+            description: "Please select an organization with at least one branch",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
       } else {
         // Clear branch_id for super_admin
         updateData.branch_id = null;
@@ -203,10 +221,14 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
 
   const handleRoleChange = (newRole: string) => {
     setRole(newRole);
-    // Clear branch if role doesn't need it
-    if (!needsBranchAssignment(newRole)) {
+    // Clear branch and org if role doesn't need organization
+    if (!needsOrganizationAssignment(newRole)) {
       setBranchId('');
       setOrganizationId('');
+    }
+    // Clear branch if role is lab_admin (they access all branches)
+    if (newRole === 'lab_admin') {
+      setBranchId('');
     }
   };
 
@@ -322,7 +344,7 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
             </Select>
           </div>
 
-          {needsBranchAssignment(role) && (
+          {needsOrganizationAssignment(role) && (
             <>
               <div className="space-y-2">
                 <Label htmlFor="organization">Organization</Label>
@@ -340,7 +362,7 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
                 </Select>
               </div>
 
-              {organizationId && (
+              {organizationId && needsBranchAssignment(role) && (
                 <div className="space-y-2">
                   <Label htmlFor="branch">Branch</Label>
                   <Select value={branchId} onValueChange={setBranchId}>
@@ -356,6 +378,12 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
                     </SelectContent>
                   </Select>
                 </div>
+              )}
+
+              {role === 'lab_admin' && organizationId && (
+                <p className="text-sm text-muted-foreground">
+                  Lab Admin has access to all branches in this organization
+                </p>
               )}
             </>
           )}
