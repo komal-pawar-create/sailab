@@ -17,8 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { KeyRound, ChevronDown, Eye, EyeOff } from 'lucide-react';
 
 interface User {
   id: string;
@@ -54,16 +60,26 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const { toast } = useToast();
 
-  // Load initial user data
+  // Load initial user data and reset password fields
   useEffect(() => {
     if (user) {
       setFullName(user.full_name);
       setRole(user.role);
       setBranchId(user.branch_id || '');
     }
-  }, [user]);
+    // Reset password fields when dialog opens/closes
+    setNewPassword('');
+    setConfirmPassword('');
+    setIsPasswordOpen(false);
+    setShowPassword(false);
+  }, [user, isOpen]);
 
   // Fetch organizations
   useEffect(() => {
@@ -199,6 +215,71 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
     setBranchId(''); // Reset branch selection when organization changes
   };
 
+  const handleChangePassword = async () => {
+    if (!user) return;
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      // Get user_id from profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profileData) {
+        throw new Error('Could not find user');
+      }
+
+      // Use admin API to update password
+      const { error } = await supabase.auth.admin.updateUserById(
+        profileData.user_id,
+        { password: newPassword }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Password changed successfully",
+      });
+
+      setNewPassword('');
+      setConfirmPassword('');
+      setIsPasswordOpen(false);
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to change password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
@@ -278,6 +359,59 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
               )}
             </>
           )}
+
+          {/* Password Change Section */}
+          <Collapsible open={isPasswordOpen} onOpenChange={setIsPasswordOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                <span className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4" />
+                  Change Password
+                </span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isPasswordOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-3 pt-3">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="newPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                />
+              </div>
+              <Button 
+                onClick={handleChangePassword} 
+                disabled={isChangingPassword || !newPassword || !confirmPassword}
+                className="w-full"
+              >
+                {isChangingPassword ? 'Changing...' : 'Update Password'}
+              </Button>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
 
         <DialogFooter>
