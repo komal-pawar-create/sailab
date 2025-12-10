@@ -137,20 +137,9 @@ const Dashboard = () => {
       const weekDate = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
       const monthDate = format(startOfMonth(new Date()), 'yyyy-MM-dd');
 
-      // Get branch IDs for filtering
-      let branchIds: string[] = [];
-      if (isAdmin) {
-        if (selectedBranch === 'all') {
-          // Use all organization branches
-          branchIds = branches.map(b => b.id);
-        } else {
-          branchIds = [selectedBranch];
-        }
-      } else if (isBranchOperator && profile?.branch_id) {
-        branchIds = [profile.branch_id];
-      }
-
-      // Build queries with branch filtering
+      // Build queries - RLS handles branch-level filtering automatically
+      // For admins, we add explicit branch filtering for cross-branch visibility
+      // For operators, RLS policies already restrict to their branch
       let patientsQuery = supabase.from('patients').select('*').order('created_at', { ascending: false });
       let reportsQuery = supabase.from('test_reports').select('*, patients(id, full_name, patient_id)').order('test_date', { ascending: false });
       let documentsQuery = supabase.from('documents').select('*, patients:patient_id(id, full_name, patient_id)').order('created_at', { ascending: false });
@@ -159,8 +148,20 @@ const Dashboard = () => {
       let feedbackQuery = supabase.from('feedback').select('*, patients:patient_id(id, full_name, patient_id)').order('created_at', { ascending: false });
       let paymentsQuery = supabase.from('bill_payments').select('*, bills(id, bill_number, total_amount, patients(id, full_name, patient_id))').order('payment_date', { ascending: false });
 
-      // Apply branch filtering
-      if (branchIds.length > 0) {
+      // Only apply explicit branch filtering for admins who want to filter by specific branch
+      // For operators, RLS already handles branch-level access - no need for client-side filtering
+      if (isAdmin && selectedBranch !== 'all') {
+        const branchFilter = [selectedBranch];
+        patientsQuery = patientsQuery.in('branch_id', branchFilter);
+        reportsQuery = reportsQuery.in('branch_id', branchFilter);
+        documentsQuery = documentsQuery.in('branch_id', branchFilter);
+        billsQuery = billsQuery.in('branch_id', branchFilter);
+        followupsQuery = followupsQuery.in('branch_id', branchFilter);
+        feedbackQuery = feedbackQuery.in('branch_id', branchFilter);
+        paymentsQuery = paymentsQuery.in('branch_id', branchFilter);
+      } else if (isAdmin && selectedBranch === 'all' && branches.length > 0) {
+        // Admin viewing all branches - filter by organization branches
+        const branchIds = branches.map(b => b.id);
         patientsQuery = patientsQuery.in('branch_id', branchIds);
         reportsQuery = reportsQuery.in('branch_id', branchIds);
         documentsQuery = documentsQuery.in('branch_id', branchIds);
@@ -169,6 +170,7 @@ const Dashboard = () => {
         feedbackQuery = feedbackQuery.in('branch_id', branchIds);
         paymentsQuery = paymentsQuery.in('branch_id', branchIds);
       }
+      // For non-admin (operators), don't add .in() filter - let RLS handle it automatically
 
       const [
         { data: patients },
