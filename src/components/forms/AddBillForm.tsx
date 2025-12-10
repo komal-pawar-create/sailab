@@ -57,7 +57,7 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
       fetchPatients();
       generateBillNumber();
     }
-  }, [open]);
+  }, [open, selectedOperator, profile?.branch_id]);
 
   // Auto-select patient when preSelectedPatientId changes and patients are loaded
   useEffect(() => {
@@ -71,11 +71,33 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
 
   const fetchPatients = async () => {
     try {
-      const { data } = await supabase
+      let targetBranchId: string | null = null;
+
+      // For admins, use selected operator's branch
+      if (profile?.role === 'admin' && selectedOperator) {
+        const { data: opProfile } = await supabase
+          .from('profiles')
+          .select('branch_id')
+          .eq('user_id', selectedOperator)
+          .maybeSingle();
+        targetBranchId = opProfile?.branch_id ?? null;
+      } else if (profile?.branch_id) {
+        // For non-admins, use their own branch
+        targetBranchId = profile.branch_id;
+      }
+
+      let query = supabase
         .from('patients')
         .select('id, full_name, patient_id')
         .order('full_name');
-      setPatients(data || []);
+
+      // Filter by branch if available
+      if (targetBranchId) {
+        query = query.eq('branch_id', targetBranchId);
+      }
+
+      const { data } = await query;
+      setPatients((data || []).filter(p => p.id && p.id.trim() !== ''));
     } catch (error) {
       toast({
         title: "Error",

@@ -45,18 +45,18 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
 
   const fetchPatients = async () => {
     try {
-      // Determine target lab for filtering (respecting RLS)
-      let targetLabId: string | null = null;
+      // Determine target branch for filtering (respecting RLS)
+      let targetBranchId: string | null = null;
 
       if (profile?.role === 'admin' && selectedOperator) {
         const { data: operatorProfile } = await supabase
           .from('profiles')
-          .select('lab_id')
+          .select('branch_id')
           .eq('user_id', selectedOperator)
           .maybeSingle();
-        targetLabId = operatorProfile?.lab_id ?? null;
+        targetBranchId = operatorProfile?.branch_id ?? null;
       } else if (profile?.role !== 'admin') {
-        targetLabId = profile?.lab_id ?? null;
+        targetBranchId = profile?.branch_id ?? null;
       }
 
       let query = supabase
@@ -64,8 +64,8 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
         .select('id, full_name, patient_id')
         .order('full_name');
 
-      if (targetLabId) {
-        query = query.eq('lab_id', targetLabId);
+      if (targetBranchId) {
+        query = query.eq('branch_id', targetBranchId);
       }
 
       const { data, error } = await query;

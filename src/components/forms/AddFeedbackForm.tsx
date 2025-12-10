@@ -41,15 +41,34 @@ export const AddFeedbackForm = ({ onFeedbackAdded }: AddFeedbackFormProps) => {
     if (open) {
       fetchPatients();
     }
-  }, [open]);
+  }, [open, selectedOperator, profile?.branch_id]);
 
   const fetchPatients = async () => {
     try {
-      const { data } = await supabase
+      let targetBranchId: string | null = null;
+
+      // For admins, use selected operator's branch
+      if (profile?.role === 'admin' && selectedOperator) {
+        const { data: opProfile } = await supabase
+          .from('profiles')
+          .select('branch_id')
+          .eq('user_id', selectedOperator)
+          .maybeSingle();
+        targetBranchId = opProfile?.branch_id ?? null;
+      } else if (profile?.branch_id) {
+        targetBranchId = profile.branch_id;
+      }
+
+      let query = supabase
         .from('patients')
         .select('id, full_name, patient_id')
-        .not('id', 'eq', '')
         .order('full_name');
+
+      if (targetBranchId) {
+        query = query.eq('branch_id', targetBranchId);
+      }
+
+      const { data } = await query;
       setPatients((data || []).filter(p => p.id && p.id.trim() !== ''));
     } catch (error) {
       toast({
