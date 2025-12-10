@@ -207,7 +207,7 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
           branch_id: branchId,
           created_by: createdBy
         })
-        .select('*, patients(full_name, patient_id, phone, age, gender)')
+        .select('*, patients!bills_patient_id_fkey(full_name, patient_id, phone, age, gender)')
         .single();
 
       if (error) throw error;

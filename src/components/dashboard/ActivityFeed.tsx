@@ -35,19 +35,19 @@ export function ActivityFeed() {
             .limit(5),
           supabase
             .from('test_reports')
-            .select('id, test_type, created_at, patients(full_name), profiles!test_reports_created_by_fkey(full_name)')
+            .select('id, test_type, created_at, patients!test_reports_patient_id_fkey(full_name), profiles!test_reports_created_by_fkey(full_name)')
             .eq('lab_id', profile.lab_id)
             .order('created_at', { ascending: false })
             .limit(5),
           supabase
             .from('bills')
-            .select('id, bill_number, created_at, patients(full_name), profiles!bills_created_by_fkey(full_name)')
+            .select('id, bill_number, created_at, patients!bills_patient_id_fkey(full_name), profiles!bills_created_by_fkey(full_name)')
             .eq('lab_id', profile.lab_id)
             .order('created_at', { ascending: false })
             .limit(5),
           supabase
             .from('documents')
-            .select('id, file_name, created_at, patients(full_name), profiles!documents_uploaded_by_fkey(full_name)')
+            .select('id, file_name, created_at, patients!documents_patient_id_fkey(full_name), profiles!documents_uploaded_by_fkey(full_name)')
             .eq('lab_id', profile.lab_id)
             .order('created_at', { ascending: false })
             .limit(5),
