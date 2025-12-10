@@ -46,7 +46,7 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
       fetchPatients();
       fetchTestTypes();
     }
-  }, [open]);
+  }, [open, selectedOperator, profile?.branch_id]);
 
   // Auto-select patient when preSelectedPatientId changes and patients are loaded
   useEffect(() => {
@@ -60,13 +60,32 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
 
   const fetchPatients = async () => {
     try {
-      const { data, error } = await supabase
+      let targetBranchId: string | null = null;
+
+      // For admins, use selected operator's branch
+      if (profile?.role === 'admin' && selectedOperator) {
+        const { data: opProfile } = await supabase
+          .from('profiles')
+          .select('branch_id')
+          .eq('user_id', selectedOperator)
+          .maybeSingle();
+        targetBranchId = opProfile?.branch_id ?? null;
+      } else if (profile?.branch_id) {
+        targetBranchId = profile.branch_id;
+      }
+
+      let query = supabase
         .from('patients')
         .select('id, full_name, patient_id')
         .order('full_name');
 
+      if (targetBranchId) {
+        query = query.eq('branch_id', targetBranchId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      setPatients(data || []);
+      setPatients((data || []).filter(p => p.id && p.id.trim() !== ''));
     } catch (error) {
       console.error('Error fetching patients:', error);
       toast({

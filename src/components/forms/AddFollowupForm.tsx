@@ -53,17 +53,23 @@ export function AddFollowupForm({ onFollowupAdded }: AddFollowupFormProps) {
       fetchPatients();
       fetchTeamMembers();
     }
-  }, [open]);
+  }, [open, profile?.branch_id]);
 
   const fetchPatients = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('patients')
         .select('id, full_name, patient_id')
         .order('full_name');
-      
+
+      // Filter by branch for non-admin users
+      if (profile?.branch_id) {
+        query = query.eq('branch_id', profile.branch_id);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      setPatients(data || []);
+      setPatients((data || []).filter(p => p.id && p.id.trim() !== ''));
     } catch (error) {
       toast.error('Failed to fetch patients');
     }
