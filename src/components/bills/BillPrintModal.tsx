@@ -378,12 +378,6 @@ const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
             </div>
           )}
           
-          {/* Letterhead mode indicator in preview */}
-          {labProfile?.bill_print_with_header === false && (
-            <div className="text-center mb-4 p-2 bg-blue-50 text-blue-700 rounded text-sm border border-blue-200" style={{ marginTop: '10px' }}>
-              Letterhead Mode: Header hidden. Content positioned for pre-printed letterhead paper.
-            </div>
-          )}
 
           {/* Bill and Patient Information */}
           <div className="bill-info">
