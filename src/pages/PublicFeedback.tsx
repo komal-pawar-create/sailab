@@ -1,20 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, Send, CheckCircle } from "lucide-react";
+import { Star, Send, CheckCircle, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const FEEDBACK_TYPES = ["Compliment", "Suggestion", "Complaint", "General"];
 
+interface LabBranchInfo {
+  orgName: string | null;
+  branchName: string | null;
+}
+
 export default function PublicFeedback() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [labInfo, setLabInfo] = useState<LabBranchInfo | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -22,6 +28,29 @@ export default function PublicFeedback() {
     rating: 0,
     message: "",
   });
+
+  useEffect(() => {
+    const fetchLabInfo = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const branchId = urlParams.get('branch');
+      
+      if (branchId) {
+        const { data } = await supabase
+          .from('branches')
+          .select('name, organizations(name)')
+          .eq('id', branchId)
+          .single();
+        
+        if (data) {
+          setLabInfo({
+            branchName: data.name,
+            orgName: (data.organizations as any)?.name || null
+          });
+        }
+      }
+    };
+    fetchLabInfo();
+  }, []);
 
   const handleRatingClick = (rating: number) => {
     setFormData(prev => ({ ...prev, rating }));
@@ -91,6 +120,12 @@ export default function PublicFeedback() {
           <CardContent className="pt-8 pb-8">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Thank You!</h2>
+            {labInfo && (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2">
+                <Building2 className="h-4 w-4" />
+                <span>{labInfo.orgName}{labInfo.branchName && ` - ${labInfo.branchName}`}</span>
+              </div>
+            )}
             <p className="text-muted-foreground mb-6">
               Your feedback has been submitted successfully. We appreciate you taking the time to share your thoughts with us.
             </p>
@@ -107,6 +142,12 @@ export default function PublicFeedback() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
+          {labInfo && (
+            <div className="flex items-center justify-center gap-2 text-sm text-primary mb-2">
+              <Building2 className="h-4 w-4" />
+              <span className="font-medium">{labInfo.orgName}{labInfo.branchName && ` - ${labInfo.branchName}`}</span>
+            </div>
+          )}
           <CardTitle className="text-2xl">Share Your Feedback</CardTitle>
           <CardDescription>
             We value your opinion. Help us improve our services.
