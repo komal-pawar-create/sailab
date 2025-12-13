@@ -41,6 +41,7 @@ interface LabProfile {
   bank_ifsc_code?: string | null;
   footer_text?: string | null;
   terms_conditions?: string | null;
+  bill_print_with_header?: boolean;
 }
 
 export const BillPrint = ({ bill }: BillPrintProps) => {
@@ -145,7 +146,8 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
         bank_account_number: branchData?.bank_account_number || labData?.bank_account_number || defaultLabProfile.bank_account_number,
         bank_ifsc_code: branchData?.bank_ifsc_code || labData?.bank_ifsc_code || defaultLabProfile.bank_ifsc_code,
         footer_text: branchData?.footer_text || labData?.footer_text || defaultLabProfile.footer_text,
-        terms_conditions: branchData?.terms_conditions || labData?.terms_conditions || defaultLabProfile.terms_conditions
+        terms_conditions: branchData?.terms_conditions || labData?.terms_conditions || defaultLabProfile.terms_conditions,
+        bill_print_with_header: branchData?.bill_print_with_header ?? true
       };
 
       setLabProfile(mergedProfile);
@@ -194,7 +196,11 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
             body {
               font-family: Arial, sans-serif;
               padding: 20px;
+              padding-top: ${labProfile?.bill_print_with_header === false ? '150px' : '20px'};
               background: white;
+            }
+            .header-hidden {
+              display: none !important;
             }
             .header {
               text-align: center;
@@ -355,26 +361,35 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
         </DialogHeader>
         
         <div ref={printRef} className="p-6 bg-white">
-          {/* Header with Lab Info */}
-          <div className="header">
-            {labProfile?.logo_url && (
-              <img src={labProfile.logo_url} alt="Lab Logo" className="logo mx-auto" />
-            )}
-            <h1 className="lab-name">{labProfile?.name || 'Laboratory'}</h1>
-            <div className="lab-details">
-              {formatAddress() && <div>{formatAddress()}</div>}
-              {labProfile?.phone && <div>Phone: {labProfile.phone}</div>}
-              {labProfile?.website && <div>Website: {labProfile.website}</div>}
-            </div>
-            <div className="registration-details">
-              {labProfile?.registration_number && (
-                <span>Registration No: {labProfile.registration_number} </span>
+          {/* Header with Lab Info - conditionally shown */}
+          {labProfile?.bill_print_with_header !== false && (
+            <div className="header">
+              {labProfile?.logo_url && (
+                <img src={labProfile.logo_url} alt="Lab Logo" className="logo mx-auto" />
               )}
-              {labProfile?.gst_number && (
-                <span>| GST: {labProfile.gst_number}</span>
-              )}
+              <h1 className="lab-name">{labProfile?.name || 'Laboratory'}</h1>
+              <div className="lab-details">
+                {formatAddress() && <div>{formatAddress()}</div>}
+                {labProfile?.phone && <div>Phone: {labProfile.phone}</div>}
+                {labProfile?.website && <div>Website: {labProfile.website}</div>}
+              </div>
+              <div className="registration-details">
+                {labProfile?.registration_number && (
+                  <span>Registration No: {labProfile.registration_number} </span>
+                )}
+                {labProfile?.gst_number && (
+                  <span>| GST: {labProfile.gst_number}</span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+          
+          {/* Letterhead mode indicator in preview */}
+          {labProfile?.bill_print_with_header === false && (
+            <div className="text-center mb-4 p-2 bg-blue-50 text-blue-700 rounded text-sm border border-blue-200">
+              Letterhead Mode: Header will be hidden when printing. Content starts below to accommodate pre-printed letterhead.
+            </div>
+          )}
 
           {/* Bill and Patient Information */}
           <div className="bill-info">
