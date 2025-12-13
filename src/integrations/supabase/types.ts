@@ -343,6 +343,7 @@ export type Database = {
           bank_account_number: string | null
           bank_ifsc_code: string | null
           bank_name: string | null
+          bill_print_with_header: boolean
           branch_code: string
           city: string | null
           created_at: string
@@ -371,6 +372,7 @@ export type Database = {
           bank_account_number?: string | null
           bank_ifsc_code?: string | null
           bank_name?: string | null
+          bill_print_with_header?: boolean
           branch_code: string
           city?: string | null
           created_at?: string
@@ -399,6 +401,7 @@ export type Database = {
           bank_account_number?: string | null
           bank_ifsc_code?: string | null
           bank_name?: string | null
+          bill_print_with_header?: boolean
           branch_code?: string
           city?: string | null
           created_at?: string

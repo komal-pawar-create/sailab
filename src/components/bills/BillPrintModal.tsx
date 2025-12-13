@@ -43,6 +43,7 @@ interface LabProfile {
   bank_ifsc_code?: string;
   footer_text?: string;
   terms_conditions?: string;
+  bill_print_with_header?: boolean;
 }
 
 const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
@@ -61,8 +62,8 @@ const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
   const fetchLabProfile = async () => {
     // Set default lab profile first
     const defaultLabProfile: LabProfile = {
-      name: 'Lab Name',
-      phone: 'Contact Number',
+      name: '',
+      phone: '',
       logo_url: undefined,
       signature_url: undefined,
       terms_conditions: 'Terms and conditions apply',
@@ -76,38 +77,53 @@ const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
       bank_account_number: '',
       bank_ifsc_code: '',
       registration_number: '',
-      gst_number: ''
+      gst_number: '',
+      bill_print_with_header: true
     };
+
+    // First fetch branch data for bill_print_with_header setting
+    let branchData = null;
+    if (profile?.branch_id) {
+      try {
+        const { data } = await supabase
+          .from('branches')
+          .select('*')
+          .eq('id', profile.branch_id)
+          .single();
+        branchData = data;
+      } catch (error) {
+        console.error('Error fetching branch:', error);
+      }
+    }
 
     if (!profile?.lab_id) {
       // If no lab_id, try to fetch any lab in the organization
-      if (profile?.branch_id) {
+      if (branchData?.organization_id) {
         try {
-          const { data: branchData } = await supabase
-            .from('branches')
-            .select('organization_id')
-            .eq('id', profile.branch_id)
+          const { data: labsData } = await supabase
+            .from('labs')
+            .select('*')
+            .eq('organization_id', branchData.organization_id)
+            .limit(1)
             .single();
 
-          if (branchData?.organization_id) {
-            const { data: labsData } = await supabase
-              .from('labs')
-              .select('*')
-              .eq('organization_id', branchData.organization_id)
-              .limit(1)
-              .single();
-
-            if (labsData) {
-              setLabProfile({ ...defaultLabProfile, ...labsData });
-              return;
-            }
+          if (labsData) {
+            setLabProfile({ 
+              ...defaultLabProfile, 
+              ...labsData,
+              bill_print_with_header: branchData?.bill_print_with_header ?? true
+            });
+            return;
           }
         } catch (error) {
           console.error('Error fetching lab by organization:', error);
         }
       }
       
-      setLabProfile(defaultLabProfile);
+      setLabProfile({
+        ...defaultLabProfile,
+        bill_print_with_header: branchData?.bill_print_with_header ?? true
+      });
       return;
     }
 
@@ -119,13 +135,23 @@ const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
         .single();
 
       if (!error && data) {
-        setLabProfile({ ...defaultLabProfile, ...data });
+        setLabProfile({ 
+          ...defaultLabProfile, 
+          ...data,
+          bill_print_with_header: branchData?.bill_print_with_header ?? true
+        });
       } else {
-        setLabProfile(defaultLabProfile);
+        setLabProfile({
+          ...defaultLabProfile,
+          bill_print_with_header: branchData?.bill_print_with_header ?? true
+        });
       }
     } catch (error) {
       console.error('Error fetching lab profile:', error);
-      setLabProfile(defaultLabProfile);
+      setLabProfile({
+        ...defaultLabProfile,
+        bill_print_with_header: branchData?.bill_print_with_header ?? true
+      });
     }
   };
 
@@ -168,7 +194,11 @@ const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
             body {
               font-family: Arial, sans-serif;
               padding: 20px;
+              padding-top: ${labProfile?.bill_print_with_header === false ? '150px' : '20px'};
               background: white;
+            }
+            .header-hidden {
+              display: none !important;
             }
             .header {
               text-align: center;
@@ -324,27 +354,36 @@ const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
           <DialogTitle>Bill Preview - Ready to Print</DialogTitle>
         </DialogHeader>
         
-        <div ref={printRef} className="p-6 bg-white">
-          {/* Header with Lab Info */}
-          <div className="header">
-            {labProfile?.logo_url && (
-              <img src={labProfile.logo_url} alt="Lab Logo" className="logo mx-auto" />
-            )}
-            <h1 className="lab-name">{labProfile?.name || 'Laboratory'}</h1>
-            <div className="lab-details">
-              {formatAddress() && <div>{formatAddress()}</div>}
-              {labProfile?.phone && <div>Phone: {labProfile.phone}</div>}
-              {labProfile?.website && <div>Website: {labProfile.website}</div>}
-            </div>
-            <div className="registration-details">
-              {labProfile?.registration_number && (
-                <span>Registration No: {labProfile.registration_number} </span>
+        <div ref={printRef} className="p-6 bg-white" style={{ paddingTop: labProfile?.bill_print_with_header === false ? '20px' : undefined }}>
+          {/* Header with Lab Info - conditionally shown */}
+          {labProfile?.bill_print_with_header !== false && (
+            <div className="header">
+              {labProfile?.logo_url && (
+                <img src={labProfile.logo_url} alt="Lab Logo" className="logo mx-auto" />
               )}
-              {labProfile?.gst_number && (
-                <span>| GST: {labProfile.gst_number}</span>
-              )}
+              {labProfile?.name && <h1 className="lab-name">{labProfile.name}</h1>}
+              <div className="lab-details">
+                {formatAddress() && <div>{formatAddress()}</div>}
+                {labProfile?.phone && <div>Phone: {labProfile.phone}</div>}
+                {labProfile?.website && <div>Website: {labProfile.website}</div>}
+              </div>
+              <div className="registration-details">
+                {labProfile?.registration_number && (
+                  <span>Registration No: {labProfile.registration_number} </span>
+                )}
+                {labProfile?.gst_number && (
+                  <span>| GST: {labProfile.gst_number}</span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+          
+          {/* Letterhead mode indicator in preview */}
+          {labProfile?.bill_print_with_header === false && (
+            <div className="text-center mb-4 p-2 bg-blue-50 text-blue-700 rounded text-sm border border-blue-200" style={{ marginTop: '10px' }}>
+              Letterhead Mode: Header hidden. Content positioned for pre-printed letterhead paper.
+            </div>
+          )}
 
           {/* Bill and Patient Information */}
           <div className="bill-info">

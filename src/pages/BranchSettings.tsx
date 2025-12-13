@@ -36,6 +36,7 @@ interface Branch {
   terms_conditions?: string | null;
   organization_id: string;
   lab_id?: string | null;
+  bill_print_with_header?: boolean;
 }
 
 export default function BranchSettings() {
@@ -619,6 +620,34 @@ export default function BranchSettings() {
                 <CardTitle>Additional Settings</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="p-4 border rounded-lg bg-muted/50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="bill_print_mode" className="text-base font-medium">Bill Print Mode</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Choose how bills are printed
+                      </p>
+                    </div>
+                    <Select
+                      value={formData.bill_print_with_header === false ? 'letterhead' : 'with-header'}
+                      onValueChange={(value) => setFormData({ ...formData, bill_print_with_header: value === 'with-header' })}
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="with-header">With Header (Plain Paper)</SelectItem>
+                        <SelectItem value="letterhead">For Letterhead Paper</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {formData.bill_print_with_header === false 
+                      ? "Bills will print without header section, suitable for pre-printed letterhead paper with top margin."
+                      : "Bills will include full header with logo, name, and contact details."}
+                  </p>
+                </div>
+
                 <div>
                   <Label htmlFor="footer_text">Footer Text</Label>
                   <Textarea
