@@ -194,86 +194,168 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
               box-sizing: border-box;
             }
             body {
-              font-family: Arial, sans-serif;
+              font-family: 'Segoe UI', Arial, sans-serif;
               padding: 20px;
-              padding-top: ${labProfile?.bill_print_with_header === false ? '150px' : '20px'};
+              padding-top: ${labProfile?.bill_print_with_header === false ? '120px' : '20px'};
               background: white;
+              color: #333;
             }
             .header-hidden {
               display: none !important;
             }
             .header {
-              text-align: center;
-              margin-bottom: 30px;
-              border-bottom: 2px solid #333;
-              padding-bottom: 20px;
+              margin-bottom: 20px;
+              padding-bottom: 15px;
+              border-bottom: 3px solid #2563eb;
+            }
+            .header-top {
+              display: flex;
+              align-items: flex-start;
+              gap: 20px;
             }
             .logo {
-              max-height: 80px;
-              margin-bottom: 10px;
+              width: 90px;
+              height: 90px;
+              object-fit: contain;
+              border-radius: 8px;
+              border: 1px solid #e5e7eb;
+            }
+            .lab-info {
+              flex: 1;
             }
             .lab-name {
-              font-size: 24px;
-              font-weight: bold;
-              color: #333;
-              margin: 10px 0;
+              font-size: 26px;
+              font-weight: 700;
+              color: #1e40af;
+              margin: 0 0 4px 0;
+              letter-spacing: -0.5px;
             }
-            .lab-details {
+            .lab-tagline {
+              font-size: 13px;
+              color: #6b7280;
+              margin: 0 0 10px 0;
+            }
+            .contact-row {
               font-size: 12px;
-              color: #666;
-              line-height: 1.6;
+              color: #4b5563;
+              line-height: 1.8;
             }
-            .registration-details {
+            .contact-row span {
+              margin-right: 20px;
+            }
+            .registration-row {
+              margin-top: 10px;
+              padding-top: 10px;
+              border-top: 1px dashed #d1d5db;
               font-size: 11px;
-              color: #555;
-              margin-top: 5px;
+              color: #6b7280;
+            }
+            .registration-row strong {
+              color: #374151;
+            }
+            .invoice-title {
+              text-align: center;
+              margin: 20px 0 15px 0;
+            }
+            .invoice-badge {
+              display: inline-block;
+              background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+              color: white;
+              padding: 8px 30px;
+              font-size: 14px;
+              font-weight: 600;
+              border-radius: 50px;
+              letter-spacing: 1px;
             }
             .bill-info {
               display: flex;
               justify-content: space-between;
               margin: 20px 0;
+              gap: 20px;
             }
-            .patient-info, .bill-meta {
+            .info-box {
               flex: 1;
+              background: #f8fafc;
+              padding: 15px;
+              border-radius: 8px;
+              border: 1px solid #e2e8f0;
+            }
+            .info-box h3 {
+              font-size: 14px;
+              font-weight: 600;
+              color: #1e40af;
+              margin: 0 0 12px 0;
+              padding-bottom: 8px;
+              border-bottom: 2px solid #2563eb;
             }
             .info-row {
-              margin: 5px 0;
-              font-size: 13px;
+              margin: 6px 0;
+              font-size: 12px;
+              color: #4b5563;
             }
             .info-label {
-              font-weight: bold;
+              font-weight: 600;
               display: inline-block;
-              width: 120px;
+              width: 100px;
+              color: #374151;
             }
             table {
               width: 100%;
               border-collapse: collapse;
               margin: 20px 0;
             }
-            th, td {
-              border: 1px solid #ddd;
-              padding: 8px;
-              text-align: left;
-            }
             th {
-              background-color: #f2f2f2;
-              font-weight: bold;
+              background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+              color: white;
+              padding: 10px 8px;
+              text-align: left;
+              font-size: 12px;
+              font-weight: 600;
+            }
+            td {
+              border: 1px solid #e5e7eb;
+              padding: 10px 8px;
+              font-size: 12px;
             }
             .total-row {
-              font-weight: bold;
-              background-color: #f9f9f9;
+              font-weight: 600;
+              background-color: #f1f5f9;
+            }
+            .total-row td {
+              font-size: 13px;
             }
             .payment-info {
               margin: 20px 0;
               padding: 15px;
-              background: #f9f9f9;
-              border-radius: 5px;
+              background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+              border-radius: 8px;
+              border: 1px solid #bbf7d0;
             }
+            .payment-info h3 {
+              font-size: 13px;
+              font-weight: 600;
+              color: #166534;
+              margin: 0 0 10px 0;
+            }
+            .payment-summary {
+              display: flex;
+              justify-content: space-between;
+              font-size: 13px;
+            }
+            .payment-summary .paid { color: #16a34a; }
+            .payment-summary .due { color: #dc2626; font-weight: 600; }
             .bank-details {
               margin: 20px 0;
               padding: 15px;
-              background: #f0f8ff;
-              border-radius: 5px;
+              background: #eff6ff;
+              border-radius: 8px;
+              border: 1px solid #bfdbfe;
+            }
+            .bank-details h3 {
+              font-size: 13px;
+              font-weight: 600;
+              color: #1e40af;
+              margin: 0 0 10px 0;
             }
             .signature-section {
               margin-top: 40px;
@@ -285,32 +367,32 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
             }
             .terms {
               margin: 20px 0;
-              font-size: 11px;
-              color: #666;
-              line-height: 1.5;
-              padding-top: 10px;
-              border-top: 1px solid #ddd;
+              font-size: 10px;
+              color: #6b7280;
+              line-height: 1.6;
+              padding-top: 15px;
+              border-top: 1px solid #e5e7eb;
             }
             .footer {
               text-align: center;
-              font-size: 12px;
-              color: #666;
+              font-size: 11px;
+              color: #6b7280;
               margin-top: 30px;
-              padding-top: 10px;
-              border-top: 1px solid #ddd;
+              padding-top: 15px;
+              border-top: 1px solid #e5e7eb;
             }
             .status-badge {
               display: inline-block;
-              padding: 4px 8px;
-              border-radius: 4px;
-              font-size: 11px;
-              font-weight: bold;
+              padding: 4px 10px;
+              border-radius: 50px;
+              font-size: 10px;
+              font-weight: 600;
               text-transform: uppercase;
             }
-            .status-paid { background: #d4edda; color: #155724; }
-            .status-pending { background: #fff3cd; color: #856404; }
-            .status-partially_paid { background: #ffe5cc; color: #cc5200; }
-            .status-overdue { background: #f8d7da; color: #721c24; }
+            .status-paid { background: #dcfce7; color: #166534; }
+            .status-pending { background: #fef3c7; color: #92400e; }
+            .status-partially_paid { background: #ffedd5; color: #c2410c; }
+            .status-overdue { background: #fee2e2; color: #991b1b; }
           </style>
         </head>
         <body>
@@ -361,25 +443,36 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
         </DialogHeader>
         
         <div ref={printRef} className="p-6 bg-white">
-          {/* Header with Lab Info - conditionally shown */}
+          {/* Professional Header - conditionally shown */}
           {labProfile?.bill_print_with_header !== false && (
             <div className="header">
-              {labProfile?.logo_url && (
-                <img src={labProfile.logo_url} alt="Lab Logo" className="logo mx-auto" />
-              )}
-              <h1 className="lab-name">{labProfile?.name || 'Laboratory'}</h1>
-              <div className="lab-details">
-                {formatAddress() && <div>{formatAddress()}</div>}
-                {labProfile?.phone && <div>Phone: {labProfile.phone}</div>}
-                {labProfile?.website && <div>Website: {labProfile.website}</div>}
+              <div className="header-top">
+                {labProfile?.logo_url && (
+                  <img src={labProfile.logo_url} alt="Lab Logo" className="logo" />
+                )}
+                <div className="lab-info">
+                  <h1 className="lab-name">{labProfile?.name || 'Laboratory'}</h1>
+                  <p className="lab-tagline">Diagnostic & Pathology Center</p>
+                  <div className="contact-row">
+                    {formatAddress() && <span>📍 {formatAddress()}</span>}
+                    {labProfile?.phone && <span>📞 {labProfile.phone}</span>}
+                    {labProfile?.website && <span>🌐 {labProfile.website}</span>}
+                  </div>
+                </div>
               </div>
-              <div className="registration-details">
-                {labProfile?.registration_number && (
-                  <span>Registration No: {labProfile.registration_number} </span>
-                )}
-                {labProfile?.gst_number && (
-                  <span>| GST: {labProfile.gst_number}</span>
-                )}
+              {(labProfile?.registration_number || labProfile?.gst_number) && (
+                <div className="registration-row">
+                  {labProfile?.registration_number && (
+                    <span>Registration No: <strong>{labProfile.registration_number}</strong></span>
+                  )}
+                  {labProfile?.registration_number && labProfile?.gst_number && <span> | </span>}
+                  {labProfile?.gst_number && (
+                    <span>GST: <strong>{labProfile.gst_number}</strong></span>
+                  )}
+                </div>
+              )}
+              <div className="invoice-title">
+                <span className="invoice-badge">📋 INVOICE</span>
               </div>
             </div>
           )}
@@ -393,8 +486,8 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
 
           {/* Bill and Patient Information */}
           <div className="bill-info">
-            <div className="patient-info">
-              <h3 style={{ marginBottom: '10px', fontSize: '16px', fontWeight: 'bold' }}>Patient Details</h3>
+            <div className="info-box patient-info">
+              <h3>Patient Details</h3>
               <div className="info-row">
                 <span className="info-label">Patient ID:</span>
                 {bill.patients?.patient_id || 'N/A'}
@@ -413,16 +506,12 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
                     <span className="info-label">Phone:</span>
                     {patientDetails.phone || 'N/A'}
                   </div>
-                  <div className="info-row">
-                    <span className="info-label">Email:</span>
-                    {patientDetails.email || 'N/A'}
-                  </div>
                 </>
               )}
             </div>
             
-            <div className="bill-meta">
-              <h3 style={{ marginBottom: '10px', fontSize: '16px', fontWeight: 'bold' }}>Bill Details</h3>
+            <div className="info-box bill-meta">
+              <h3>Bill Details</h3>
               <div className="info-row">
                 <span className="info-label">Bill Number:</span>
                 <strong>{bill.bill_number}</strong>

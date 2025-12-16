@@ -11,6 +11,7 @@ import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2, Upload, X, Building, CreditCard, FileText, Image } from 'lucide-react';
+import { BillPreviewSample } from '@/components/bills/BillPreviewSample';
 
 interface Branch {
   id: string;
@@ -671,6 +672,32 @@ export default function BranchSettings() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Bill Preview */}
+            <BillPreviewSample 
+              branchData={{
+                name: formData.name,
+                phone: formData.phone || undefined,
+                address_line1: formData.address_line1 || undefined,
+                address_line2: formData.address_line2 || undefined,
+                city: formData.city || undefined,
+                state: formData.state || undefined,
+                postal_code: formData.postal_code || undefined,
+                logo_url: formData.logo_url,
+                signature_url: formData.signature_url,
+                registration_number: formData.registration_number,
+                gst_number: formData.gst_number,
+                website: formData.website,
+                bank_name: formData.bank_name,
+                bank_account_number: formData.bank_account_number,
+                bank_ifsc_code: formData.bank_ifsc_code,
+                footer_text: formData.footer_text,
+                terms_conditions: formData.terms_conditions,
+                bill_print_with_header: formData.bill_print_with_header,
+              }}
+              logoPreview={logoPreview}
+              signaturePreview={signaturePreview}
+            />
           </TabsContent>
         </Tabs>
       )}
