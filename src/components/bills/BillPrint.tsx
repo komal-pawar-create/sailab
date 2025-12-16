@@ -45,6 +45,18 @@ interface LabProfile {
   bill_print_with_header?: boolean;
 }
 
+// Helper to get full storage URL from path
+const getStorageUrl = (path: string | null | undefined): string | undefined => {
+  if (!path) return undefined;
+  // If already a full URL, return as is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  // Otherwise, generate public URL from storage path
+  const { data } = supabase.storage.from('lab-assets').getPublicUrl(path);
+  return data?.publicUrl;
+};
+
 export const BillPrint = ({ bill }: BillPrintProps) => {
   const printRef = useRef<HTMLDivElement>(null);
   const [labProfile, setLabProfile] = useState<LabProfile | null>(null);
@@ -98,6 +110,7 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
     }
 
     // Build profile from branch data (branch takes priority)
+    // Convert storage paths to full URLs for logo and signature
     const mergedProfile: LabProfile = {
       name: branchData.name || defaultLabProfile.name,
       phone: branchData.phone || defaultLabProfile.phone,
@@ -106,8 +119,8 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
       city: branchData.city || defaultLabProfile.city,
       state: branchData.state || defaultLabProfile.state,
       postal_code: branchData.postal_code || defaultLabProfile.postal_code,
-      logo_url: branchData.logo_url || defaultLabProfile.logo_url,
-      signature_url: branchData.signature_url || defaultLabProfile.signature_url,
+      logo_url: getStorageUrl(branchData.logo_url) || defaultLabProfile.logo_url,
+      signature_url: getStorageUrl(branchData.signature_url) || defaultLabProfile.signature_url,
       website: branchData.website || defaultLabProfile.website,
       registration_number: branchData.registration_number || defaultLabProfile.registration_number,
       gst_number: branchData.gst_number || defaultLabProfile.gst_number,
