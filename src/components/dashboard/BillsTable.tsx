@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Search, Plus, Printer, CreditCard } from "lucide-react";
-import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PaymentForm } from "@/components/forms/PaymentForm";
 import BillPrintModal from "@/components/bills/BillPrintModal";
 import { AddBillForm } from "@/components/forms/AddBillForm";
+import { formatDate } from "@/lib/utils";
 
 interface Bill {
   id: string;
@@ -22,6 +22,7 @@ interface Bill {
   status: string;
   items: any;
   notes?: string;
+  branch_id?: string;
   patients?: {
     id: string;
     full_name: string;
@@ -112,7 +113,7 @@ export function BillsTable({ bills, onRefresh }: BillsTableProps) {
                   <TableCell className="font-mono text-xs">{bill.bill_number}</TableCell>
                   <TableCell className="font-medium">{bill.patients?.full_name || "-"}</TableCell>
                   <TableCell className="text-sm">
-                    {format(new Date(bill.bill_date), "dd MMM yy")}
+                    {formatDate(bill.bill_date)}
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     ₹{bill.total_amount.toLocaleString()}
