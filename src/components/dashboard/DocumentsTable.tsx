@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Search, Download, ExternalLink } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Document {
@@ -103,7 +103,7 @@ export function DocumentsTable({ documents, onRefresh }: DocumentsTableProps) {
                     {formatFileSize(doc.file_size)}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {format(new Date(doc.created_at), "dd MMM yy")}
+                    {formatDate(doc.created_at)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
 
 interface BillPreviewSampleProps {
   branchData: {
@@ -148,8 +149,8 @@ export const BillPreviewSample = ({ branchData, logoPreview, signaturePreview }:
                 <h3 className="font-semibold text-sm mb-2 text-primary">Bill Details</h3>
                 <div className="text-xs space-y-1 text-muted-foreground">
                   <p><span className="font-medium">Bill No:</span> <strong>INV-2024-0001</strong></p>
-                  <p><span className="font-medium">Date:</span> {new Date().toLocaleDateString()}</p>
-                  <p><span className="font-medium">Due Date:</span> {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
+                  <p><span className="font-medium">Date:</span> {formatDate(new Date())}</p>
+                  <p><span className="font-medium">Due Date:</span> {formatDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))}</p>
                   <p><span className="font-medium">Status:</span> <span className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-[10px]">PENDING</span></p>
                 </div>
               </div>

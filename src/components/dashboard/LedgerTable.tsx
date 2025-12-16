@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Search, Receipt } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils";
 
 interface Payment {
   id: string;
@@ -124,7 +124,7 @@ export function LedgerTable({ payments, onRefresh }: LedgerTableProps) {
               paymentsWithBalance.slice(0, 100).map((payment) => (
                 <TableRow key={payment.id} className="hover:bg-muted/50">
                   <TableCell className="text-sm">
-                    {format(new Date(payment.payment_date), "dd MMM yy")}
+                    {formatDate(payment.payment_date)}
                   </TableCell>
                   <TableCell className="font-mono text-xs">
                     {payment.bills?.bill_number || "-"}

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Printer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { formatDate } from '@/lib/utils';
 
 interface Bill {
   id: string;
@@ -16,6 +16,7 @@ interface Bill {
   status: string;
   items: any;
   notes?: string;
+  branch_id?: string;
   patients?: { full_name: string; patient_id: string; phone?: string; email?: string; age?: number; gender?: string } | null;
 }
 
@@ -48,7 +49,6 @@ interface LabProfile {
 
 const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
   const printRef = useRef<HTMLDivElement>(null);
-  const { profile } = useAuth();
   const [labProfile, setLabProfile] = useState<LabProfile | null>(null);
   const [patientDetails, setPatientDetails] = useState<any>(null);
 
@@ -57,7 +57,7 @@ const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
       fetchLabProfile();
       fetchPatientDetails();
     }
-  }, [profile, bill, open]);
+  }, [bill, open]);
 
   const fetchLabProfile = async () => {
     // Set default lab profile first
@@ -81,14 +81,14 @@ const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
       bill_print_with_header: true
     };
 
-    // First fetch branch data for bill_print_with_header setting
+    // Fetch branch data using the BILL's branch_id (not user's profile branch)
     let branchData = null;
-    if (profile?.branch_id) {
+    if (bill?.branch_id) {
       try {
         const { data } = await supabase
           .from('branches')
           .select('*')
-          .eq('id', profile.branch_id)
+          .eq('id', bill.branch_id)
           .single();
         branchData = data;
       } catch (error) {
@@ -96,63 +96,34 @@ const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
       }
     }
 
-    if (!profile?.lab_id) {
-      // If no lab_id, try to fetch any lab in the organization
-      if (branchData?.organization_id) {
-        try {
-          const { data: labsData } = await supabase
-            .from('labs')
-            .select('*')
-            .eq('organization_id', branchData.organization_id)
-            .limit(1)
-            .single();
-
-          if (labsData) {
-            setLabProfile({ 
-              ...defaultLabProfile, 
-              ...labsData,
-              bill_print_with_header: branchData?.bill_print_with_header ?? true
-            });
-            return;
-          }
-        } catch (error) {
-          console.error('Error fetching lab by organization:', error);
-        }
-      }
-      
-      setLabProfile({
-        ...defaultLabProfile,
-        bill_print_with_header: branchData?.bill_print_with_header ?? true
-      });
+    if (!branchData) {
+      setLabProfile(defaultLabProfile);
       return;
     }
 
-    try {
-      const { data, error } = await supabase
-        .from('labs')
-        .select('*')
-        .eq('id', profile.lab_id)
-        .single();
+    // Build profile from branch data (branch takes priority)
+    const mergedProfile: LabProfile = {
+      name: branchData.name || defaultLabProfile.name,
+      phone: branchData.phone || defaultLabProfile.phone,
+      address_line1: branchData.address_line1 || defaultLabProfile.address_line1,
+      address_line2: branchData.address_line2 || defaultLabProfile.address_line2,
+      city: branchData.city || defaultLabProfile.city,
+      state: branchData.state || defaultLabProfile.state,
+      postal_code: branchData.postal_code || defaultLabProfile.postal_code,
+      logo_url: branchData.logo_url || defaultLabProfile.logo_url,
+      signature_url: branchData.signature_url || defaultLabProfile.signature_url,
+      website: branchData.website || defaultLabProfile.website,
+      registration_number: branchData.registration_number || defaultLabProfile.registration_number,
+      gst_number: branchData.gst_number || defaultLabProfile.gst_number,
+      bank_name: branchData.bank_name || defaultLabProfile.bank_name,
+      bank_account_number: branchData.bank_account_number || defaultLabProfile.bank_account_number,
+      bank_ifsc_code: branchData.bank_ifsc_code || defaultLabProfile.bank_ifsc_code,
+      footer_text: branchData.footer_text || defaultLabProfile.footer_text,
+      terms_conditions: branchData.terms_conditions || defaultLabProfile.terms_conditions,
+      bill_print_with_header: branchData.bill_print_with_header ?? true
+    };
 
-      if (!error && data) {
-        setLabProfile({ 
-          ...defaultLabProfile, 
-          ...data,
-          bill_print_with_header: branchData?.bill_print_with_header ?? true
-        });
-      } else {
-        setLabProfile({
-          ...defaultLabProfile,
-          bill_print_with_header: branchData?.bill_print_with_header ?? true
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching lab profile:', error);
-      setLabProfile({
-        ...defaultLabProfile,
-        bill_print_with_header: branchData?.bill_print_with_header ?? true
-      });
-    }
+    setLabProfile(mergedProfile);
   };
 
   const fetchPatientDetails = async () => {
@@ -506,11 +477,11 @@ const BillPrintModal = ({ bill, open, onOpenChange }: BillPrintModalProps) => {
               </div>
               <div className="info-row">
                 <span className="info-label">Bill Date:</span>
-                {new Date(bill.bill_date).toLocaleDateString()}
+                {formatDate(bill.bill_date)}
               </div>
               <div className="info-row">
                 <span className="info-label">Due Date:</span>
-                {new Date(bill.due_date).toLocaleDateString()}
+                {formatDate(bill.due_date)}
               </div>
               <div className="info-row">
                 <span className="info-label">Status:</span>

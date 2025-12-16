@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Plus, FileText, Receipt, Search, UserPlus } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
 import { AddBillForm } from "@/components/forms/AddBillForm";
@@ -108,7 +108,7 @@ export function PatientsTable({ patients, onRefresh }: PatientsTableProps) {
                     {patient.referred_by_doctor_name || "-"}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {format(new Date(patient.created_at), "dd MMM yy")}
+                    {formatDate(patient.created_at)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">

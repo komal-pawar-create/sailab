@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Search, Check, Clock } from "lucide-react";
-import { format, isPast, isToday } from "date-fns";
+import { isPast, isToday } from "date-fns";
+import { formatDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -133,7 +134,7 @@ export function FollowupsTable({ followups, onRefresh }: FollowupsTableProps) {
                   </TableCell>
                   <TableCell>{followup.patients?.full_name || "-"}</TableCell>
                   <TableCell className="text-sm">
-                    {format(new Date(followup.due_at), "dd MMM yy HH:mm")}
+                    {formatDate(followup.due_at, true)}
                   </TableCell>
                   <TableCell>{getPriorityBadge(followup.priority)}</TableCell>
                   <TableCell>{getStatusBadge(followup.status, followup.due_at)}</TableCell>

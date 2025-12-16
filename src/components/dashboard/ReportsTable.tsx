@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Search } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils";
 import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
 
 interface Report {
@@ -92,7 +92,7 @@ export function ReportsTable({ reports, onRefresh }: ReportsTableProps) {
                   <TableCell>{report.patients?.full_name || "-"}</TableCell>
                   <TableCell className="font-mono text-xs">{report.patients?.patient_id || "-"}</TableCell>
                   <TableCell className="text-sm">
-                    {format(new Date(report.test_date), "dd MMM yy")}
+                    {formatDate(report.test_date)}
                   </TableCell>
                   <TableCell>{getStatusBadge(report.status)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">

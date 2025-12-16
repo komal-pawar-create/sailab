@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Eye, Search, Star, QrCode, Link as LinkIcon, Download, Printer } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
 import { AddFeedbackForm } from "@/components/forms/AddFeedbackForm";
 import { useAuth } from "@/hooks/useAuth";
@@ -243,7 +243,7 @@ export function FeedbackTable({ feedback, onRefresh }: FeedbackTableProps) {
                   <TableCell>{item.patients?.full_name || "Anonymous"}</TableCell>
                   <TableCell>{renderStars(item.rating)}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {format(new Date(item.created_at), "dd MMM yy")}
+                    {formatDate(item.created_at)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end">
