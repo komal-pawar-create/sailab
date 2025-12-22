@@ -145,7 +145,7 @@ const Dashboard = () => {
       let reportsQuery = supabase.from('test_reports').select('*, patients!test_reports_patient_id_fkey(id, full_name, patient_id)').order('test_date', { ascending: false });
       let documentsQuery = supabase.from('documents').select('*, patients!documents_patient_id_fkey(id, full_name, patient_id)').order('created_at', { ascending: false });
       let billsQuery = supabase.from('bills').select('*, patients!bills_patient_id_fkey(id, full_name, patient_id)').order('bill_date', { ascending: false });
-      let followupsQuery = supabase.from('patient_followups').select('*, patients!patient_followups_patient_id_fkey(id, full_name, patient_id)').order('due_at', { ascending: false });
+      let followupsQuery = supabase.from('patient_followups').select('*, patients!fk_patient_followups_patient(id, full_name, patient_id)').order('due_at', { ascending: false });
       let feedbackQuery = supabase.from('feedback').select('*, patients!feedback_patient_id_fkey(id, full_name, patient_id)').order('created_at', { ascending: false });
       let paymentsQuery = supabase.from('bill_payments').select('*, bills!bill_payments_bill_id_fkey(id, bill_number, total_amount, patients!bills_patient_id_fkey(id, full_name, patient_id))').order('payment_date', { ascending: false });
 

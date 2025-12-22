@@ -27,7 +27,7 @@ export function useFollowupReminders() {
             title,
             due_at,
             priority,
-            patients!inner(full_name)
+            patients!fk_patient_followups_patient(full_name)
           `)
           .eq('status', 'open')
           .lt('due_at', now.toISOString());
@@ -40,7 +40,7 @@ export function useFollowupReminders() {
             title,
             remind_at,
             priority,
-            patients!inner(full_name)
+            patients!fk_patient_followups_patient(full_name)
           `)
           .eq('status', 'open')
           .not('remind_at', 'is', null)
