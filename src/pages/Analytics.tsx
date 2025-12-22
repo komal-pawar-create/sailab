@@ -72,9 +72,9 @@ interface PredictionInsights {
 
 const Analytics = () => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("30d");
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [sendingReport, setSendingReport] = useState(false);
   
   // Comparison mode
@@ -114,13 +114,15 @@ const Analytics = () => {
   const [compareAvgBill, setCompareAvgBill] = useState(0);
 
   useEffect(() => {
+    if (authLoading) return;
+    
     if (!user) {
       navigate("/auth");
       return;
     }
     fetchAnalytics();
     fetchBranches();
-  }, [user, navigate, timePeriod, profile]);
+  }, [user, authLoading, navigate, timePeriod, profile]);
 
   useEffect(() => {
     if (comparisonMode) {
@@ -159,7 +161,7 @@ const Analytics = () => {
   const fetchAnalytics = async () => {
     if (!profile?.lab_id) return;
     
-    setLoading(true);
+    setDataLoading(true);
     try {
       const { start, end } = getDateRange();
       
@@ -282,7 +284,7 @@ const Analytics = () => {
       console.error("Error fetching analytics:", error);
       toast.error("Failed to load analytics data");
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   };
 
@@ -548,6 +550,17 @@ const Analytics = () => {
       color: "hsl(var(--primary))",
     },
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -908,7 +921,7 @@ const Analytics = () => {
               </div>
               <Button
                 onClick={generatePredictions}
-                disabled={loadingPredictions || loading}
+                disabled={loadingPredictions || dataLoading}
                 size="sm"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
