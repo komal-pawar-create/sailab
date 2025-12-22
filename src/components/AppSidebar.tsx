@@ -43,7 +43,7 @@ interface NavItem {
 const mainItems: NavItem[] = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Patient History', url: '/patient-history', icon: History },
-  { title: 'Analytics', url: '/analytics', icon: BarChart3, roles: ['admin', 'lab_admin', 'super_admin'] },
+  { title: 'Analytics', url: '/analytics', icon: BarChart3, roles: ['admin', 'lab_admin', 'super_admin', 'branch_operator'] },
 ];
 
 const adminItems: NavItem[] = [
