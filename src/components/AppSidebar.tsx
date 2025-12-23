@@ -12,6 +12,7 @@ import {
   LogOut,
   Pencil,
   RotateCcw,
+  ClipboardList,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -43,6 +44,7 @@ interface NavItem {
 const mainItems: NavItem[] = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Patient History', url: '/patient-history', icon: History },
+  { title: 'Follow-ups', url: '/followups', icon: ClipboardList },
   { title: 'Analytics', url: '/analytics', icon: BarChart3, roles: ['admin', 'lab_admin', 'super_admin', 'branch_operator'] },
 ];
 

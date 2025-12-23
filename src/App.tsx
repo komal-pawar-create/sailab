@@ -14,6 +14,7 @@ import DataManagement from "./pages/DataManagement";
 import AuditLogs from "./pages/AuditLogs";
 import ApiSettings from "./pages/ApiSettings";
 import Analytics from "./pages/Analytics";
+import Followups from "./pages/Followups";
 import ForgotPassword from "./pages/ForgotPassword";
 import PublicFeedback from "./pages/PublicFeedback";
 import NotFound from "./pages/NotFound";
@@ -123,6 +124,7 @@ const AppContent = () => {
               <Route path="/patient-history" element={<PatientHistory />} />
               <Route path="/patient/:patientId" element={<PatientHistory />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/followups" element={<Followups />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
