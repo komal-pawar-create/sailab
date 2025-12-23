@@ -49,6 +49,11 @@ interface BranchData {
   collectionRate: number;
 }
 
+interface BranchRevenueTimeData {
+  date: string;
+  [branchName: string]: string | number;
+}
+
 interface Branch {
   id: string;
   name: string;
@@ -86,6 +91,7 @@ const Analytics = () => {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
   const [branchData, setBranchData] = useState<BranchData[]>([]);
+  const [branchRevenueOverTime, setBranchRevenueOverTime] = useState<BranchRevenueTimeData[]>([]);
   
   // Predictive analytics
   const [showPredictions, setShowPredictions] = useState(false);
@@ -417,6 +423,9 @@ const Analytics = () => {
     try {
       const { start, end } = getDateRange();
       
+      // Store bills data for time series processing
+      const allBranchBills: { branchId: string; branchName: string; bills: any[] }[] = [];
+      
       const branchMetrics = await Promise.all(
         selectedBranches.map(async (branchId) => {
           const [billsResult, patientsResult, testsResult] = await Promise.all([
@@ -444,12 +453,20 @@ const Analytics = () => {
           ]);
 
           const branch = branches.find(b => b.id === branchId);
+          const branchName = branch?.name || "Unknown";
           const revenue = billsResult.data?.reduce((sum, bill) => sum + Number(bill.total_amount), 0) || 0;
           const paidAmount = billsResult.data?.filter(b => b.status === 'paid').reduce((sum, bill) => sum + Number(bill.total_amount), 0) || 0;
           
+          // Store bills for time series
+          allBranchBills.push({
+            branchId,
+            branchName,
+            bills: billsResult.data || []
+          });
+          
           return {
             id: branchId,
-            name: branch?.name || "Unknown",
+            name: branchName,
             revenue,
             patients: patientsResult.data?.length || 0,
             tests: testsResult.data?.length || 0,
@@ -460,6 +477,36 @@ const Analytics = () => {
       );
 
       setBranchData(branchMetrics);
+      
+      // Process revenue over time for all branches
+      const revenueByDateMap: { [date: string]: BranchRevenueTimeData } = {};
+      
+      allBranchBills.forEach(({ branchName, bills }) => {
+        bills.forEach((bill: any) => {
+          const date = new Date(bill.created_at).toISOString().split('T')[0];
+          if (!revenueByDateMap[date]) {
+            revenueByDateMap[date] = { date };
+          }
+          revenueByDateMap[date][branchName] = 
+            ((revenueByDateMap[date][branchName] as number) || 0) + Number(bill.total_amount);
+        });
+      });
+      
+      // Sort by date and fill in zeros for missing branch data
+      const sortedDates = Object.keys(revenueByDateMap).sort();
+      const branchNames = allBranchBills.map(b => b.branchName);
+      
+      const timeSeriesData = sortedDates.map(date => {
+        const entry = revenueByDateMap[date];
+        branchNames.forEach(name => {
+          if (!(name in entry)) {
+            entry[name] = 0;
+          }
+        });
+        return entry;
+      });
+      
+      setBranchRevenueOverTime(timeSeriesData);
     } catch (error: any) {
       console.error("Error fetching branch comparison:", error);
       toast.error("Failed to load branch comparison data");
@@ -807,6 +854,54 @@ const Analytics = () => {
                           </CardContent>
                         </Card>
                       </div>
+
+                      {/* Revenue Trend Over Time Chart */}
+                      {branchRevenueOverTime.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <TrendingUp className="h-5 w-5" />
+                              Revenue Trend by Branch
+                            </CardTitle>
+                            <CardDescription>Daily revenue comparison across selected branches</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <ChartContainer config={chartConfig} className="h-[350px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={branchRevenueOverTime}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                                  <XAxis 
+                                    dataKey="date" 
+                                    stroke="hsl(var(--foreground))" 
+                                    fontSize={11}
+                                    tickFormatter={(value) => {
+                                      const date = new Date(value);
+                                      return `${date.getDate()}/${date.getMonth() + 1}`;
+                                    }}
+                                  />
+                                  <YAxis stroke="hsl(var(--foreground))" fontSize={11} />
+                                  <ChartTooltip 
+                                    content={<ChartTooltipContent />}
+                                    formatter={(value: number) => [`₹${value.toLocaleString()}`, '']}
+                                  />
+                                  <Legend />
+                                  {branchData.map((branch, index) => (
+                                    <Line
+                                      key={branch.id}
+                                      type="monotone"
+                                      dataKey={branch.name}
+                                      stroke={COLORS[index % COLORS.length]}
+                                      strokeWidth={2}
+                                      dot={{ r: 3 }}
+                                      activeDot={{ r: 5 }}
+                                    />
+                                  ))}
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </ChartContainer>
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
                   )}
                 </div>
