@@ -16,9 +16,128 @@ import {
   Sparkles,
   Zap,
   Globe,
-  HeartHandshake
+  HeartHandshake,
+  Menu,
+  X
 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+
+// Fixed Navigation Header component
+const NavHeader = ({ scrollY }: { scrollY: number }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isScrolled = scrollY > 50;
+
+  const navLinks = [
+    { href: '#features', label: 'Features' },
+    { href: '#how-it-works', label: 'How It Works' },
+    { href: '#benefits', label: 'Benefits' },
+  ];
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const target = document.querySelector(href);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setMobileMenuOpen(false);
+  };
+
+  return (
+    <header 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'glass-strong shadow-lg py-3' 
+          : 'bg-transparent py-5'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className={`p-2 rounded-xl transition-all duration-300 ${
+            isScrolled ? 'bg-primary/10' : 'bg-background/50 backdrop-blur-sm'
+          }`}>
+            <TestTube className="h-6 w-6 text-primary group-hover:rotate-12 transition-transform duration-300" />
+          </div>
+          <span className={`text-xl font-bold transition-colors duration-300 ${
+            isScrolled ? 'text-foreground' : 'text-foreground'
+          }`}>
+            Lab Master
+          </span>
+        </Link>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              onClick={(e) => handleSmoothScroll(e, link.href)}
+              className={`text-sm font-medium transition-colors duration-300 hover:text-primary relative group ${
+                isScrolled ? 'text-foreground' : 'text-foreground'
+              }`}
+            >
+              {link.label}
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+            </a>
+          ))}
+        </nav>
+
+        {/* Desktop CTA */}
+        <div className="hidden md:flex items-center gap-4">
+          <Button variant="ghost" asChild className="text-sm">
+            <Link to="/auth">Login</Link>
+          </Button>
+          <Button asChild size="sm" className={`transition-all duration-300 ${
+            isScrolled ? '' : 'shadow-lg'
+          }`}>
+            <Link to="/auth">Get Started</Link>
+          </Button>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? (
+            <X className="h-6 w-6 text-foreground" />
+          ) : (
+            <Menu className="h-6 w-6 text-foreground" />
+          )}
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      <div className={`md:hidden absolute top-full left-0 right-0 glass-strong shadow-lg transition-all duration-300 overflow-hidden ${
+        mobileMenuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'
+      }`}>
+        <nav className="flex flex-col p-4 gap-2">
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              onClick={(e) => handleSmoothScroll(e, link.href)}
+              className="text-foreground hover:text-primary py-3 px-4 rounded-lg hover:bg-muted/50 transition-colors"
+            >
+              {link.label}
+            </a>
+          ))}
+          <div className="border-t border-border my-2" />
+          <Link
+            to="/auth"
+            className="text-foreground hover:text-primary py-3 px-4 rounded-lg hover:bg-muted/50 transition-colors"
+          >
+            Login
+          </Link>
+          <Button asChild className="mt-2">
+            <Link to="/auth">Get Started</Link>
+          </Button>
+        </nav>
+      </div>
+    </header>
+  );
+};
 
 // Animated counter component
 const AnimatedCounter = ({ end, duration = 2000, suffix = '' }: { end: number; duration?: number; suffix?: string }) => {
@@ -176,7 +295,9 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
+    <div className="min-h-screen bg-background overflow-hidden scroll-smooth">
+      {/* Fixed Navigation Header */}
+      <NavHeader scrollY={scrollY} />
       {/* Floating background shapes */}
       <FloatingShape className="w-[600px] h-[600px] bg-primary/20 -top-48 -left-48" />
       <FloatingShape className="w-[500px] h-[500px] bg-accent/20 top-96 -right-48 delay-200" />
@@ -274,6 +395,7 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
+      <section id="how-it-works" />
       <section className="relative py-24 px-4 bg-muted/30">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
@@ -306,6 +428,7 @@ const Index = () => {
       </section>
 
       {/* Benefits Section */}
+      <section id="benefits" />
       <section className="relative py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
