@@ -18,20 +18,34 @@ import {
   Globe,
   HeartHandshake,
   Menu,
-  X
+  X,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+import { useTheme } from 'next-themes';
 
 // Fixed Navigation Header component
 const NavHeader = ({ scrollY }: { scrollY: number }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const isScrolled = scrollY > 50;
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navLinks = [
     { href: '#features', label: 'Features' },
     { href: '#how-it-works', label: 'How It Works' },
     { href: '#benefits', label: 'Benefits' },
   ];
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
@@ -83,7 +97,23 @@ const NavHeader = ({ scrollY }: { scrollY: number }) => {
         </nav>
 
         {/* Desktop CTA */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={toggleTheme}
+            className={`p-2 rounded-lg transition-all duration-300 hover:bg-muted ${
+              isScrolled ? 'bg-muted/50' : 'bg-background/50 backdrop-blur-sm'
+            }`}
+            aria-label="Toggle dark mode"
+          >
+            {mounted && (
+              theme === 'dark' ? (
+                <Sun className="h-5 w-5 text-foreground" />
+              ) : (
+                <Moon className="h-5 w-5 text-foreground" />
+              )
+            )}
+          </button>
           <Button variant="ghost" asChild className="text-sm">
             <Link to="/auth">Login</Link>
           </Button>
@@ -95,17 +125,33 @@ const NavHeader = ({ scrollY }: { scrollY: number }) => {
         </div>
 
         {/* Mobile Menu Button */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? (
-            <X className="h-6 w-6 text-foreground" />
-          ) : (
-            <Menu className="h-6 w-6 text-foreground" />
-          )}
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          {/* Dark Mode Toggle - Mobile */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {mounted && (
+              theme === 'dark' ? (
+                <Sun className="h-5 w-5 text-foreground" />
+              ) : (
+                <Moon className="h-5 w-5 text-foreground" />
+              )
+            )}
+          </button>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6 text-foreground" />
+            ) : (
+              <Menu className="h-6 w-6 text-foreground" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
