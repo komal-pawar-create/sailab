@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { 
   TestTube, 
   Users, 
@@ -23,7 +24,9 @@ import {
   Moon,
   Check,
   Star,
-  BadgePercent
+  BadgePercent,
+  HelpCircle,
+  MessageCircle
 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useTheme } from 'next-themes';
@@ -44,7 +47,7 @@ const NavHeader = ({ scrollY }: { scrollY: number }) => {
     { href: '#features', label: 'Features' },
     { href: '#how-it-works', label: 'How It Works' },
     { href: '#pricing', label: 'Pricing' },
-    { href: '#benefits', label: 'Benefits' },
+    { href: '#faq', label: 'FAQ' },
   ];
 
   const toggleTheme = () => {
@@ -487,6 +490,69 @@ const Index = () => {
     }
   ];
 
+  const faqs = [
+    {
+      category: 'pricing',
+      question: "What's included in the one-time setup fee?",
+      answer: "Full software installation, initial configuration, data migration assistance, custom branding setup, and basic training for your team. We ensure you're fully operational from day one."
+    },
+    {
+      category: 'pricing',
+      question: "What does the AMC (Annual Maintenance Contract) cover?",
+      answer: "All software updates, bug fixes, security patches, data backups, email support, and up to 2 hours of remote assistance per month. Your lab stays current with the latest features."
+    },
+    {
+      category: 'pricing',
+      question: "Can I upgrade from Starter to Professional later?",
+      answer: "Yes! You can upgrade anytime. You'll only pay the difference in setup cost, and your AMC will be prorated for the remaining period. All your data migrates seamlessly."
+    },
+    {
+      category: 'pricing',
+      question: "Are there any hidden charges?",
+      answer: "No hidden fees. The pricing shown includes everything. Additional charges only apply for custom development, SMS/WhatsApp notifications, or on-site training if requested."
+    },
+    {
+      category: 'features',
+      question: "Can I use Lab Master on mobile devices?",
+      answer: "Yes! Lab Master is a Progressive Web App (PWA) that works on all devices — desktops, tablets, and smartphones. It can even work offline for basic operations."
+    },
+    {
+      category: 'features',
+      question: "How many users can I add to my lab?",
+      answer: "Unlimited users! Each plan allows unlimited user accounts with role-based access control (Super Admin, Lab Admin, Branch Operator). No per-user fees."
+    },
+    {
+      category: 'features',
+      question: "Can I customize test types and report templates?",
+      answer: "Absolutely. You can create custom test types, set reference ranges, add letterheads, signatures, and design your own report templates to match your lab's branding."
+    },
+    {
+      category: 'features',
+      question: "Does Lab Master support multiple branches?",
+      answer: "Yes! The Professional and Enterprise plans support multi-branch management with centralized dashboards, cross-branch reporting, and unified analytics."
+    },
+    {
+      category: 'support',
+      question: "What kind of support do you provide?",
+      answer: "Starter: Email support (24-48hr response). Professional: Priority email + chat (4hr response). Enterprise: 24/7 phone support with a dedicated account manager."
+    },
+    {
+      category: 'support',
+      question: "Is my data secure?",
+      answer: "Yes. We use industry-standard encryption, regular backups, and role-based access control. Your data is hosted on secure servers with 99.9% uptime guarantee."
+    },
+    {
+      category: 'support',
+      question: "Can I export my data if I stop using Lab Master?",
+      answer: "Yes. You can export all your data (patients, reports, bills) in standard formats (CSV, PDF) at any time. We never lock you in — your data is always yours."
+    },
+    {
+      category: 'support',
+      question: "Do you offer training for my team?",
+      answer: "Starter and Professional plans include online documentation and video tutorials. Enterprise plans include on-site training sessions and a dedicated onboarding specialist."
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-background overflow-hidden scroll-smooth">
       {/* Fixed Navigation Header */}
@@ -756,8 +822,77 @@ const Index = () => {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section id="faq" className="relative py-24 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
+              <HelpCircle className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">FAQ</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+              Frequently Asked
+              <span className="gradient-text"> Questions</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Got questions? We've got answers. Find everything you need to know about Lab Master.
+            </p>
+          </div>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {faqs.map((faq, index) => (
+              <AccordionItem 
+                key={index} 
+                value={`item-${index}`}
+                className="glass rounded-xl px-6 border-none animate-slide-up opacity-0"
+                style={{ animationFillMode: 'forwards', animationDelay: `${index * 50}ms` }}
+              >
+                <AccordionTrigger className="text-left hover:no-underline py-5 gap-4">
+                  <div className="flex items-start gap-3">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 mt-0.5 ${
+                      faq.category === 'pricing' 
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                        : faq.category === 'features'
+                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                    }`}>
+                      {faq.category === 'pricing' ? '💰' : faq.category === 'features' ? '🔧' : '🛠️'}
+                    </span>
+                    <span className="font-medium text-foreground">{faq.question}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-5 pl-9">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+
+          {/* Still have questions CTA */}
+          <div className="mt-12 text-center">
+            <div className="inline-flex flex-col sm:flex-row items-center gap-4 p-6 rounded-2xl glass">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-primary/10">
+                  <MessageCircle className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-foreground">Still have questions?</p>
+                  <p className="text-sm text-muted-foreground">Our team is here to help you</p>
+                </div>
+              </div>
+              <Button asChild variant="outline" className="shrink-0">
+                <Link to="/auth" className="flex items-center gap-2">
+                  Contact Support
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="relative py-24 px-4">
+      <section className="relative py-24 px-4 bg-muted/30">
         <div className="max-w-4xl mx-auto">
           <div className="relative glass-strong rounded-3xl p-12 text-center overflow-hidden">
             {/* Animated background */}
