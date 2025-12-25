@@ -20,7 +20,10 @@ import {
   Menu,
   X,
   Sun,
-  Moon
+  Moon,
+  Check,
+  Star,
+  BadgePercent
 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useTheme } from 'next-themes';
@@ -40,6 +43,7 @@ const NavHeader = ({ scrollY }: { scrollY: number }) => {
   const navLinks = [
     { href: '#features', label: 'Features' },
     { href: '#how-it-works', label: 'How It Works' },
+    { href: '#pricing', label: 'Pricing' },
     { href: '#benefits', label: 'Benefits' },
   ];
 
@@ -269,6 +273,101 @@ const Step = ({ number, title, description, isLast, delay }: {
   </div>
 );
 
+// Pricing card component
+interface PricingPlan {
+  name: string;
+  price: number;
+  amcPrice: number;
+  discount?: number;
+  minLabs?: number;
+  features: string[];
+  isPopular?: boolean;
+  isEnterprise?: boolean;
+}
+
+const PricingCard = ({ 
+  plan, 
+  delay 
+}: { 
+  plan: PricingPlan;
+  delay: string;
+}) => {
+  const { name, price, amcPrice, discount, minLabs, features, isPopular, isEnterprise } = plan;
+  
+  return (
+    <Card className={`group relative overflow-hidden p-6 animate-slide-up opacity-0 ${delay} ${
+      isPopular 
+        ? 'glass-strong border-2 border-primary shadow-xl scale-105 z-10' 
+        : 'glass hover-lift'
+    }`} style={{ animationFillMode: 'forwards' }}>
+      {/* Popular Badge */}
+      {isPopular && (
+        <div className="absolute -top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-lg">
+            <Star className="h-3.5 w-3.5 fill-current" />
+            Most Popular
+          </div>
+        </div>
+      )}
+      
+      {/* Discount Badge */}
+      {discount && (
+        <div className="absolute top-4 right-4">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+            <BadgePercent className="h-3 w-3" />
+            Save {discount}%
+          </div>
+        </div>
+      )}
+
+      <div className={`${isPopular ? 'pt-4' : ''}`}>
+        {/* Plan Name */}
+        <h3 className="text-xl font-bold text-foreground mb-2">{name}</h3>
+        {minLabs && (
+          <p className="text-sm text-muted-foreground mb-4">Minimum {minLabs} labs</p>
+        )}
+        {!minLabs && <div className="h-6 mb-4" />}
+        
+        {/* Price */}
+        <div className="mb-2">
+          <span className="text-4xl font-bold text-foreground">₹{price.toLocaleString('en-IN')}</span>
+          <span className="text-muted-foreground">{minLabs ? '/lab' : ''}</span>
+        </div>
+        <p className="text-sm text-muted-foreground mb-1">One-time setup</p>
+        
+        {/* AMC Price */}
+        <div className="flex items-baseline gap-2 mb-6 pb-6 border-b border-border">
+          <span className="text-lg font-semibold text-foreground">+ ₹{amcPrice.toLocaleString('en-IN')}</span>
+          <span className="text-sm text-muted-foreground">{minLabs ? '/lab/year' : '/year'} AMC</span>
+        </div>
+        
+        {/* Features */}
+        <ul className="space-y-3 mb-8">
+          {features.map((feature, index) => (
+            <li key={index} className="flex items-start gap-3">
+              <Check className={`h-5 w-5 flex-shrink-0 mt-0.5 ${isPopular ? 'text-primary' : 'text-green-600 dark:text-green-400'}`} />
+              <span className="text-sm text-foreground">{feature}</span>
+            </li>
+          ))}
+        </ul>
+        
+        {/* CTA Button */}
+        <Button 
+          asChild 
+          className={`w-full ${isPopular ? 'animate-pulse-glow' : ''}`}
+          variant={isPopular ? 'default' : 'outline'}
+          size="lg"
+        >
+          <Link to="/auth" className="flex items-center justify-center gap-2">
+            {isEnterprise ? 'Contact Sales' : 'Get Started'}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
 // Floating shape component
 const FloatingShape = ({ className }: { className?: string }) => (
   <div className={`absolute rounded-full animate-blob opacity-30 blur-3xl ${className}`} />
@@ -338,6 +437,54 @@ const Index = () => {
     { title: 'Configure Settings', description: 'Customize test types, billing templates, letterheads, and role permissions to match your workflow.' },
     { title: 'Onboard Your Team', description: 'Invite staff members with appropriate roles. Branch operators, lab admins, and super admins.' },
     { title: 'Start Operating', description: 'Begin managing patients, generating reports, and tracking revenue with powerful analytics.' }
+  ];
+
+  const pricingPlans: PricingPlan[] = [
+    {
+      name: 'Starter',
+      price: 5000,
+      amcPrice: 1500,
+      features: [
+        '1 Lab License',
+        'Patient Management',
+        'Test Reporting & Billing',
+        'Analytics Dashboard',
+        'Email Support',
+        'Standard updates'
+      ]
+    },
+    {
+      name: 'Professional',
+      price: 4500,
+      amcPrice: 1350,
+      discount: 10,
+      minLabs: 3,
+      isPopular: true,
+      features: [
+        'All Starter features',
+        'Centralized Dashboard',
+        'Cross-branch Reporting',
+        'Multi-branch Analytics',
+        'Priority Support',
+        'Custom branding'
+      ]
+    },
+    {
+      name: 'Enterprise',
+      price: 4000,
+      amcPrice: 1200,
+      discount: 20,
+      minLabs: 10,
+      isEnterprise: true,
+      features: [
+        'All Professional features',
+        'Dedicated Account Manager',
+        'Custom Integrations',
+        'Advanced API Access',
+        '24/7 Phone Support',
+        'On-site Training'
+      ]
+    }
   ];
 
   return (
@@ -554,6 +701,56 @@ const Index = () => {
               {/* Decorative elements */}
               <div className="absolute -top-4 -right-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
               <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-accent/10 rounded-full blur-2xl" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="relative py-24 px-4 bg-muted/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
+              <CreditCard className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Transparent Pricing</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+              Simple Pricing for
+              <span className="gradient-text"> Labs of All Sizes</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Choose the plan that fits your needs. Multi-lab owners get special discounts with centralized access and reports.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            {pricingPlans.map((plan, index) => (
+              <PricingCard 
+                key={plan.name}
+                plan={plan}
+                delay={`delay-${(index + 1) * 100}`}
+              />
+            ))}
+          </div>
+
+          {/* Multi-lab CTA */}
+          <div className="mt-16 text-center">
+            <div className="inline-flex flex-col sm:flex-row items-center gap-4 p-6 rounded-2xl glass">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-primary/10">
+                  <Building2 className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-foreground">Own multiple labs?</p>
+                  <p className="text-sm text-muted-foreground">Get centralized access, unified reports & volume discounts</p>
+                </div>
+              </div>
+              <Button asChild variant="outline" className="shrink-0">
+                <Link to="/auth" className="flex items-center gap-2">
+                  Contact for Custom Quote
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
