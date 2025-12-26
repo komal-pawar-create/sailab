@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { 
   TestTube, 
   Users, 
@@ -26,7 +27,8 @@ import {
   Star,
   BadgePercent,
   HelpCircle,
-  MessageCircle
+  MessageCircle,
+  Quote
 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useTheme } from 'next-themes';
@@ -46,6 +48,7 @@ const NavHeader = ({ scrollY }: { scrollY: number }) => {
   const navLinks = [
     { href: '#features', label: 'Features' },
     { href: '#how-it-works', label: 'How It Works' },
+    { href: '#testimonials', label: 'Testimonials' },
     { href: '#pricing', label: 'Pricing' },
     { href: '#faq', label: 'FAQ' },
   ];
@@ -553,6 +556,57 @@ const Index = () => {
     }
   ];
 
+  const testimonials = [
+    {
+      name: "Dr. Rajesh Kumar",
+      role: "Owner, HealthCare Diagnostics",
+      location: "Mumbai",
+      rating: 5,
+      text: "Lab Master transformed how we manage our 5-branch network. The centralized dashboard saves us hours every week, and the multi-branch analytics give us insights we never had before.",
+      image: "RK"
+    },
+    {
+      name: "Dr. Priya Sharma",
+      role: "Director, Sharma Pathology Lab",
+      location: "Delhi",
+      rating: 5,
+      text: "The billing and ledger tracking features are exceptional. We've reduced billing errors by 90% and our patients love the professional invoices. Best investment for our lab!",
+      image: "PS"
+    },
+    {
+      name: "Dr. Arun Patel",
+      role: "Founder, Patel Diagnostic Centre",
+      location: "Ahmedabad",
+      rating: 5,
+      text: "Moving from paper records to Lab Master was seamless. The support team helped migrate all our data, and the PWA works perfectly on our tablets during sample collection.",
+      image: "AP"
+    },
+    {
+      name: "Dr. Sunita Reddy",
+      role: "MD, Reddy Labs",
+      location: "Hyderabad",
+      rating: 4,
+      text: "The role-based access control gives me peace of mind. I can give operators exactly the permissions they need, and the audit logs help track everything.",
+      image: "SR"
+    },
+    {
+      name: "Dr. Mohammed Iqbal",
+      role: "Owner, City Diagnostics",
+      location: "Bangalore",
+      rating: 5,
+      text: "We switched from another LIMS software and the difference is night and day. Lab Master's UI is intuitive, fast, and our staff learned it in just one day!",
+      image: "MI"
+    },
+    {
+      name: "Dr. Kavitha Nair",
+      role: "Partner, Kerala Path Labs",
+      location: "Kochi",
+      rating: 5,
+      text: "The patient follow-up feature has improved our patient retention significantly. Automated reminders and the feedback system help us maintain excellent service quality.",
+      image: "KN"
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-background overflow-hidden scroll-smooth">
       {/* Fixed Navigation Header */}
@@ -769,6 +823,75 @@ const Index = () => {
               <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-accent/10 rounded-full blur-2xl" />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="relative py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
+              <Quote className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Customer Stories</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+              Trusted by
+              <span className="gradient-text"> 500+ Labs</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Hear what lab owners across India have to say about Lab Master.
+            </p>
+          </div>
+
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {testimonials.map((testimonial, index) => (
+                <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                  <Card className="glass hover-lift h-full p-6 flex flex-col">
+                    {/* Quote Icon */}
+                    <Quote className="h-8 w-8 text-primary/30 mb-4" />
+                    
+                    {/* Star Rating */}
+                    <div className="flex gap-1 mb-4">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`h-4 w-4 ${i < testimonial.rating ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground/30'}`} 
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Testimonial Text */}
+                    <p className="text-foreground/90 text-sm leading-relaxed flex-grow mb-6">
+                      "{testimonial.text}"
+                    </p>
+                    
+                    {/* Author Info */}
+                    <div className="flex items-center gap-3 pt-4 border-t border-border">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-sm">
+                        {testimonial.image}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-foreground">{testimonial.name}</div>
+                        <div className="text-xs text-muted-foreground">{testimonial.role}</div>
+                        <div className="text-xs text-primary">{testimonial.location}</div>
+                      </div>
+                    </div>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <div className="flex justify-center gap-4 mt-8">
+              <CarouselPrevious className="static translate-y-0 bg-background hover:bg-muted" />
+              <CarouselNext className="static translate-y-0 bg-background hover:bg-muted" />
+            </div>
+          </Carousel>
         </div>
       </section>
 
