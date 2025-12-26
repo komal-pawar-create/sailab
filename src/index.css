@@ -183,6 +183,31 @@ All colors MUST be HSL.
   50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
 }
 
+@keyframes scroll-fade-in {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scroll-fade-in-left {
+  0% { opacity: 0; transform: translateX(-30px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scroll-fade-in-right {
+  0% { opacity: 0; transform: translateX(30px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scroll-scale-in {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scroll-blur-in {
+  0% { opacity: 0; filter: blur(10px); transform: translateY(20px); }
+  100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
 /* Utility animation classes */
 @layer utilities {
   .animate-float {
@@ -235,6 +260,64 @@ All colors MUST be HSL.
   
   .animate-blob {
     animation: blob 7s ease-in-out infinite;
+  }
+  
+  /* Scroll-triggered animations */
+  .scroll-animate {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out, filter 0.6s ease-out;
+  }
+  
+  .scroll-animate.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .scroll-animate-left {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+  
+  .scroll-animate-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  
+  .scroll-animate-right {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+  
+  .scroll-animate-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  
+  .scroll-animate-scale {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+  
+  .scroll-animate-scale.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .scroll-animate-blur {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out, filter 0.6s ease-out;
+  }
+  
+  .scroll-animate-blur.visible {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
   }
   
   /* Staggered animation delays */
