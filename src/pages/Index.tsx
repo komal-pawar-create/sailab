@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { 
+import { AnimatedSection, AnimatedItems } from '@/components/AnimatedSection';
+import {
   TestTube, 
   Users, 
   FileText, 
@@ -681,7 +682,7 @@ const Index = () => {
       {/* Features Section */}
       <section id="features" className="relative py-24 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <AnimatedSection className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
               <Zap className="h-4 w-4 text-accent" />
               <span className="text-sm font-medium text-foreground">Powerful Features</span>
@@ -693,17 +694,21 @@ const Index = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Comprehensive tools designed specifically for diagnostic laboratories and pathology centers.
             </p>
-          </div>
+          </AnimatedSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <AnimatedItems 
+            animation="scale" 
+            staggerDelay={100} 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
             {features.map((feature, index) => (
               <FeatureCard 
                 key={index} 
                 {...feature} 
-                delay={`delay-${(index + 1) * 100}`}
+                delay=""
               />
             ))}
-          </div>
+          </AnimatedItems>
         </div>
       </section>
 
@@ -711,7 +716,7 @@ const Index = () => {
       <section id="how-it-works" />
       <section className="relative py-24 px-4 bg-muted/30">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
+          <AnimatedSection className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
               <Globe className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium text-foreground">Simple Process</span>
@@ -723,9 +728,9 @@ const Index = () => {
             <p className="text-xl text-muted-foreground">
               From signup to fully operational — we make onboarding seamless.
             </p>
-          </div>
+          </AnimatedSection>
 
-          <div className="relative">
+          <AnimatedSection animation="fade-left" className="relative">
             {steps.map((step, index) => (
               <Step 
                 key={index}
@@ -733,10 +738,10 @@ const Index = () => {
                 title={step.title}
                 description={step.description}
                 isLast={index === steps.length - 1}
-                delay={`delay-${(index + 1) * 100}`}
+                delay=""
               />
             ))}
-          </div>
+          </AnimatedSection>
         </div>
       </section>
 
@@ -745,7 +750,7 @@ const Index = () => {
       <section className="relative py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
+            <AnimatedSection animation="fade-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
                 <HeartHandshake className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium text-foreground">Why Choose Us</span>
@@ -766,15 +771,15 @@ const Index = () => {
                   'Professional billing with GST and ledger tracking',
                   'PWA support — works offline, installs like an app'
                 ].map((benefit, index) => (
-                  <div key={index} className="flex items-start gap-3 animate-slide-in-left opacity-0" style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}>
+                  <div key={index} className="flex items-start gap-3 scroll-animate visible" style={{ transitionDelay: `${index * 100}ms` }}>
                     <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0 mt-0.5" />
                     <span className="text-foreground">{benefit}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </AnimatedSection>
 
-            <div className="relative">
+            <AnimatedSection animation="fade-right" delay={200} className="relative">
               <div className="glass-strong rounded-3xl p-8 animate-float">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between p-4 rounded-xl bg-primary/5">
@@ -821,7 +826,7 @@ const Index = () => {
               {/* Decorative elements */}
               <div className="absolute -top-4 -right-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
               <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-accent/10 rounded-full blur-2xl" />
-            </div>
+            </AnimatedSection>
           </div>
         </div>
       </section>
@@ -829,7 +834,7 @@ const Index = () => {
       {/* Testimonials Section */}
       <section id="testimonials" className="relative py-24 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <AnimatedSection className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
               <Quote className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium text-foreground">Customer Stories</span>
@@ -841,64 +846,66 @@ const Index = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Hear what lab owners across India have to say about Lab Master.
             </p>
-          </div>
+          </AnimatedSection>
 
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-4">
-              {testimonials.map((testimonial, index) => (
-                <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                  <Card className="glass hover-lift h-full p-6 flex flex-col">
-                    {/* Quote Icon */}
-                    <Quote className="h-8 w-8 text-primary/30 mb-4" />
-                    
-                    {/* Star Rating */}
-                    <div className="flex gap-1 mb-4">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={`h-4 w-4 ${i < testimonial.rating ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground/30'}`} 
-                        />
-                      ))}
-                    </div>
-                    
-                    {/* Testimonial Text */}
-                    <p className="text-foreground/90 text-sm leading-relaxed flex-grow mb-6">
-                      "{testimonial.text}"
-                    </p>
-                    
-                    {/* Author Info */}
-                    <div className="flex items-center gap-3 pt-4 border-t border-border">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-sm">
-                        {testimonial.image}
+          <AnimatedSection animation="blur" delay={200}>
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {testimonials.map((testimonial, index) => (
+                  <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                    <Card className="glass hover-lift h-full p-6 flex flex-col">
+                      {/* Quote Icon */}
+                      <Quote className="h-8 w-8 text-primary/30 mb-4" />
+                      
+                      {/* Star Rating */}
+                      <div className="flex gap-1 mb-4">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star 
+                            key={i} 
+                            className={`h-4 w-4 ${i < testimonial.rating ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground/30'}`} 
+                          />
+                        ))}
                       </div>
-                      <div>
-                        <div className="font-semibold text-foreground">{testimonial.name}</div>
-                        <div className="text-xs text-muted-foreground">{testimonial.role}</div>
-                        <div className="text-xs text-primary">{testimonial.location}</div>
+                      
+                      {/* Testimonial Text */}
+                      <p className="text-foreground/90 text-sm leading-relaxed flex-grow mb-6">
+                        "{testimonial.text}"
+                      </p>
+                      
+                      {/* Author Info */}
+                      <div className="flex items-center gap-3 pt-4 border-t border-border">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-sm">
+                          {testimonial.image}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-foreground">{testimonial.name}</div>
+                          <div className="text-xs text-muted-foreground">{testimonial.role}</div>
+                          <div className="text-xs text-primary">{testimonial.location}</div>
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <div className="flex justify-center gap-4 mt-8">
-              <CarouselPrevious className="static translate-y-0 bg-background hover:bg-muted" />
-              <CarouselNext className="static translate-y-0 bg-background hover:bg-muted" />
-            </div>
-          </Carousel>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="flex justify-center gap-4 mt-8">
+                <CarouselPrevious className="static translate-y-0 bg-background hover:bg-muted" />
+                <CarouselNext className="static translate-y-0 bg-background hover:bg-muted" />
+              </div>
+            </Carousel>
+          </AnimatedSection>
         </div>
       </section>
 
       {/* Pricing Section */}
       <section id="pricing" className="relative py-24 px-4 bg-muted/30">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <AnimatedSection className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
               <CreditCard className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium text-foreground">Transparent Pricing</span>
@@ -910,20 +917,24 @@ const Index = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Choose the plan that fits your needs. Multi-lab owners get special discounts with centralized access and reports.
             </p>
-          </div>
+          </AnimatedSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-            {pricingPlans.map((plan, index) => (
+          <AnimatedItems 
+            animation="scale" 
+            staggerDelay={150} 
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start"
+          >
+            {pricingPlans.map((plan) => (
               <PricingCard 
                 key={plan.name}
                 plan={plan}
-                delay={`delay-${(index + 1) * 100}`}
+                delay=""
               />
             ))}
-          </div>
+          </AnimatedItems>
 
           {/* Multi-lab CTA */}
-          <div className="mt-16 text-center">
+          <AnimatedSection delay={400} className="mt-16 text-center">
             <div className="inline-flex flex-col sm:flex-row items-center gap-4 p-6 rounded-2xl glass">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-xl bg-primary/10">
@@ -941,14 +952,14 @@ const Index = () => {
                 </Link>
               </Button>
             </div>
-          </div>
+          </AnimatedSection>
         </div>
       </section>
 
       {/* FAQ Section */}
       <section id="faq" className="relative py-24 px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
+          <AnimatedSection className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
               <HelpCircle className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium text-foreground">FAQ</span>
@@ -960,39 +971,40 @@ const Index = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Got questions? We've got answers. Find everything you need to know about Lab Master.
             </p>
-          </div>
+          </AnimatedSection>
 
-          <Accordion type="single" collapsible className="space-y-4">
-            {faqs.map((faq, index) => (
-              <AccordionItem 
-                key={index} 
-                value={`item-${index}`}
-                className="glass rounded-xl px-6 border-none animate-slide-up opacity-0"
-                style={{ animationFillMode: 'forwards', animationDelay: `${index * 50}ms` }}
-              >
-                <AccordionTrigger className="text-left hover:no-underline py-5 gap-4">
-                  <div className="flex items-start gap-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 mt-0.5 ${
-                      faq.category === 'pricing' 
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                        : faq.category === 'features'
-                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
-                    }`}>
-                      {faq.category === 'pricing' ? '💰' : faq.category === 'features' ? '🔧' : '🛠️'}
-                    </span>
-                    <span className="font-medium text-foreground">{faq.question}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-5 pl-9">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <AnimatedSection animation="blur" delay={150}>
+            <Accordion type="single" collapsible className="space-y-4">
+              {faqs.map((faq, index) => (
+                <AccordionItem 
+                  key={index} 
+                  value={`item-${index}`}
+                  className="glass rounded-xl px-6 border-none"
+                >
+                  <AccordionTrigger className="text-left hover:no-underline py-5 gap-4">
+                    <div className="flex items-start gap-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 mt-0.5 ${
+                        faq.category === 'pricing' 
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                          : faq.category === 'features'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                          : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                      }`}>
+                        {faq.category === 'pricing' ? '💰' : faq.category === 'features' ? '🔧' : '🛠️'}
+                      </span>
+                      <span className="font-medium text-foreground">{faq.question}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground pb-5 pl-9">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </AnimatedSection>
 
           {/* Still have questions CTA */}
-          <div className="mt-12 text-center">
+          <AnimatedSection delay={300} className="mt-12 text-center">
             <div className="inline-flex flex-col sm:flex-row items-center gap-4 p-6 rounded-2xl glass">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-xl bg-primary/10">
@@ -1010,7 +1022,7 @@ const Index = () => {
                 </Link>
               </Button>
             </div>
-          </div>
+          </AnimatedSection>
         </div>
       </section>
 
