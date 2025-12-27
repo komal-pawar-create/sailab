@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { AnimatedSection, AnimatedItems } from '@/components/AnimatedSection';
+import { supabase } from '@/integrations/supabase/client';
 import {
   TestTube, 
   Users, 
@@ -389,6 +390,79 @@ const FloatingShape = ({ className }: { className?: string }) => (
 const DemoSection = () => {
   const [activeTab, setActiveTab] = useState<'video' | 'tour'>('video');
   const [tourStep, setTourStep] = useState(0);
+  const [demoVideos, setDemoVideos] = useState<Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    video_url: string;
+    video_type: string;
+    thumbnail_url: string | null;
+    duration: string | null;
+  }>>([]);
+  const [activeVideo, setActiveVideo] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      const { data } = await supabase
+        .from('demo_videos')
+        .select('id, title, description, video_url, video_type, thumbnail_url, duration')
+        .eq('is_active', true)
+        .order('display_order');
+      
+      if (data && data.length > 0) {
+        setDemoVideos(data);
+      }
+    };
+    fetchVideos();
+  }, []);
+
+  const extractYouTubeId = (url: string): string => {
+    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    return match ? match[1] : url;
+  };
+
+  const extractVimeoId = (url: string): string => {
+    const match = url.match(/(?:vimeo\.com\/)(\d+)/);
+    return match ? match[1] : url;
+  };
+
+  const renderVideoEmbed = (video: typeof demoVideos[0]) => {
+    switch (video.video_type) {
+      case 'youtube':
+        return (
+          <iframe
+            src={`https://www.youtube.com/embed/${extractYouTubeId(video.video_url)}?autoplay=${isPlaying ? 1 : 0}&rel=0`}
+            title={video.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+          />
+        );
+      case 'vimeo':
+        return (
+          <iframe
+            src={`https://player.vimeo.com/video/${extractVimeoId(video.video_url)}?autoplay=${isPlaying ? 1 : 0}`}
+            title={video.title}
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+          />
+        );
+      case 'uploaded':
+        return (
+          <video
+            src={video.video_url}
+            controls
+            poster={video.thumbnail_url || undefined}
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay={isPlaying}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   const tourSteps = [
     {
@@ -506,6 +580,8 @@ const DemoSection = () => {
     }
   };
 
+  const currentVideo = demoVideos[activeVideo];
+
   return (
     <div className="space-y-8">
       {/* Tab Switcher */}
@@ -539,18 +615,9 @@ const DemoSection = () => {
       {/* Video Tab */}
       {activeTab === 'video' && (
         <div className="relative">
-          <div className="aspect-video rounded-2xl overflow-hidden glass-strong border border-border/50 shadow-2xl">
-            {/* Video Placeholder - Replace with actual video */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 flex flex-col items-center justify-center">
-              <div className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-lg animate-pulse-glow">
-                <Play className="h-8 w-8 text-primary-foreground ml-1" />
-              </div>
-              <p className="mt-4 text-foreground/80 font-medium">Watch 2-minute demo</p>
-              <p className="text-sm text-muted-foreground">See Lab Master in action</p>
-            </div>
-            
+          <div className="aspect-video rounded-2xl overflow-hidden glass-strong border border-border/50 shadow-2xl relative">
             {/* Mock Browser Chrome */}
-            <div className="absolute top-0 left-0 right-0 h-10 bg-muted/80 backdrop-blur flex items-center px-4 gap-2">
+            <div className="absolute top-0 left-0 right-0 h-10 bg-muted/80 backdrop-blur flex items-center px-4 gap-2 z-10">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-500/80" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
@@ -560,7 +627,65 @@ const DemoSection = () => {
                 <span className="text-xs text-muted-foreground">labmaster.app/dashboard</span>
               </div>
             </div>
+
+            {/* Video Content */}
+            <div className="absolute inset-0 pt-10">
+              {demoVideos.length > 0 && currentVideo ? (
+                isPlaying ? (
+                  renderVideoEmbed(currentVideo)
+                ) : (
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 flex flex-col items-center justify-center cursor-pointer"
+                    onClick={() => setIsPlaying(true)}
+                  >
+                    {currentVideo.thumbnail_url && (
+                      <img 
+                        src={currentVideo.thumbnail_url} 
+                        alt={currentVideo.title}
+                        className="absolute inset-0 w-full h-full object-cover opacity-50"
+                      />
+                    )}
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center hover:scale-110 transition-transform shadow-lg animate-pulse-glow">
+                        <Play className="h-8 w-8 text-primary-foreground ml-1" />
+                      </div>
+                      <p className="mt-4 text-foreground/80 font-medium">{currentVideo.title}</p>
+                      {currentVideo.duration && (
+                        <p className="text-sm text-muted-foreground">{currentVideo.duration}</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 flex flex-col items-center justify-center">
+                  <div className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center shadow-lg animate-pulse-glow">
+                    <Play className="h-8 w-8 text-primary-foreground ml-1" />
+                  </div>
+                  <p className="mt-4 text-foreground/80 font-medium">Demo video coming soon</p>
+                  <p className="text-sm text-muted-foreground">Check back later</p>
+                </div>
+              )}
+            </div>
           </div>
+          
+          {/* Video Selection (if multiple) */}
+          {demoVideos.length > 1 && (
+            <div className="flex justify-center gap-3 mt-6">
+              {demoVideos.map((video, index) => (
+                <button
+                  key={video.id}
+                  onClick={() => { setActiveVideo(index); setIsPlaying(false); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeVideo === index
+                      ? 'bg-primary text-primary-foreground'
+                      : 'glass hover:bg-muted/50 text-muted-foreground'
+                  }`}
+                >
+                  {video.title}
+                </button>
+              ))}
+            </div>
+          )}
           
           {/* Device indicators */}
           <div className="flex justify-center gap-6 mt-6">

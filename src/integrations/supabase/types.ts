@@ -471,6 +471,51 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_videos: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          display_order: number | null
+          duration: string | null
+          id: string
+          is_active: boolean | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          video_type: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          display_order?: number | null
+          duration?: string | null
+          id?: string
+          is_active?: boolean | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          video_type: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          display_order?: number | null
+          duration?: string | null
+          id?: string
+          is_active?: boolean | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          video_type?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       document_templates: {
         Row: {
           branch_id: string | null
