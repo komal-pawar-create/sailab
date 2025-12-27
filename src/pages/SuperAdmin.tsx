@@ -7,14 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { AddOrganizationForm } from '@/components/forms/AddOrganizationForm';
 import { AddBranchForm } from '@/components/forms/AddBranchForm';
 import { AddUserForm } from '@/components/forms/AddUserForm';
 import { AddTestTypeForm } from '@/components/forms/AddTestTypeForm';
+import { AddDemoVideoForm } from '@/components/forms/AddDemoVideoForm';
 import EditUserDialog from '@/components/forms/EditUserDialog';
 import EditBranchDialog from '@/components/forms/EditBranchDialog';
-import { Edit, Database, Trash2, Settings, BarChart3 } from 'lucide-react';
+import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink } from 'lucide-react';
 
 interface Organization {
   id: string;
@@ -57,12 +59,26 @@ interface User {
   } | null;
 }
 
+interface DemoVideo {
+  id: string;
+  title: string;
+  description: string | null;
+  video_url: string;
+  video_type: string;
+  thumbnail_url: string | null;
+  duration: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
 export default function SuperAdmin() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [demoVideos, setDemoVideos] = useState<DemoVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -83,7 +99,7 @@ export default function SuperAdmin() {
 
   const fetchData = async () => {
     try {
-      const [organizationsRes, branchesRes, usersRes] = await Promise.all([
+      const [organizationsRes, branchesRes, usersRes, demoVideosRes] = await Promise.all([
         supabase.from('organizations').select('*').order('name'),
         supabase.from('branches').select(`
           *,
@@ -96,17 +112,60 @@ export default function SuperAdmin() {
             name,
             organization:organizations(name)
           )
-        `).order('full_name')
+        `).order('full_name'),
+        supabase.from('demo_videos').select('*').order('display_order')
       ]);
 
       setOrganizations(organizationsRes.data || []);
       setBranches(branchesRes.data as Branch[] || []);
       setUsers(usersRes.data || []);
+      setDemoVideos(demoVideosRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to fetch data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleVideoActive = async (video: DemoVideo) => {
+    try {
+      const { error } = await supabase
+        .from('demo_videos')
+        .update({ is_active: !video.is_active })
+        .eq('id', video.id);
+
+      if (error) throw error;
+      toast.success(`Video ${!video.is_active ? 'activated' : 'deactivated'}`);
+      fetchData();
+    } catch (error: any) {
+      toast.error('Failed to update video status');
+    }
+  };
+
+  const deleteVideo = async (videoId: string) => {
+    if (!confirm('Are you sure you want to delete this demo video?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('demo_videos')
+        .delete()
+        .eq('id', videoId);
+
+      if (error) throw error;
+      toast.success('Video deleted successfully');
+      fetchData();
+    } catch (error: any) {
+      toast.error('Failed to delete video');
+    }
+  };
+
+  const getVideoTypeColor = (type: string) => {
+    switch (type) {
+      case 'youtube': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'vimeo': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'uploaded': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -223,6 +282,10 @@ export default function SuperAdmin() {
             <TabsTrigger value="branches">Branches</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="test-types">Test Types</TabsTrigger>
+            <TabsTrigger value="demo-videos" className="flex items-center gap-1">
+              <Video className="h-4 w-4" />
+              Demo Videos
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="organizations" className="space-y-6">
@@ -358,6 +421,89 @@ export default function SuperAdmin() {
         
         <TabsContent value="test-types" className="space-y-4 overflow-auto">
           <AddTestTypeForm />
+        </TabsContent>
+
+        <TabsContent value="demo-videos" className="space-y-6">
+          <AddDemoVideoForm onSuccess={fetchData} />
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Play className="h-5 w-5" />
+                Demo Videos ({demoVideos.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {demoVideos.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No demo videos yet. Add your first video above.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead>Active</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {demoVideos.map((video) => (
+                      <TableRow key={video.id}>
+                        <TableCell className="font-mono">{video.display_order}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{video.title}</div>
+                            {video.description && (
+                              <div className="text-sm text-muted-foreground line-clamp-1">
+                                {video.description}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${getVideoTypeColor(video.video_type)}`}>
+                            {video.video_type}
+                          </span>
+                        </TableCell>
+                        <TableCell>{video.duration || '-'}</TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={video.is_active}
+                            onCheckedChange={() => toggleVideoActive(video)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(video.video_url, '_blank')}
+                              title="Open video"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteVideo(video.id)}
+                              className="text-destructive hover:text-destructive"
+                              title="Delete video"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
       </main>
