@@ -14,9 +14,10 @@ import { AddBranchForm } from '@/components/forms/AddBranchForm';
 import { AddUserForm } from '@/components/forms/AddUserForm';
 import { AddTestTypeForm } from '@/components/forms/AddTestTypeForm';
 import { AddDemoVideoForm } from '@/components/forms/AddDemoVideoForm';
+import { LandingPageManager } from '@/components/forms/LandingPageManager';
 import EditUserDialog from '@/components/forms/EditUserDialog';
 import EditBranchDialog from '@/components/forms/EditBranchDialog';
-import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink } from 'lucide-react';
+import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout } from 'lucide-react';
 
 interface Organization {
   id: string;
@@ -277,7 +278,7 @@ export default function SuperAdmin() {
         </div>
 
         <Tabs defaultValue="organizations" className="space-y-4">
-          <TabsList>
+          <TabsList className="flex flex-wrap">
             <TabsTrigger value="organizations">Organizations</TabsTrigger>
             <TabsTrigger value="branches">Branches</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
@@ -285,6 +286,10 @@ export default function SuperAdmin() {
             <TabsTrigger value="demo-videos" className="flex items-center gap-1">
               <Video className="h-4 w-4" />
               Demo Videos
+            </TabsTrigger>
+            <TabsTrigger value="landing-page" className="flex items-center gap-1">
+              <Layout className="h-4 w-4" />
+              Landing Page
             </TabsTrigger>
           </TabsList>
 
@@ -504,6 +509,10 @@ export default function SuperAdmin() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="landing-page" className="space-y-6">
+          <LandingPageManager />
         </TabsContent>
       </Tabs>
       </main>

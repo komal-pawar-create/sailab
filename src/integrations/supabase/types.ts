@@ -802,6 +802,264 @@ export type Database = {
           },
         ]
       }
+      landing_faqs: {
+        Row: {
+          answer: string
+          category: string
+          created_at: string | null
+          created_by: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          question: string
+        }
+        Insert: {
+          answer: string
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          question: string
+        }
+        Update: {
+          answer?: string
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          question?: string
+        }
+        Relationships: []
+      }
+      landing_features: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          icon_name: string
+          id: string
+          is_active: boolean | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon_name: string
+          id?: string
+          is_active?: boolean | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon_name?: string
+          id?: string
+          is_active?: boolean | null
+          title?: string
+        }
+        Relationships: []
+      }
+      landing_hero: {
+        Row: {
+          badge_text: string | null
+          cta_primary_text: string | null
+          cta_secondary_text: string | null
+          id: string
+          is_active: boolean | null
+          main_headline: string | null
+          sub_headline: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          badge_text?: string | null
+          cta_primary_text?: string | null
+          cta_secondary_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          main_headline?: string | null
+          sub_headline?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          badge_text?: string | null
+          cta_primary_text?: string | null
+          cta_secondary_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          main_headline?: string | null
+          sub_headline?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      landing_pricing: {
+        Row: {
+          amc_price: number
+          created_at: string | null
+          created_by: string | null
+          discount: number | null
+          display_order: number | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          is_enterprise: boolean | null
+          is_popular: boolean | null
+          min_labs: number | null
+          name: string
+          price: number
+        }
+        Insert: {
+          amc_price: number
+          created_at?: string | null
+          created_by?: string | null
+          discount?: number | null
+          display_order?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_enterprise?: boolean | null
+          is_popular?: boolean | null
+          min_labs?: number | null
+          name: string
+          price: number
+        }
+        Update: {
+          amc_price?: number
+          created_at?: string | null
+          created_by?: string | null
+          discount?: number | null
+          display_order?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_enterprise?: boolean | null
+          is_popular?: boolean | null
+          min_labs?: number | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      landing_stats: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          label: string
+          suffix: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          label: string
+          suffix?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          suffix?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
+      landing_steps: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          step_number: number
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          step_number: number
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          step_number?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      landing_testimonials: {
+        Row: {
+          avatar_initials: string | null
+          avatar_url: string | null
+          created_at: string | null
+          created_by: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          location: string | null
+          name: string
+          rating: number | null
+          role: string | null
+          testimonial_text: string
+        }
+        Insert: {
+          avatar_initials?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          name: string
+          rating?: number | null
+          role?: string | null
+          testimonial_text: string
+        }
+        Update: {
+          avatar_initials?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          name?: string
+          rating?: number | null
+          role?: string | null
+          testimonial_text?: string
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           address_line1: string | null
