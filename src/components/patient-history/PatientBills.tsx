@@ -4,10 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Receipt, Download } from "lucide-react";
+import { DollarSign, Calendar, Receipt, Download, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { BillPrint } from "@/components/bills/BillPrint";
+import { EditBillForm } from "@/components/forms/EditBillForm";
 
 interface Bill {
   id: string;
@@ -36,12 +38,17 @@ interface PatientBillsProps {
 }
 
 export default function PatientBills({ patientId }: PatientBillsProps) {
+  const { profile } = useAuth();
   const [bills, setBills] = useState<Bill[]>([]);
   const [payments, setPayments] = useState<BillPayment[]>([]);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [showPrint, setShowPrint] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editBill, setEditBill] = useState<Bill | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin' || profile?.role === 'super_admin';
 
   useEffect(() => {
     fetchBills();
@@ -101,6 +108,16 @@ export default function PatientBills({ patientId }: PatientBillsProps) {
   const handlePrintBill = (bill: Bill) => {
     setSelectedBill(bill);
     setShowPrint(true);
+  };
+
+  const handleEditBill = (bill: Bill) => {
+    setEditBill(bill);
+    setShowEditForm(true);
+  };
+
+  const handleBillUpdated = () => {
+    fetchBills();
+    fetchPayments();
   };
 
   const getStatusVariant = (status: string) => {
@@ -200,15 +217,27 @@ export default function PatientBills({ patientId }: PatientBillsProps) {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handlePrintBill(bill)}
-                          className="gap-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          Print
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditBill(bill)}
+                              title="Edit Bill"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePrintBill(bill)}
+                            className="gap-2"
+                          >
+                            <Download className="h-4 w-4" />
+                            Print
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -290,6 +319,19 @@ export default function PatientBills({ patientId }: PatientBillsProps) {
             <BillPrint bill={selectedBill} />
           </div>
         </div>
+      )}
+
+      {/* Edit Bill Form (Admin Only) */}
+      {editBill && (
+        <EditBillForm
+          bill={editBill}
+          open={showEditForm}
+          onOpenChange={(open) => {
+            setShowEditForm(open);
+            if (!open) setEditBill(null);
+          }}
+          onBillUpdated={handleBillUpdated}
+        />
       )}
     </>
   );

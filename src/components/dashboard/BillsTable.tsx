@@ -4,13 +4,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Search, Plus, Printer, CreditCard } from "lucide-react";
+import { Eye, Search, Plus, Printer, CreditCard, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PaymentForm } from "@/components/forms/PaymentForm";
 import BillPrintModal from "@/components/bills/BillPrintModal";
 import { AddBillForm } from "@/components/forms/AddBillForm";
+import { EditBillForm } from "@/components/forms/EditBillForm";
+import { useAuth } from "@/hooks/useAuth";
 import { formatDate } from "@/lib/utils";
-
 interface Bill {
   id: string;
   bill_number: string;
@@ -40,11 +41,15 @@ interface BillsTableProps {
 
 export function BillsTable({ bills, onRefresh }: BillsTableProps) {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editBill, setEditBill] = useState<Bill | null>(null);
 
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin' || profile?.role === 'super_admin';
   const filteredBills = bills.filter((b) =>
     b.bill_number.toLowerCase().includes(search.toLowerCase()) ||
     b.patients?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -69,6 +74,11 @@ export function BillsTable({ bills, onRefresh }: BillsTableProps) {
   const handlePrint = (bill: Bill) => {
     setSelectedBill(bill);
     setShowPrintModal(true);
+  };
+
+  const handleEdit = (bill: Bill) => {
+    setEditBill(bill);
+    setShowEditForm(true);
   };
 
   return (
@@ -135,6 +145,16 @@ export function BillsTable({ bills, onRefresh }: BillsTableProps) {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
+                      {isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(bill)}
+                          title="Edit Bill"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -198,6 +218,19 @@ export function BillsTable({ bills, onRefresh }: BillsTableProps) {
             setShowPrintModal(open);
             if (!open) setSelectedBill(null);
           }}
+        />
+      )}
+
+      {/* Edit Bill Form (Admin Only) */}
+      {editBill && (
+        <EditBillForm
+          bill={editBill}
+          open={showEditForm}
+          onOpenChange={(open) => {
+            setShowEditForm(open);
+            if (!open) setEditBill(null);
+          }}
+          onBillUpdated={onRefresh}
         />
       )}
     </div>
