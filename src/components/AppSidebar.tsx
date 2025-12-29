@@ -11,9 +11,15 @@ import {
   ClipboardList,
   Globe,
   AlertCircle,
+  Users,
+  TestTube,
+  FileText,
+  Receipt,
+  MessageSquare,
+  Wallet,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -60,16 +66,32 @@ const superAdminItems: NavItem[] = [
   { title: 'Data Management', url: '/super-admin/data-management', icon: Database, roles: ['super_admin'] },
 ];
 
+const dataItems: NavItem[] = [
+  { title: 'Patients', url: '/dashboard?tab=patients', icon: Users },
+  { title: 'Test Reports', url: '/dashboard?tab=reports', icon: TestTube },
+  { title: 'Documents', url: '/dashboard?tab=documents', icon: FileText },
+  { title: 'Bills', url: '/dashboard?tab=bills', icon: Receipt },
+  { title: 'Feedback', url: '/dashboard?tab=feedback', icon: MessageSquare },
+  { title: 'Ledger', url: '/dashboard?tab=ledger', icon: Wallet },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { profile, signOut } = useAuth();
   const { toast } = useToast();
   const currentPath = location.pathname;
+  const currentTab = searchParams.get('tab');
 
   const isActive = (path: string) => currentPath === path;
   const isCollapsed = state === "collapsed";
+
+  const isDataItemActive = (url: string) => {
+    const tabParam = new URL(url, 'http://x').searchParams.get('tab');
+    return currentPath === '/dashboard' && currentTab === tabParam;
+  };
 
   const filterByRole = (items: NavItem[]) => {
     if (!profile) return [];
@@ -112,6 +134,7 @@ export function AppSidebar() {
   };
 
   const filteredMainItems = filterByRole(mainItems);
+  const filteredDataItems = filterByRole(dataItems);
   const filteredAdminItems = filterByRole(adminItems);
   const filteredSuperAdminItems = filterByRole(superAdminItems);
 
@@ -135,6 +158,31 @@ export function AppSidebar() {
                         end 
                         className="hover:bg-sidebar-accent"
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {!isCollapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Data Navigation */}
+        {filteredDataItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Data</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {filteredDataItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink 
+                        to={item.url} 
+                        className={`hover:bg-sidebar-accent ${isDataItemActive(item.url) ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : ''}`}
+                        activeClassName=""
                       >
                         <item.icon className="h-4 w-4" />
                         {!isCollapsed && <span>{item.title}</span>}
