@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -24,8 +24,10 @@ const defaultPagination: PaginationState = { page: 1, pageSize: 25, totalCount: 
 const Dashboard = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'patients');
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('today');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -321,6 +323,11 @@ const Dashboard = () => {
     isLoading: isRefreshing,
   });
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
+
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -369,6 +376,8 @@ const Dashboard = () => {
         feedbackPagination={makePaginationProps(feedbackPag, setFeedbackPag)}
         paymentsPagination={makePaginationProps(paymentsPag, setPaymentsPag)}
         onRefresh={fetchAll}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
       />
     </div>
   );

@@ -35,6 +35,8 @@ interface DataTabsProps {
   feedbackPagination: PaginationProps;
   paymentsPagination: PaginationProps;
   onRefresh: () => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 export function DataTabs({ 
@@ -42,7 +44,9 @@ export function DataTabs({
   totalCollected,
   patientsPagination, reportsPagination, documentsPagination, billsPagination,
   followupsPagination, feedbackPagination, paymentsPagination,
-  onRefresh 
+  onRefresh,
+  activeTab = 'patients',
+  onTabChange
 }: DataTabsProps) {
   const tabs = [
     { id: "patients", label: "Patients", icon: Users, count: patientsPagination.totalCount },
@@ -55,7 +59,7 @@ export function DataTabs({
   ];
 
   return (
-    <Tabs defaultValue="patients" className="w-full">
+    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-muted/50 p-1">
         {tabs.map((tab) => (
           <TabsTrigger
