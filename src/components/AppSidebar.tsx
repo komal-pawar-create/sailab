@@ -1,7 +1,5 @@
 import { 
   LayoutDashboard, 
-  Users, 
-  FileText, 
   Settings, 
   Building2, 
   BarChart3,
@@ -10,8 +8,6 @@ import {
   History,
   FileCheck,
   LogOut,
-  Pencil,
-  RotateCcw,
   ClipboardList,
   Globe,
   AlertCircle,
@@ -119,20 +115,6 @@ export function AppSidebar() {
   const filteredAdminItems = filterByRole(adminItems);
   const filteredSuperAdminItems = filterByRole(superAdminItems);
 
-  const handleEditDashboard = () => {
-    if (location.pathname !== '/dashboard') {
-      navigate('/dashboard');
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('dashboard-edit-mode'));
-      }, 100);
-    } else {
-      window.dispatchEvent(new CustomEvent('dashboard-edit-mode'));
-    }
-  };
-
-  const handleResetDashboard = () => {
-    window.dispatchEvent(new CustomEvent('dashboard-reset-layout'));
-  };
 
   return (
     <Sidebar
@@ -160,25 +142,6 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
-                {/* Dashboard customization options */}
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={handleEditDashboard}
-                    className="hover:bg-sidebar-accent cursor-pointer"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    {!isCollapsed && <span>Edit Dashboard</span>}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={handleResetDashboard}
-                    className="hover:bg-sidebar-accent cursor-pointer"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    {!isCollapsed && <span>Reset Dashboard</span>}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
