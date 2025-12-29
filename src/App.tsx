@@ -16,6 +16,7 @@ import AuditLogs from "./pages/AuditLogs";
 import ApiSettings from "./pages/ApiSettings";
 import Analytics from "./pages/Analytics";
 import Followups from "./pages/Followups";
+import OutstandingReport from "./pages/OutstandingReport";
 import ForgotPassword from "./pages/ForgotPassword";
 import PublicFeedback from "./pages/PublicFeedback";
 import NotFound from "./pages/NotFound";
@@ -116,6 +117,7 @@ const AppContent = () => {
           <main className="flex-1 overflow-auto">
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/outstanding-report" element={<OutstandingReport />} />
               <Route path="/super-admin" element={<SuperAdmin />} />
               <Route path="/super-admin/data-management" element={<DataManagement />} />
               <Route path="/audit-logs" element={<AuditLogs />} />
