@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,24 +9,17 @@ import { useFollowupReminders } from '@/hooks/useFollowupReminders';
 import { DashboardFilters, TimePeriod, Branch } from '@/components/dashboard/DashboardFilters';
 import { StatsRow } from '@/components/dashboard/StatsRow';
 import { DataTabs } from '@/components/dashboard/DataTabs';
+import { useDebounce } from '@/hooks/useDebounce';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
 
-interface DashboardData {
-  patients: any[];
-  reports: any[];
-  documents: any[];
-  bills: any[];
-  followups: any[];
-  feedback: any[];
-  payments: any[];
+interface PaginationState {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  search: string;
 }
 
-interface PeriodCounts {
-  today: number;
-  week: number;
-  month: number;
-  all: number;
-}
+const defaultPagination: PaginationState = { page: 1, pageSize: 25, totalCount: 0, search: '' };
 
 const Dashboard = () => {
   const { user, profile, loading } = useAuth();
@@ -35,31 +28,46 @@ const Dashboard = () => {
   
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('today');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [data, setData] = useState<DashboardData>({
-    patients: [],
-    reports: [],
-    documents: [],
-    bills: [],
-    followups: [],
-    feedback: [],
-    payments: [],
-  });
-  const [patientCounts, setPatientCounts] = useState<PeriodCounts>({ today: 0, week: 0, month: 0, all: 0 });
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
+
+  // Pagination states for each table
+  const [patientsPag, setPatientsPag] = useState<PaginationState>(defaultPagination);
+  const [reportsPag, setReportsPag] = useState<PaginationState>(defaultPagination);
+  const [documentsPag, setDocumentsPag] = useState<PaginationState>(defaultPagination);
+  const [billsPag, setBillsPag] = useState<PaginationState>(defaultPagination);
+  const [followupsPag, setFollowupsPag] = useState<PaginationState>(defaultPagination);
+  const [feedbackPag, setFeedbackPag] = useState<PaginationState>(defaultPagination);
+  const [paymentsPag, setPaymentsPag] = useState<PaginationState>(defaultPagination);
+
+  // Debounced search values
+  const debouncedPatientsSearch = useDebounce(patientsPag.search, 300);
+  const debouncedReportsSearch = useDebounce(reportsPag.search, 300);
+  const debouncedDocumentsSearch = useDebounce(documentsPag.search, 300);
+  const debouncedBillsSearch = useDebounce(billsPag.search, 300);
+  const debouncedFollowupsSearch = useDebounce(followupsPag.search, 300);
+  const debouncedFeedbackSearch = useDebounce(feedbackPag.search, 300);
+  const debouncedPaymentsSearch = useDebounce(paymentsPag.search, 300);
+
+  // Data states
+  const [patients, setPatients] = useState<any[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [bills, setBills] = useState<any[]>([]);
+  const [followups, setFollowups] = useState<any[]>([]);
+  const [feedback, setFeedback] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [totalCollected, setTotalCollected] = useState(0);
+  const [stats, setStats] = useState({ patients: 0, tests: 0, documents: 0, bills: 0, revenue: 0, pending: 0 });
 
   useFollowupReminders();
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin';
-  const isBranchOperator = profile && ['operator_1', 'operator_2', 'operator_3', 'branch_operator'].includes(profile.role);
 
   useEffect(() => {
     if (!loading) {
-      if (!user) {
-        navigate('/auth');
-      } else if (profile?.role === 'super_admin') {
-        navigate('/super-admin');
-      }
+      if (!user) navigate('/auth');
+      else if (profile?.role === 'super_admin') navigate('/super-admin');
     }
   }, [user, profile, loading, navigate]);
 
@@ -67,182 +75,228 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchBranches = async () => {
       if (!isAdmin || !profile?.branch_id) return;
-      
       try {
-        // Get organization ID from user's branch
-        const { data: userBranch } = await supabase
-          .from('branches')
-          .select('organization_id')
-          .eq('id', profile.branch_id)
-          .single();
-
+        const { data: userBranch } = await supabase.from('branches').select('organization_id').eq('id', profile.branch_id).single();
         if (userBranch?.organization_id) {
-          // Fetch all branches in the organization
-          const { data: orgBranches } = await supabase
-            .from('branches')
-            .select('id, name')
-            .eq('organization_id', userBranch.organization_id)
-            .order('name');
-
+          const { data: orgBranches } = await supabase.from('branches').select('id, name').eq('organization_id', userBranch.organization_id).order('name');
           setBranches(orgBranches || []);
         }
       } catch (error) {
         console.error('Error fetching branches:', error);
       }
     };
-
-    if (!loading && user && profile) {
-      fetchBranches();
-    }
+    if (!loading && user && profile) fetchBranches();
   }, [user, profile, loading, isAdmin]);
-
-  useEffect(() => {
-    if (!loading && user && profile && profile.role !== 'super_admin') {
-      fetchDashboardData();
-    }
-  }, [user, profile, loading, timePeriod, selectedBranch]);
 
   const getDateFilter = (period: TimePeriod): string | null => {
     const now = new Date();
     switch (period) {
-      case 'today':
-        return format(now, 'yyyy-MM-dd');
-      case 'week':
-        return format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-      case 'month':
-        return format(startOfMonth(now), 'yyyy-MM-dd');
-      case 'all':
-      default:
-        return null;
+      case 'today': return format(now, 'yyyy-MM-dd');
+      case 'week': return format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+      case 'month': return format(startOfMonth(now), 'yyyy-MM-dd');
+      default: return null;
     }
   };
 
-  const fetchDashboardData = async () => {
-    try {
-      setIsRefreshing(true);
-      
-      if (!profile?.lab_id && !isAdmin) {
-        if (!loading) {
-          toast({
-            title: "Error",
-            description: "User is not assigned to any lab",
-            variant: "destructive",
-          });
-        }
-        return;
-      }
+  const getBranchFilter = useCallback(() => {
+    if (isAdmin && selectedBranch !== 'all') return [selectedBranch];
+    if (isAdmin && selectedBranch === 'all' && branches.length > 0) return branches.map(b => b.id);
+    return null;
+  }, [isAdmin, selectedBranch, branches]);
 
-      const dateFilter = getDateFilter(timePeriod);
-      const todayDate = format(new Date(), 'yyyy-MM-dd');
-      const weekDate = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
-      const monthDate = format(startOfMonth(new Date()), 'yyyy-MM-dd');
+  // Fetch patients with pagination
+  const fetchPatients = useCallback(async () => {
+    if (!profile) return;
+    setIsRefreshing(true);
+    const dateFilter = getDateFilter(timePeriod);
+    const branchFilter = getBranchFilter();
+    const { page, pageSize, search } = patientsPag;
+    const offset = (page - 1) * pageSize;
 
-      // Build queries - RLS handles branch-level filtering automatically
-      // Use explicit FK hints to avoid PGRST201 ambiguity errors with duplicate foreign keys
-      console.log('Dashboard: Fetching data for role:', profile?.role, 'branch:', profile?.branch_id, 'lab:', profile?.lab_id);
-      
-      let patientsQuery = supabase.from('patients').select('*').order('created_at', { ascending: false });
-      let reportsQuery = supabase.from('test_reports').select('*, patients!test_reports_patient_id_fkey(id, full_name, patient_id)').order('test_date', { ascending: false });
-      let documentsQuery = supabase.from('documents').select('*, patients!documents_patient_id_fkey(id, full_name, patient_id)').order('created_at', { ascending: false });
-      let billsQuery = supabase.from('bills').select('*, patients!bills_patient_id_fkey(id, full_name, patient_id)').order('bill_date', { ascending: false });
-      let followupsQuery = supabase.from('patient_followups').select('*, patients!fk_patient_followups_patient(id, full_name, patient_id)').order('due_at', { ascending: false });
-      let feedbackQuery = supabase.from('feedback').select('*, patients!feedback_patient_id_fkey(id, full_name, patient_id)').order('created_at', { ascending: false });
-      let paymentsQuery = supabase.from('bill_payments').select('*, bills!bill_payments_bill_id_fkey(id, bill_number, total_amount, patients!bills_patient_id_fkey(id, full_name, patient_id))').order('payment_date', { ascending: false });
+    let query = supabase.from('patients').select('*', { count: 'exact' });
+    if (branchFilter) query = query.in('branch_id', branchFilter);
+    if (dateFilter) query = query.gte('created_at', dateFilter);
+    if (search) query = query.or(`full_name.ilike.%${search}%,patient_id.ilike.%${search}%,phone.ilike.%${search}%`);
+    query = query.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1);
 
-      // Only apply explicit branch filtering for admins who want to filter by specific branch
-      // For operators, RLS already handles branch-level access - no need for client-side filtering
-      if (isAdmin && selectedBranch !== 'all') {
-        const branchFilter = [selectedBranch];
-        patientsQuery = patientsQuery.in('branch_id', branchFilter);
-        reportsQuery = reportsQuery.in('branch_id', branchFilter);
-        documentsQuery = documentsQuery.in('branch_id', branchFilter);
-        billsQuery = billsQuery.in('branch_id', branchFilter);
-        followupsQuery = followupsQuery.in('branch_id', branchFilter);
-        feedbackQuery = feedbackQuery.in('branch_id', branchFilter);
-        paymentsQuery = paymentsQuery.in('branch_id', branchFilter);
-      } else if (isAdmin && selectedBranch === 'all' && branches.length > 0) {
-        // Admin viewing all branches - filter by organization branches
-        const branchIds = branches.map(b => b.id);
-        patientsQuery = patientsQuery.in('branch_id', branchIds);
-        reportsQuery = reportsQuery.in('branch_id', branchIds);
-        documentsQuery = documentsQuery.in('branch_id', branchIds);
-        billsQuery = billsQuery.in('branch_id', branchIds);
-        followupsQuery = followupsQuery.in('branch_id', branchIds);
-        feedbackQuery = feedbackQuery.in('branch_id', branchIds);
-        paymentsQuery = paymentsQuery.in('branch_id', branchIds);
-      }
-      // For non-admin (operators), don't add .in() filter - let RLS handle it automatically
+    const { data, count } = await query;
+    setPatients(data || []);
+    setPatientsPag(p => ({ ...p, totalCount: count || 0 }));
+    setIsRefreshing(false);
+  }, [profile, timePeriod, patientsPag.page, patientsPag.pageSize, debouncedPatientsSearch, getBranchFilter]);
 
-      const [
-        { data: patients },
-        { data: reports },
-        { data: documents },
-        { data: bills },
-        { data: followups },
-        { data: feedbackData },
-        { data: payments }
-      ] = await Promise.all([
-        patientsQuery,
-        reportsQuery,
-        documentsQuery,
-        billsQuery,
-        followupsQuery,
-        feedbackQuery,
-        paymentsQuery
-      ]);
+  // Fetch reports with pagination
+  const fetchReports = useCallback(async () => {
+    if (!profile) return;
+    const dateFilter = getDateFilter(timePeriod);
+    const branchFilter = getBranchFilter();
+    const { page, pageSize, search } = reportsPag;
+    const offset = (page - 1) * pageSize;
 
-      // Calculate patient counts for each period
-      const allPatients = patients || [];
-      setPatientCounts({
-        today: allPatients.filter(p => p.created_at >= todayDate).length,
-        week: allPatients.filter(p => p.created_at >= weekDate).length,
-        month: allPatients.filter(p => p.created_at >= monthDate).length,
-        all: allPatients.length,
-      });
+    let query = supabase.from('test_reports').select('*, patients!test_reports_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
+    if (branchFilter) query = query.in('branch_id', branchFilter);
+    if (dateFilter) query = query.gte('test_date', dateFilter);
+    if (search) query = query.or(`test_type.ilike.%${search}%`);
+    query = query.order('test_date', { ascending: false }).range(offset, offset + pageSize - 1);
 
-      // Filter data based on time period
-      const filterByDate = <T extends { created_at?: string; test_date?: string; bill_date?: string; due_at?: string; payment_date?: string }>(
-        dataArr: T[] | null,
-        dateField: 'created_at' | 'test_date' | 'bill_date' | 'due_at' | 'payment_date'
-      ): T[] => {
-        if (!dataArr || !dateFilter) return dataArr || [];
-        return dataArr.filter(item => {
-          const itemDate = item[dateField];
-          if (!itemDate) return false;
-          return itemDate >= dateFilter;
-        });
-      };
+    const { data, count } = await query;
+    setReports(data || []);
+    setReportsPag(p => ({ ...p, totalCount: count || 0 }));
+  }, [profile, timePeriod, reportsPag.page, reportsPag.pageSize, debouncedReportsSearch, getBranchFilter]);
 
-      setData({
-        patients: filterByDate(patients, 'created_at'),
-        reports: filterByDate(reports, 'test_date'),
-        documents: filterByDate(documents, 'created_at'),
-        bills: filterByDate(bills, 'bill_date'),
-        followups: filterByDate(followups, 'due_at'),
-        feedback: filterByDate(feedbackData, 'created_at'),
-        payments: filterByDate(payments, 'payment_date'),
-      });
+  // Fetch documents with pagination
+  const fetchDocuments = useCallback(async () => {
+    if (!profile) return;
+    const dateFilter = getDateFilter(timePeriod);
+    const branchFilter = getBranchFilter();
+    const { page, pageSize, search } = documentsPag;
+    const offset = (page - 1) * pageSize;
 
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch dashboard data",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRefreshing(false);
+    let query = supabase.from('documents').select('*, patients!documents_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
+    if (branchFilter) query = query.in('branch_id', branchFilter);
+    if (dateFilter) query = query.gte('created_at', dateFilter);
+    if (search) query = query.ilike('file_name', `%${search}%`);
+    query = query.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1);
+
+    const { data, count } = await query;
+    setDocuments(data || []);
+    setDocumentsPag(p => ({ ...p, totalCount: count || 0 }));
+  }, [profile, timePeriod, documentsPag.page, documentsPag.pageSize, debouncedDocumentsSearch, getBranchFilter]);
+
+  // Fetch bills with pagination
+  const fetchBills = useCallback(async () => {
+    if (!profile) return;
+    const dateFilter = getDateFilter(timePeriod);
+    const branchFilter = getBranchFilter();
+    const { page, pageSize, search } = billsPag;
+    const offset = (page - 1) * pageSize;
+
+    let query = supabase.from('bills').select('*, patients!bills_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
+    if (branchFilter) query = query.in('branch_id', branchFilter);
+    if (dateFilter) query = query.gte('bill_date', dateFilter);
+    if (search) query = query.or(`bill_number.ilike.%${search}%`);
+    query = query.order('bill_date', { ascending: false }).range(offset, offset + pageSize - 1);
+
+    const { data, count } = await query;
+    setBills(data || []);
+    setBillsPag(p => ({ ...p, totalCount: count || 0 }));
+  }, [profile, timePeriod, billsPag.page, billsPag.pageSize, debouncedBillsSearch, getBranchFilter]);
+
+  // Fetch followups with pagination
+  const fetchFollowups = useCallback(async () => {
+    if (!profile) return;
+    const dateFilter = getDateFilter(timePeriod);
+    const branchFilter = getBranchFilter();
+    const { page, pageSize, search } = followupsPag;
+    const offset = (page - 1) * pageSize;
+
+    let query = supabase.from('patient_followups').select('*, patients!fk_patient_followups_patient(id, full_name, patient_id)', { count: 'exact' });
+    if (branchFilter) query = query.in('branch_id', branchFilter);
+    if (dateFilter) query = query.gte('due_at', dateFilter);
+    if (search) query = query.ilike('title', `%${search}%`);
+    query = query.order('due_at', { ascending: false }).range(offset, offset + pageSize - 1);
+
+    const { data, count } = await query;
+    setFollowups(data || []);
+    setFollowupsPag(p => ({ ...p, totalCount: count || 0 }));
+  }, [profile, timePeriod, followupsPag.page, followupsPag.pageSize, debouncedFollowupsSearch, getBranchFilter]);
+
+  // Fetch feedback with pagination
+  const fetchFeedback = useCallback(async () => {
+    if (!profile) return;
+    const dateFilter = getDateFilter(timePeriod);
+    const branchFilter = getBranchFilter();
+    const { page, pageSize, search } = feedbackPag;
+    const offset = (page - 1) * pageSize;
+
+    let query = supabase.from('feedback').select('*, patients!feedback_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
+    if (branchFilter) query = query.in('branch_id', branchFilter);
+    if (dateFilter) query = query.gte('created_at', dateFilter);
+    if (search) query = query.or(`message.ilike.%${search}%,feedback_type.ilike.%${search}%`);
+    query = query.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1);
+
+    const { data, count } = await query;
+    setFeedback(data || []);
+    setFeedbackPag(p => ({ ...p, totalCount: count || 0 }));
+  }, [profile, timePeriod, feedbackPag.page, feedbackPag.pageSize, debouncedFeedbackSearch, getBranchFilter]);
+
+  // Fetch payments with pagination
+  const fetchPayments = useCallback(async () => {
+    if (!profile) return;
+    const dateFilter = getDateFilter(timePeriod);
+    const branchFilter = getBranchFilter();
+    const { page, pageSize, search } = paymentsPag;
+    const offset = (page - 1) * pageSize;
+
+    let query = supabase.from('bill_payments').select('*, bills!bill_payments_bill_id_fkey(id, bill_number, total_amount, patients!bills_patient_id_fkey(id, full_name, patient_id))', { count: 'exact' });
+    if (branchFilter) query = query.in('branch_id', branchFilter);
+    if (dateFilter) query = query.gte('payment_date', dateFilter);
+    if (search) query = query.or(`payment_method.ilike.%${search}%,reference_number.ilike.%${search}%`);
+    query = query.order('payment_date', { ascending: false }).range(offset, offset + pageSize - 1);
+
+    const { data, count } = await query;
+    setPayments(data || []);
+    setPaymentsPag(p => ({ ...p, totalCount: count || 0 }));
+
+    // Get total collected
+    let totalQuery = supabase.from('bill_payments').select('payment_amount');
+    if (branchFilter) totalQuery = totalQuery.in('branch_id', branchFilter);
+    if (dateFilter) totalQuery = totalQuery.gte('payment_date', dateFilter);
+    const { data: totalData } = await totalQuery;
+    setTotalCollected(totalData?.reduce((sum, p) => sum + p.payment_amount, 0) || 0);
+  }, [profile, timePeriod, paymentsPag.page, paymentsPag.pageSize, debouncedPaymentsSearch, getBranchFilter]);
+
+  // Fetch stats
+  const fetchStats = useCallback(async () => {
+    if (!profile) return;
+    const dateFilter = getDateFilter(timePeriod);
+    const branchFilter = getBranchFilter();
+
+    let pQuery = supabase.from('patients').select('id', { count: 'exact', head: true });
+    let rQuery = supabase.from('test_reports').select('id', { count: 'exact', head: true });
+    let dQuery = supabase.from('documents').select('id', { count: 'exact', head: true });
+    let bQuery = supabase.from('bills').select('total_amount, due_amount');
+
+    if (branchFilter) {
+      pQuery = pQuery.in('branch_id', branchFilter);
+      rQuery = rQuery.in('branch_id', branchFilter);
+      dQuery = dQuery.in('branch_id', branchFilter);
+      bQuery = bQuery.in('branch_id', branchFilter);
     }
-  };
+    if (dateFilter) {
+      pQuery = pQuery.gte('created_at', dateFilter);
+      rQuery = rQuery.gte('test_date', dateFilter);
+      dQuery = dQuery.gte('created_at', dateFilter);
+      bQuery = bQuery.gte('bill_date', dateFilter);
+    }
 
-  // Calculate stats from filtered data
-  const stats = {
-    patients: data.patients.length,
-    tests: data.reports.length,
-    documents: data.documents.length,
-    bills: data.bills.length,
-    revenue: data.bills.reduce((sum, bill) => sum + (bill.total_amount || 0), 0),
-    pending: data.bills.reduce((sum, bill) => sum + (bill.due_amount || 0), 0),
-  };
+    const [{ count: pCount }, { count: rCount }, { count: dCount }, { data: billsData }] = await Promise.all([pQuery, rQuery, dQuery, bQuery]);
+    
+    setStats({
+      patients: pCount || 0,
+      tests: rCount || 0,
+      documents: dCount || 0,
+      bills: billsData?.length || 0,
+      revenue: billsData?.reduce((sum, b) => sum + (b.total_amount || 0), 0) || 0,
+      pending: billsData?.reduce((sum, b) => sum + (b.due_amount || 0), 0) || 0,
+    });
+  }, [profile, timePeriod, getBranchFilter]);
+
+  // Fetch all data
+  const fetchAll = useCallback(async () => {
+    if (!loading && user && profile && profile.role !== 'super_admin') {
+      await Promise.all([fetchPatients(), fetchReports(), fetchDocuments(), fetchBills(), fetchFollowups(), fetchFeedback(), fetchPayments(), fetchStats()]);
+    }
+  }, [loading, user, profile, fetchPatients, fetchReports, fetchDocuments, fetchBills, fetchFollowups, fetchFeedback, fetchPayments, fetchStats]);
+
+  useEffect(() => { fetchAll(); }, [timePeriod, selectedBranch, branches]);
+  useEffect(() => { fetchPatients(); }, [patientsPag.page, patientsPag.pageSize, debouncedPatientsSearch]);
+  useEffect(() => { fetchReports(); }, [reportsPag.page, reportsPag.pageSize, debouncedReportsSearch]);
+  useEffect(() => { fetchDocuments(); }, [documentsPag.page, documentsPag.pageSize, debouncedDocumentsSearch]);
+  useEffect(() => { fetchBills(); }, [billsPag.page, billsPag.pageSize, debouncedBillsSearch]);
+  useEffect(() => { fetchFollowups(); }, [followupsPag.page, followupsPag.pageSize, debouncedFollowupsSearch]);
+  useEffect(() => { fetchFeedback(); }, [feedbackPag.page, feedbackPag.pageSize, debouncedFeedbackSearch]);
+  useEffect(() => { fetchPayments(); }, [paymentsPag.page, paymentsPag.pageSize, debouncedPaymentsSearch]);
 
   if (loading) {
     return (
@@ -255,65 +309,66 @@ const Dashboard = () => {
     );
   }
 
-  if (!user || !profile) {
-    return null;
-  }
+  if (!user || !profile) return null;
+
+  const makePaginationProps = (pag: PaginationState, setPag: React.Dispatch<React.SetStateAction<PaginationState>>) => ({
+    currentPage: pag.page,
+    pageSize: pag.pageSize,
+    totalCount: pag.totalCount,
+    onPageChange: (page: number) => setPag(p => ({ ...p, page })),
+    onPageSizeChange: (size: number) => setPag(p => ({ ...p, pageSize: size, page: 1 })),
+    onSearch: (search: string) => setPag(p => ({ ...p, search, page: 1 })),
+    isLoading: isRefreshing,
+  });
 
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-sm">
-            Welcome back, {profile.full_name}
-          </p>
+          <p className="text-muted-foreground text-sm">Welcome back, {profile.full_name}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchDashboardData}
-            disabled={isRefreshing}
-          >
+          <Button variant="outline" size="sm" onClick={fetchAll} disabled={isRefreshing}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/analytics')}
-          >
+          <Button variant="outline" size="sm" onClick={() => navigate('/analytics')}>
             <BarChart3 className="h-4 w-4 mr-2" />
             Analytics
           </Button>
         </div>
       </div>
 
-      {/* Time Period Filter with Branch Dropdown for Admins */}
       <DashboardFilters 
         value={timePeriod} 
         onChange={setTimePeriod}
-        counts={patientCounts}
+        counts={{ today: 0, week: 0, month: 0, all: patientsPag.totalCount }}
         branches={branches}
         selectedBranch={selectedBranch}
         onBranchChange={setSelectedBranch}
         showBranchFilter={isAdmin && branches.length > 1}
       />
 
-      {/* Stats Row */}
       <StatsRow stats={stats} />
 
-      {/* Tabbed Data Sections */}
       <DataTabs
-        patients={data.patients}
-        reports={data.reports}
-        documents={data.documents}
-        bills={data.bills}
-        followups={data.followups}
-        feedback={data.feedback}
-        payments={data.payments}
-        onRefresh={fetchDashboardData}
+        patients={patients}
+        reports={reports}
+        documents={documents}
+        bills={bills}
+        followups={followups}
+        feedback={feedback}
+        payments={payments}
+        totalCollected={totalCollected}
+        patientsPagination={makePaginationProps(patientsPag, setPatientsPag)}
+        reportsPagination={makePaginationProps(reportsPag, setReportsPag)}
+        documentsPagination={makePaginationProps(documentsPag, setDocumentsPag)}
+        billsPagination={makePaginationProps(billsPag, setBillsPag)}
+        followupsPagination={makePaginationProps(followupsPag, setFollowupsPag)}
+        feedbackPagination={makePaginationProps(feedbackPag, setFeedbackPag)}
+        paymentsPagination={makePaginationProps(paymentsPag, setPaymentsPag)}
+        onRefresh={fetchAll}
       />
     </div>
   );

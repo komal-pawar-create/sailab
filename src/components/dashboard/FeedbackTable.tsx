@@ -11,6 +11,8 @@ import { QRCodeSVG } from "qrcode.react";
 import { AddFeedbackForm } from "@/components/forms/AddFeedbackForm";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { TablePagination } from "./TablePagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Feedback {
   id: string;
@@ -28,15 +30,41 @@ interface Feedback {
 
 interface FeedbackTableProps {
   feedback: Feedback[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  onSearch: (search: string) => void;
   onRefresh: () => void;
+  isLoading?: boolean;
 }
 
-export function FeedbackTable({ feedback, onRefresh }: FeedbackTableProps) {
+export function FeedbackTable({ 
+  feedback, 
+  totalCount,
+  currentPage,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  onSearch,
+  onRefresh,
+  isLoading = false 
+}: FeedbackTableProps) {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const qrRef = useRef<HTMLDivElement>(null);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const hasNext = currentPage < totalPages;
+  const hasPrev = currentPage > 1;
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    onSearch(value);
+  };
 
   const getFeedbackUrl = () => {
     if (!profile?.lab_id) return "";
@@ -124,12 +152,6 @@ export function FeedbackTable({ feedback, onRefresh }: FeedbackTableProps) {
     printWindow.print();
   };
 
-  const filteredFeedback = feedback.filter((f) =>
-    f.message.toLowerCase().includes(search.toLowerCase()) ||
-    f.feedback_type.toLowerCase().includes(search.toLowerCase()) ||
-    f.patients?.full_name?.toLowerCase().includes(search.toLowerCase())
-  );
-
   const getTypeBadge = (type: string) => {
     switch (type.toLowerCase()) {
       case "complaint":
@@ -165,7 +187,7 @@ export function FeedbackTable({ feedback, onRefresh }: FeedbackTableProps) {
           <Input
             placeholder="Search feedback..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -227,14 +249,25 @@ export function FeedbackTable({ feedback, onRefresh }: FeedbackTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredFeedback.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: pageSize > 10 ? 10 : pageSize }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-8 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : feedback.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No feedback found
                 </TableCell>
               </TableRow>
             ) : (
-              filteredFeedback.slice(0, 50).map((item) => (
+              feedback.map((item) => (
                 <TableRow key={item.id} className="hover:bg-muted/50">
                   <TableCell>{getTypeBadge(item.feedback_type)}</TableCell>
                   <TableCell className="max-w-[300px]">
@@ -266,11 +299,18 @@ export function FeedbackTable({ feedback, onRefresh }: FeedbackTableProps) {
         </Table>
       </div>
 
-      {filteredFeedback.length > 50 && (
-        <p className="text-sm text-muted-foreground text-center">
-          Showing 50 of {filteredFeedback.length} feedback items.
-        </p>
-      )}
+      {/* Pagination */}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        hasNext={hasNext}
+        hasPrev={hasPrev}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

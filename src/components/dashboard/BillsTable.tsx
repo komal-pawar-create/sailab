@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Search, Plus, Printer, CreditCard, Pencil } from "lucide-react";
+import { Eye, Search, Printer, CreditCard, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PaymentForm } from "@/components/forms/PaymentForm";
 import BillPrintModal from "@/components/bills/BillPrintModal";
@@ -12,6 +12,9 @@ import { AddBillForm } from "@/components/forms/AddBillForm";
 import { EditBillForm } from "@/components/forms/EditBillForm";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDate } from "@/lib/utils";
+import { TablePagination } from "./TablePagination";
+import { Skeleton } from "@/components/ui/skeleton";
+
 interface Bill {
   id: string;
   bill_number: string;
@@ -36,10 +39,27 @@ interface Bill {
 
 interface BillsTableProps {
   bills: Bill[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  onSearch: (search: string) => void;
   onRefresh: () => void;
+  isLoading?: boolean;
 }
 
-export function BillsTable({ bills, onRefresh }: BillsTableProps) {
+export function BillsTable({ 
+  bills, 
+  totalCount,
+  currentPage,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  onSearch,
+  onRefresh,
+  isLoading = false 
+}: BillsTableProps) {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [search, setSearch] = useState("");
@@ -49,12 +69,16 @@ export function BillsTable({ bills, onRefresh }: BillsTableProps) {
   const [showEditForm, setShowEditForm] = useState(false);
   const [editBill, setEditBill] = useState<Bill | null>(null);
 
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const hasNext = currentPage < totalPages;
+  const hasPrev = currentPage > 1;
+
   const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin' || profile?.role === 'super_admin';
-  const filteredBills = bills.filter((b) =>
-    b.bill_number.toLowerCase().includes(search.toLowerCase()) ||
-    b.patients?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    b.patients?.patient_id?.toLowerCase().includes(search.toLowerCase())
-  );
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    onSearch(value);
+  };
 
   const getStatusBadge = (status: string, dueAmount: number) => {
     if (dueAmount <= 0 || status === "paid") {
@@ -89,7 +113,7 @@ export function BillsTable({ bills, onRefresh }: BillsTableProps) {
           <Input
             placeholder="Search bills..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -111,14 +135,27 @@ export function BillsTable({ bills, onRefresh }: BillsTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredBills.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: pageSize > 10 ? 10 : pageSize }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : bills.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   No bills found
                 </TableCell>
               </TableRow>
             ) : (
-              filteredBills.slice(0, 50).map((bill) => (
+              bills.map((bill) => (
                 <TableRow key={bill.id} className="hover:bg-muted/50">
                   <TableCell className="font-mono text-xs">{bill.bill_number}</TableCell>
                   <TableCell className="font-medium">{bill.patients?.full_name || "-"}</TableCell>
@@ -183,11 +220,18 @@ export function BillsTable({ bills, onRefresh }: BillsTableProps) {
         </Table>
       </div>
 
-      {filteredBills.length > 50 && (
-        <p className="text-sm text-muted-foreground text-center">
-          Showing 50 of {filteredBills.length} bills.
-        </p>
-      )}
+      {/* Pagination */}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        hasNext={hasNext}
+        hasPrev={hasPrev}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        isLoading={isLoading}
+      />
 
       {/* Payment Dialog */}
       <Dialog open={showPaymentForm} onOpenChange={setShowPaymentForm}>

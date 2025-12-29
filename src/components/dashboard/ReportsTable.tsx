@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, Search } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
+import { TablePagination } from "./TablePagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Report {
   id: string;
@@ -24,18 +26,38 @@ interface Report {
 
 interface ReportsTableProps {
   reports: Report[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  onSearch: (search: string) => void;
   onRefresh: () => void;
+  isLoading?: boolean;
 }
 
-export function ReportsTable({ reports, onRefresh }: ReportsTableProps) {
+export function ReportsTable({ 
+  reports, 
+  totalCount,
+  currentPage,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  onSearch,
+  onRefresh,
+  isLoading = false 
+}: ReportsTableProps) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
-  const filteredReports = reports.filter((r) =>
-    r.test_type.toLowerCase().includes(search.toLowerCase()) ||
-    r.patients?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    r.patients?.patient_id?.toLowerCase().includes(search.toLowerCase())
-  );
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const hasNext = currentPage < totalPages;
+  const hasPrev = currentPage > 1;
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    onSearch(value);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -58,7 +80,7 @@ export function ReportsTable({ reports, onRefresh }: ReportsTableProps) {
           <Input
             placeholder="Search reports..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -79,14 +101,26 @@ export function ReportsTable({ reports, onRefresh }: ReportsTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredReports.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: pageSize > 10 ? 10 : pageSize }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-8 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : reports.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   No reports found
                 </TableCell>
               </TableRow>
             ) : (
-              filteredReports.slice(0, 50).map((report) => (
+              reports.map((report) => (
                 <TableRow key={report.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium">{report.test_type}</TableCell>
                   <TableCell>{report.patients?.full_name || "-"}</TableCell>
@@ -117,11 +151,18 @@ export function ReportsTable({ reports, onRefresh }: ReportsTableProps) {
         </Table>
       </div>
 
-      {filteredReports.length > 50 && (
-        <p className="text-sm text-muted-foreground text-center">
-          Showing 50 of {filteredReports.length} reports. Use search to find specific reports.
-        </p>
-      )}
+      {/* Pagination */}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        hasNext={hasNext}
+        hasPrev={hasPrev}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

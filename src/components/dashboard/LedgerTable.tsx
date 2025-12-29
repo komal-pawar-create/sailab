@@ -4,8 +4,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Search, Receipt } from "lucide-react";
+import { Eye, Search } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { TablePagination } from "./TablePagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Payment {
   id: string;
@@ -29,40 +31,40 @@ interface Payment {
 
 interface LedgerTableProps {
   payments: Payment[];
+  totalCount: number;
+  totalCollected: number;
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  onSearch: (search: string) => void;
   onRefresh: () => void;
+  isLoading?: boolean;
 }
 
-export function LedgerTable({ payments, onRefresh }: LedgerTableProps) {
+export function LedgerTable({ 
+  payments, 
+  totalCount,
+  totalCollected,
+  currentPage,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  onSearch,
+  onRefresh,
+  isLoading = false 
+}: LedgerTableProps) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
-  // Sort payments by date descending and filter
-  const sortedPayments = [...payments].sort(
-    (a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
-  );
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const hasNext = currentPage < totalPages;
+  const hasPrev = currentPage > 1;
 
-  const filteredPayments = sortedPayments.filter((p) =>
-    p.bills?.bill_number?.toLowerCase().includes(search.toLowerCase()) ||
-    p.bills?.patients?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.payment_method.toLowerCase().includes(search.toLowerCase()) ||
-    p.reference_number?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // Calculate running balance (total collected)
-  const totalCollected = payments.reduce((sum, p) => sum + p.payment_amount, 0);
-
-  // Calculate running balance for display (oldest to newest for running total)
-  const paymentsWithBalance = [...filteredPayments].reverse().reduce<(Payment & { runningBalance: number })[]>(
-    (acc, payment) => {
-      const previousBalance = acc.length > 0 ? acc[acc.length - 1].runningBalance : 0;
-      acc.push({
-        ...payment,
-        runningBalance: previousBalance + payment.payment_amount,
-      });
-      return acc;
-    },
-    []
-  ).reverse(); // Reverse back to show newest first
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    onSearch(value);
+  };
 
   const getMethodBadge = (method: string) => {
     const colors: Record<string, string> = {
@@ -87,7 +89,7 @@ export function LedgerTable({ payments, onRefresh }: LedgerTableProps) {
           <Input
             placeholder="Search payments..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -109,19 +111,30 @@ export function LedgerTable({ payments, onRefresh }: LedgerTableProps) {
               <TableHead className="w-[100px]">Method</TableHead>
               <TableHead className="w-[120px]">Reference</TableHead>
               <TableHead className="w-[100px] text-right">Amount</TableHead>
-              <TableHead className="w-[120px] text-right">Running Balance</TableHead>
               <TableHead className="w-[80px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paymentsWithBalance.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: pageSize > 10 ? 10 : pageSize }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-8 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : payments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   No payments found
                 </TableCell>
               </TableRow>
             ) : (
-              paymentsWithBalance.slice(0, 100).map((payment) => (
+              payments.map((payment) => (
                 <TableRow key={payment.id} className="hover:bg-muted/50">
                   <TableCell className="text-sm">
                     {formatDate(payment.payment_date)}
@@ -138,9 +151,6 @@ export function LedgerTable({ payments, onRefresh }: LedgerTableProps) {
                   </TableCell>
                   <TableCell className="text-right font-medium text-green-600">
                     +₹{payment.payment_amount.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-right font-medium">
-                    ₹{payment.runningBalance.toLocaleString()}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end">
@@ -163,11 +173,18 @@ export function LedgerTable({ payments, onRefresh }: LedgerTableProps) {
         </Table>
       </div>
 
-      {paymentsWithBalance.length > 100 && (
-        <p className="text-sm text-muted-foreground text-center">
-          Showing 100 of {paymentsWithBalance.length} payments.
-        </p>
-      )}
+      {/* Pagination */}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        hasNext={hasNext}
+        hasPrev={hasPrev}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        isLoading={isLoading}
+      />
     </div>
   );
 }
