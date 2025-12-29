@@ -19,7 +19,8 @@ import {
   Wallet,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -79,18 +80,23 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { profile, signOut } = useAuth();
   const { toast } = useToast();
   const currentPath = location.pathname;
-  const currentTab = searchParams.get('tab');
+  const currentTab = new URLSearchParams(location.search).get('tab');
 
-  const isActive = (path: string) => currentPath === path;
   const isCollapsed = state === "collapsed";
 
   const isDataItemActive = (url: string) => {
     const tabParam = new URL(url, 'http://x').searchParams.get('tab');
-    return currentPath === '/dashboard' && currentTab === tabParam;
+    const isOnDashboard = currentPath === '/dashboard';
+    
+    // If on dashboard with no tab param, 'patients' is default
+    if (isOnDashboard && !currentTab && tabParam === 'patients') {
+      return true;
+    }
+    
+    return isOnDashboard && currentTab === tabParam;
   };
 
   const filterByRole = (items: NavItem[]) => {
@@ -179,14 +185,16 @@ export function AppSidebar() {
                 {filteredDataItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={item.url} 
-                        className={`hover:bg-sidebar-accent ${isDataItemActive(item.url) ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : ''}`}
-                        activeClassName=""
+                      <Link 
+                        to={item.url}
+                        className={cn(
+                          "flex items-center gap-2 hover:bg-sidebar-accent transition-colors",
+                          isDataItemActive(item.url) && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        )}
                       >
                         <item.icon className="h-4 w-4" />
                         {!isCollapsed && <span>{item.title}</span>}
-                      </NavLink>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
