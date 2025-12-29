@@ -36,8 +36,95 @@ import {
   Smartphone,
   MousePointerClick
 } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useTheme } from 'next-themes';
+import * as LucideIcons from 'lucide-react';
+
+// Types for dynamic content
+interface HeroContent {
+  badge_text: string;
+  main_headline: string;
+  sub_headline: string;
+  cta_primary_text: string;
+  cta_secondary_text: string;
+}
+
+interface StatItem {
+  id: string;
+  value: number;
+  suffix: string | null;
+  label: string;
+}
+
+interface FeatureItem {
+  id: string;
+  icon_name: string;
+  title: string;
+  description: string | null;
+}
+
+interface StepItem {
+  id: string;
+  step_number: number;
+  title: string;
+  description: string | null;
+}
+
+interface PricingItem {
+  id: string;
+  name: string;
+  price: number;
+  amc_price: number;
+  discount: number | null;
+  min_labs: number | null;
+  features: string[];
+  is_popular: boolean;
+  is_enterprise: boolean;
+}
+
+interface FaqItem {
+  id: string;
+  category: string;
+  question: string;
+  answer: string;
+}
+
+interface TestimonialItem {
+  id: string;
+  name: string;
+  role: string | null;
+  location: string | null;
+  rating: number;
+  testimonial_text: string;
+  avatar_initials: string | null;
+  avatar_url: string | null;
+}
+
+// Dynamic icon component - map icon names to components
+const getIconComponent = (name: string): React.ElementType => {
+  const iconMap: Record<string, React.ElementType> = {
+    Users,
+    TestTube,
+    CreditCard,
+    BarChart3,
+    Shield,
+    Building2,
+    FileText,
+    Clock,
+    HelpCircle,
+    Star,
+    Zap,
+    Globe,
+    HeartHandshake,
+    CheckCircle2,
+  };
+  return iconMap[name] || HelpCircle;
+};
+
+const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
+  const IconComponent = getIconComponent(name);
+  return <IconComponent className={className} />;
+};
 
 // Fixed Navigation Header component
 const NavHeader = ({ scrollY }: { scrollY: number }) => {
@@ -243,9 +330,10 @@ const AnimatedCounter = ({ end, duration = 2000, suffix = '' }: { end: number; d
   return <span ref={ref} className="animate-count-up">{count}{suffix}</span>;
 };
 
-// Feature card component
-const FeatureCard = ({ icon: Icon, title, description, delay }: { 
-  icon: React.ElementType; 
+// Feature card component - now supports dynamic icon names
+const FeatureCard = ({ icon, iconName, title, description, delay }: { 
+  icon?: React.ElementType; 
+  iconName?: string;
   title: string; 
   description: string;
   delay: string;
@@ -254,7 +342,7 @@ const FeatureCard = ({ icon: Icon, title, description, delay }: {
     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     <div className="relative">
       <div className="mb-4 inline-flex p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-        <Icon className="h-6 w-6" />
+        {icon ? <>{React.createElement(icon, { className: "h-6 w-6" })}</> : iconName ? <DynamicIcon name={iconName} className="h-6 w-6" /> : null}
       </div>
       <h3 className="text-lg font-semibold mb-2 text-foreground">{title}</h3>
       <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
@@ -804,6 +892,16 @@ const DemoSection = () => {
 
 const Index = () => {
   const [scrollY, setScrollY] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Dynamic content state
+  const [heroContent, setHeroContent] = useState<HeroContent | null>(null);
+  const [stats, setStats] = useState<StatItem[]>([]);
+  const [features, setFeatures] = useState<FeatureItem[]>([]);
+  const [steps, setSteps] = useState<StepItem[]>([]);
+  const [pricingPlans, setPricingPlans] = useState<PricingItem[]>([]);
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -811,224 +909,56 @@ const Index = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const features = [
-    {
-      icon: Users,
-      title: 'Patient Management',
-      description: 'Complete patient records with search, history tracking, and secure data management. Auto-generated patient IDs per branch.'
-    },
-    {
-      icon: TestTube,
-      title: 'Test Reporting',
-      description: 'Digital test results with real-time status tracking, customizable test types, and instant report generation.'
-    },
-    {
-      icon: CreditCard,
-      title: 'Billing & Payments',
-      description: 'Comprehensive billing with ledger tracking, partial payments, GST support, and professional invoice printing.'
-    },
-    {
-      icon: BarChart3,
-      title: 'Analytics Dashboard',
-      description: 'Revenue trends, patient statistics, AI-powered predictions, and branch comparison analytics.'
-    },
-    {
-      icon: Shield,
-      title: 'Role-Based Access',
-      description: 'Multi-tier security with Super Admin, Lab Admin, Branch Operator roles. Complete audit logging.'
-    },
-    {
-      icon: Building2,
-      title: 'Multi-Branch Support',
-      description: 'Organization hierarchy with labs and branches. Centralized management with branch-level customization.'
-    },
-    {
-      icon: FileText,
-      title: 'Document Management',
-      description: 'Secure file storage, letterhead templates, and document organization with patient-linked attachments.'
-    },
-    {
-      icon: Clock,
-      title: 'Follow-up Tracking',
-      description: 'Patient follow-up scheduling with priority levels, reminders, and status tracking for better care.'
-    }
-  ];
+  // Fetch all landing page content
+  useEffect(() => {
+    const fetchLandingContent = async () => {
+      try {
+        const [heroRes, statsRes, featuresRes, stepsRes, pricingRes, faqsRes, testimonialsRes] = await Promise.all([
+          supabase.from('landing_hero').select('*').eq('is_active', true).single(),
+          supabase.from('landing_stats').select('*').eq('is_active', true).order('display_order'),
+          supabase.from('landing_features').select('*').eq('is_active', true).order('display_order'),
+          supabase.from('landing_steps').select('*').eq('is_active', true).order('step_number'),
+          supabase.from('landing_pricing').select('*').eq('is_active', true).order('display_order'),
+          supabase.from('landing_faqs').select('*').eq('is_active', true).order('display_order'),
+          supabase.from('landing_testimonials').select('*').eq('is_active', true).order('display_order'),
+        ]);
 
-  const stats = [
-    { value: 99.9, suffix: '%', label: 'Uptime Guaranteed' },
-    { value: 500, suffix: '+', label: 'Labs Trust Us' },
-    { value: 1, suffix: 'M+', label: 'Reports Generated' },
-    { value: 24, suffix: '/7', label: 'Support Available' }
-  ];
+        if (heroRes.data) setHeroContent(heroRes.data);
+        if (statsRes.data) setStats(statsRes.data);
+        if (featuresRes.data) setFeatures(featuresRes.data);
+        if (stepsRes.data) setSteps(stepsRes.data);
+        if (pricingRes.data) {
+          setPricingPlans(pricingRes.data.map((p: any) => ({
+            ...p,
+            features: Array.isArray(p.features) ? p.features : []
+          })));
+        }
+        if (faqsRes.data) setFaqs(faqsRes.data);
+        if (testimonialsRes.data) setTestimonials(testimonialsRes.data);
+      } catch (error) {
+        console.error('Error fetching landing content:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const steps = [
-    { title: 'Register Your Lab', description: 'Quick onboarding process with organization and lab setup. Configure your branches and team structure.' },
-    { title: 'Configure Settings', description: 'Customize test types, billing templates, letterheads, and role permissions to match your workflow.' },
-    { title: 'Onboard Your Team', description: 'Invite staff members with appropriate roles. Branch operators, lab admins, and super admins.' },
-    { title: 'Start Operating', description: 'Begin managing patients, generating reports, and tracking revenue with powerful analytics.' }
-  ];
+    fetchLandingContent();
+  }, []);
 
-  const pricingPlans: PricingPlan[] = [
-    {
-      name: 'Starter',
-      price: 5000,
-      amcPrice: 1500,
-      features: [
-        '1 Lab License',
-        'Patient Management',
-        'Test Reporting & Billing',
-        'Analytics Dashboard',
-        'Email Support',
-        'Standard updates'
-      ]
-    },
-    {
-      name: 'Professional',
-      price: 4500,
-      amcPrice: 1350,
-      discount: 10,
-      minLabs: 3,
-      isPopular: true,
-      features: [
-        'All Starter features',
-        'Centralized Dashboard',
-        'Cross-branch Reporting',
-        'Multi-branch Analytics',
-        'Priority Support',
-        'Custom branding'
-      ]
-    },
-    {
-      name: 'Enterprise',
-      price: 4000,
-      amcPrice: 1200,
-      discount: 20,
-      minLabs: 10,
-      isEnterprise: true,
-      features: [
-        'All Professional features',
-        'Dedicated Account Manager',
-        'Custom Integrations',
-        'Advanced API Access',
-        '24/7 Phone Support',
-        'On-site Training'
-      ]
-    }
-  ];
+  // Memoized pricing plans for the PricingCard component format
+  const formattedPricingPlans: PricingPlan[] = useMemo(() => {
+    return pricingPlans.map(p => ({
+      name: p.name,
+      price: p.price,
+      amcPrice: p.amc_price,
+      discount: p.discount || undefined,
+      minLabs: p.min_labs || undefined,
+      features: p.features,
+      isPopular: p.is_popular,
+      isEnterprise: p.is_enterprise,
+    }));
+  }, [pricingPlans]);
 
-  const faqs = [
-    {
-      category: 'pricing',
-      question: "What's included in the one-time setup fee?",
-      answer: "Full software installation, initial configuration, data migration assistance, custom branding setup, and basic training for your team. We ensure you're fully operational from day one."
-    },
-    {
-      category: 'pricing',
-      question: "What does the AMC (Annual Maintenance Contract) cover?",
-      answer: "All software updates, bug fixes, security patches, data backups, email support, and up to 2 hours of remote assistance per month. Your lab stays current with the latest features."
-    },
-    {
-      category: 'pricing',
-      question: "Can I upgrade from Starter to Professional later?",
-      answer: "Yes! You can upgrade anytime. You'll only pay the difference in setup cost, and your AMC will be prorated for the remaining period. All your data migrates seamlessly."
-    },
-    {
-      category: 'pricing',
-      question: "Are there any hidden charges?",
-      answer: "No hidden fees. The pricing shown includes everything. Additional charges only apply for custom development, SMS/WhatsApp notifications, or on-site training if requested."
-    },
-    {
-      category: 'features',
-      question: "Can I use Lab Master on mobile devices?",
-      answer: "Yes! Lab Master is a Progressive Web App (PWA) that works on all devices — desktops, tablets, and smartphones. It can even work offline for basic operations."
-    },
-    {
-      category: 'features',
-      question: "How many users can I add to my lab?",
-      answer: "Unlimited users! Each plan allows unlimited user accounts with role-based access control (Super Admin, Lab Admin, Branch Operator). No per-user fees."
-    },
-    {
-      category: 'features',
-      question: "Can I customize test types and report templates?",
-      answer: "Absolutely. You can create custom test types, set reference ranges, add letterheads, signatures, and design your own report templates to match your lab's branding."
-    },
-    {
-      category: 'features',
-      question: "Does Lab Master support multiple branches?",
-      answer: "Yes! The Professional and Enterprise plans support multi-branch management with centralized dashboards, cross-branch reporting, and unified analytics."
-    },
-    {
-      category: 'support',
-      question: "What kind of support do you provide?",
-      answer: "Starter: Email support (24-48hr response). Professional: Priority email + chat (4hr response). Enterprise: 24/7 phone support with a dedicated account manager."
-    },
-    {
-      category: 'support',
-      question: "Is my data secure?",
-      answer: "Yes. We use industry-standard encryption, regular backups, and role-based access control. Your data is hosted on secure servers with 99.9% uptime guarantee."
-    },
-    {
-      category: 'support',
-      question: "Can I export my data if I stop using Lab Master?",
-      answer: "Yes. You can export all your data (patients, reports, bills) in standard formats (CSV, PDF) at any time. We never lock you in — your data is always yours."
-    },
-    {
-      category: 'support',
-      question: "Do you offer training for my team?",
-      answer: "Starter and Professional plans include online documentation and video tutorials. Enterprise plans include on-site training sessions and a dedicated onboarding specialist."
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "Dr. Rajesh Kumar",
-      role: "Owner, HealthCare Diagnostics",
-      location: "Mumbai",
-      rating: 5,
-      text: "Lab Master transformed how we manage our 5-branch network. The centralized dashboard saves us hours every week, and the multi-branch analytics give us insights we never had before.",
-      image: "RK"
-    },
-    {
-      name: "Dr. Priya Sharma",
-      role: "Director, Sharma Pathology Lab",
-      location: "Delhi",
-      rating: 5,
-      text: "The billing and ledger tracking features are exceptional. We've reduced billing errors by 90% and our patients love the professional invoices. Best investment for our lab!",
-      image: "PS"
-    },
-    {
-      name: "Dr. Arun Patel",
-      role: "Founder, Patel Diagnostic Centre",
-      location: "Ahmedabad",
-      rating: 5,
-      text: "Moving from paper records to Lab Master was seamless. The support team helped migrate all our data, and the PWA works perfectly on our tablets during sample collection.",
-      image: "AP"
-    },
-    {
-      name: "Dr. Sunita Reddy",
-      role: "MD, Reddy Labs",
-      location: "Hyderabad",
-      rating: 4,
-      text: "The role-based access control gives me peace of mind. I can give operators exactly the permissions they need, and the audit logs help track everything.",
-      image: "SR"
-    },
-    {
-      name: "Dr. Mohammed Iqbal",
-      role: "Owner, City Diagnostics",
-      location: "Bangalore",
-      rating: 5,
-      text: "We switched from another LIMS software and the difference is night and day. Lab Master's UI is intuitive, fast, and our staff learned it in just one day!",
-      image: "MI"
-    },
-    {
-      name: "Dr. Kavitha Nair",
-      role: "Partner, Kerala Path Labs",
-      location: "Kochi",
-      rating: 5,
-      text: "The patient follow-up feature has improved our patient retention significantly. Automated reminders and the feedback system help us maintain excellent service quality.",
-      image: "KN"
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-background overflow-hidden scroll-smooth">
@@ -1050,33 +980,38 @@ const Index = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-slide-up opacity-0" style={{ animationFillMode: 'forwards' }}>
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Complete Laboratory Management Solution</span>
+            <span className="text-sm font-medium text-foreground">
+              {heroContent?.badge_text || 'Complete Laboratory Management Solution'}
+            </span>
           </div>
 
           {/* Main heading */}
           <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up opacity-0 delay-100" style={{ animationFillMode: 'forwards' }}>
-            <span className="text-foreground">Streamline Your</span>
+            <span className="text-foreground">
+              {heroContent?.main_headline?.split(' ').slice(0, 2).join(' ') || 'Streamline Your'}
+            </span>
             <br />
-            <span className="gradient-text">Lab Operations</span>
+            <span className="gradient-text">
+              {heroContent?.main_headline?.split(' ').slice(2).join(' ') || 'Lab Operations'}
+            </span>
           </h1>
 
           {/* Subheading */}
           <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto animate-slide-up opacity-0 delay-200" style={{ animationFillMode: 'forwards' }}>
-            From patient registration to test reporting, billing to analytics — 
-            manage everything with our powerful, role-based laboratory management system.
+            {heroContent?.sub_headline || 'From patient registration to test reporting, billing to analytics — manage everything with our powerful, role-based laboratory management system.'}
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up opacity-0 delay-300" style={{ animationFillMode: 'forwards' }}>
             <Button asChild size="lg" className="text-lg px-8 py-6 animate-pulse-glow">
               <Link to="/auth" className="flex items-center gap-2">
-                Get Started Free
+                {heroContent?.cta_primary_text || 'Get Started Free'}
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
             <Button variant="outline" size="lg" className="text-lg px-8 py-6 glass" asChild>
               <a href="#features" className="flex items-center gap-2">
-                Explore Features
+                {heroContent?.cta_secondary_text || 'Explore Features'}
                 <ChevronDown className="h-5 w-5" />
               </a>
             </Button>
@@ -1148,8 +1083,10 @@ const Index = () => {
           >
             {features.map((feature, index) => (
               <FeatureCard 
-                key={index} 
-                {...feature} 
+                key={feature.id || index}
+                iconName={feature.icon_name}
+                title={feature.title}
+                description={feature.description || ''}
                 delay=""
               />
             ))}
@@ -1178,10 +1115,10 @@ const Index = () => {
           <AnimatedSection animation="fade-left" className="relative">
             {steps.map((step, index) => (
               <Step 
-                key={index}
-                number={index + 1}
+                key={step.id || index}
+                number={step.step_number || index + 1}
                 title={step.title}
-                description={step.description}
+                description={step.description || ''}
                 isLast={index === steps.length - 1}
                 delay=""
               />
@@ -1320,13 +1257,13 @@ const Index = () => {
                       
                       {/* Testimonial Text */}
                       <p className="text-foreground/90 text-sm leading-relaxed flex-grow mb-6">
-                        "{testimonial.text}"
+                        "{testimonial.testimonial_text}"
                       </p>
                       
                       {/* Author Info */}
                       <div className="flex items-center gap-3 pt-4 border-t border-border">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-sm">
-                          {testimonial.image}
+                          {testimonial.avatar_initials || testimonial.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                         </div>
                         <div>
                           <div className="font-semibold text-foreground">{testimonial.name}</div>
@@ -1369,7 +1306,7 @@ const Index = () => {
             staggerDelay={150} 
             className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start"
           >
-            {pricingPlans.map((plan) => (
+            {formattedPricingPlans.map((plan) => (
               <PricingCard 
                 key={plan.name}
                 plan={plan}
