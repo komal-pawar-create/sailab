@@ -39,10 +39,12 @@ import {
   AlertCircle,
   Users,
   IndianRupee,
-  ArrowUpDown
+  ArrowUpDown,
+  Pencil
 } from "lucide-react";
 import { format } from "date-fns";
 import BillPrintModal from "@/components/bills/BillPrintModal";
+import { EditBillForm } from "@/components/forms/EditBillForm";
 
 interface OutstandingBill {
   id: string;
@@ -92,6 +94,10 @@ export default function OutstandingReport() {
   // Print modal state
   const [printBill, setPrintBill] = useState<OutstandingBill | null>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
+
+  // Edit modal state
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editBill, setEditBill] = useState<OutstandingBill | null>(null);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin' || profile?.role === 'super_admin';
 
@@ -442,6 +448,19 @@ export default function OutstandingReport() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditBill(bill);
+                                setShowEditForm(true);
+                              }}
+                              title="Edit Bill"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -516,6 +535,30 @@ export default function OutstandingReport() {
           if (!open) setPrintBill(null);
         }}
       />
+
+      {/* Edit Bill Form (Admin Only) */}
+      {editBill && (
+        <EditBillForm
+          bill={{
+            id: editBill.id,
+            bill_number: editBill.bill_number,
+            bill_date: editBill.bill_date,
+            due_date: editBill.due_date,
+            total_amount: editBill.total_amount,
+            paid_amount: editBill.paid_amount,
+            due_amount: editBill.due_amount,
+            status: editBill.status,
+            items: [],
+            patients: editBill.patients
+          }}
+          open={showEditForm}
+          onOpenChange={(open) => {
+            setShowEditForm(open);
+            if (!open) setEditBill(null);
+          }}
+          onBillUpdated={fetchOutstandingBills}
+        />
+      )}
     </div>
   );
 }
