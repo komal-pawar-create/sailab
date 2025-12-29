@@ -15,6 +15,7 @@ import PatientOverview from "@/components/patient-history/PatientOverview";
 import PatientTestReports from "@/components/patient-history/PatientTestReports";
 import PatientDocuments from "@/components/patient-history/PatientDocuments";
 import PatientBills from "@/components/patient-history/PatientBills";
+import PatientPayments from "@/components/patient-history/PatientPayments";
 import PatientFollowups from "@/components/patient-history/PatientFollowups";
 import PatientTimeline from "@/components/patient-history/PatientTimeline";
 
@@ -201,11 +202,12 @@ export default function PatientHistory() {
         {/* Patient Data Tabs */}
         {selectedPatient ? (
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="test-reports">Test Reports</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="bills">Bills</TabsTrigger>
+              <TabsTrigger value="payments">Payments</TabsTrigger>
               <TabsTrigger value="followups">Follow-ups</TabsTrigger>
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
             </TabsList>
@@ -228,6 +230,10 @@ export default function PatientHistory() {
             
             <TabsContent value="bills">
               <PatientBills patientId={selectedPatient.id} />
+            </TabsContent>
+            
+            <TabsContent value="payments">
+              <PatientPayments patientId={selectedPatient.id} />
             </TabsContent>
             
             <TabsContent value="followups">
