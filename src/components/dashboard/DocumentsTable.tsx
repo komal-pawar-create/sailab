@@ -4,9 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Search, Download, ExternalLink } from "lucide-react";
+import { Eye, Search, Download } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { TablePagination } from "./TablePagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Document {
   id: string;
@@ -25,17 +27,38 @@ interface Document {
 
 interface DocumentsTableProps {
   documents: Document[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  onSearch: (search: string) => void;
   onRefresh: () => void;
+  isLoading?: boolean;
 }
 
-export function DocumentsTable({ documents, onRefresh }: DocumentsTableProps) {
+export function DocumentsTable({ 
+  documents, 
+  totalCount,
+  currentPage,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  onSearch,
+  onRefresh,
+  isLoading = false 
+}: DocumentsTableProps) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
-  const filteredDocuments = documents.filter((d) =>
-    d.file_name.toLowerCase().includes(search.toLowerCase()) ||
-    d.patients?.full_name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const hasNext = currentPage < totalPages;
+  const hasPrev = currentPage > 1;
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    onSearch(value);
+  };
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return "-";
@@ -64,7 +87,7 @@ export function DocumentsTable({ documents, onRefresh }: DocumentsTableProps) {
           <Input
             placeholder="Search documents..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -83,14 +106,25 @@ export function DocumentsTable({ documents, onRefresh }: DocumentsTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredDocuments.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: pageSize > 10 ? 10 : pageSize }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : documents.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No documents found
                 </TableCell>
               </TableRow>
             ) : (
-              filteredDocuments.slice(0, 50).map((doc) => (
+              documents.map((doc) => (
                 <TableRow key={doc.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium truncate max-w-[200px]">{doc.file_name}</TableCell>
                   <TableCell>{doc.patients?.full_name || "-"}</TableCell>
@@ -132,11 +166,18 @@ export function DocumentsTable({ documents, onRefresh }: DocumentsTableProps) {
         </Table>
       </div>
 
-      {filteredDocuments.length > 50 && (
-        <p className="text-sm text-muted-foreground text-center">
-          Showing 50 of {filteredDocuments.length} documents.
-        </p>
-      )}
+      {/* Pagination */}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        hasNext={hasNext}
+        hasPrev={hasPrev}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

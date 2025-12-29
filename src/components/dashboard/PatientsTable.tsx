@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Eye, Plus, FileText, Receipt, Search, UserPlus } from "lucide-react";
+import { Eye, FileText, Receipt, Search } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
 import { AddBillForm } from "@/components/forms/AddBillForm";
 import { AddPatientForm } from "@/components/forms/AddPatientForm";
+import { TablePagination } from "./TablePagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Patient {
   id: string;
@@ -25,21 +26,41 @@ interface Patient {
 
 interface PatientsTableProps {
   patients: Patient[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  onSearch: (search: string) => void;
   onRefresh: () => void;
+  isLoading?: boolean;
 }
 
-export function PatientsTable({ patients, onRefresh }: PatientsTableProps) {
+export function PatientsTable({ 
+  patients, 
+  totalCount,
+  currentPage,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  onSearch,
+  onRefresh,
+  isLoading = false 
+}: PatientsTableProps) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showReportForm, setShowReportForm] = useState(false);
   const [showBillForm, setShowBillForm] = useState(false);
 
-  const filteredPatients = patients.filter((p) =>
-    p.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    p.patient_id.toLowerCase().includes(search.toLowerCase()) ||
-    p.phone.includes(search)
-  );
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const hasNext = currentPage < totalPages;
+  const hasPrev = currentPage > 1;
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    onSearch(value);
+  };
 
   const formatAge = (patient: Patient) => {
     if (patient.age_in_months && patient.age_in_months < 12) {
@@ -66,7 +87,7 @@ export function PatientsTable({ patients, onRefresh }: PatientsTableProps) {
           <Input
             placeholder="Search patients..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -87,14 +108,26 @@ export function PatientsTable({ patients, onRefresh }: PatientsTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPatients.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: pageSize > 10 ? 10 : pageSize }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : patients.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   No patients found
                 </TableCell>
               </TableRow>
             ) : (
-              filteredPatients.slice(0, 50).map((patient) => (
+              patients.map((patient) => (
                 <TableRow key={patient.id} className="hover:bg-muted/50">
                   <TableCell className="font-mono text-xs">{patient.patient_id}</TableCell>
                   <TableCell className="font-medium">{patient.full_name}</TableCell>
@@ -147,11 +180,18 @@ export function PatientsTable({ patients, onRefresh }: PatientsTableProps) {
         </Table>
       </div>
 
-      {filteredPatients.length > 50 && (
-        <p className="text-sm text-muted-foreground text-center">
-          Showing 50 of {filteredPatients.length} patients. Use search to find specific patients.
-        </p>
-      )}
+      {/* Pagination */}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        hasNext={hasNext}
+        hasPrev={hasPrev}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        isLoading={isLoading}
+      />
 
       {/* Add Report Dialog */}
       <Dialog open={showReportForm} onOpenChange={setShowReportForm}>
