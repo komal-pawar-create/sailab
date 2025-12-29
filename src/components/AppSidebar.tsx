@@ -13,6 +13,7 @@ import {
   Pencil,
   RotateCcw,
   ClipboardList,
+  Globe,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -57,6 +58,7 @@ const adminItems: NavItem[] = [
 
 const superAdminItems: NavItem[] = [
   { title: 'Super Admin', url: '/super-admin', icon: ShieldCheck, roles: ['super_admin'] },
+  { title: 'Landing Page', url: '/super-admin?tab=landing', icon: Globe, roles: ['super_admin'] },
   { title: 'Data Management', url: '/super-admin/data-management', icon: Database, roles: ['super_admin'] },
 ];
 
