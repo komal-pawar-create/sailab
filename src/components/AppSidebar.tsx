@@ -14,6 +14,7 @@ import {
   RotateCcw,
   ClipboardList,
   Globe,
+  AlertCircle,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -44,6 +45,7 @@ interface NavItem {
 
 const mainItems: NavItem[] = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
+  { title: 'Outstanding Report', url: '/outstanding-report', icon: AlertCircle, roles: ['admin', 'lab_admin', 'operator_1', 'operator_2', 'operator_3', 'branch_operator'] },
   { title: 'Patient History', url: '/patient-history', icon: History },
   { title: 'Follow-ups', url: '/followups', icon: ClipboardList },
   { title: 'Analytics', url: '/analytics', icon: BarChart3, roles: ['admin', 'lab_admin', 'super_admin', 'branch_operator'] },
