@@ -27,11 +27,27 @@ interface TeamMember {
 
 interface AddFollowupFormProps {
   onFollowupAdded: () => void;
+  preSelectedPatientId?: string;
+  triggerButton?: React.ReactNode;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AddFollowupForm({ onFollowupAdded }: AddFollowupFormProps) {
+export function AddFollowupForm({ onFollowupAdded, preSelectedPatientId, triggerButton, defaultOpen, onOpenChange }: AddFollowupFormProps) {
   const { profile } = useAuth();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen || false);
+  
+  // Sync with external open state
+  useEffect(() => {
+    if (defaultOpen !== undefined) {
+      setOpen(defaultOpen);
+    }
+  }, [defaultOpen]);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    onOpenChange?.(newOpen);
+  };
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -54,6 +70,13 @@ export function AddFollowupForm({ onFollowupAdded }: AddFollowupFormProps) {
       fetchTeamMembers();
     }
   }, [open, profile?.branch_id]);
+
+  // Auto-select patient when preSelectedPatientId changes
+  useEffect(() => {
+    if (preSelectedPatientId && patients.length > 0) {
+      setFormData(prev => ({ ...prev, patient_id: preSelectedPatientId }));
+    }
+  }, [preSelectedPatientId, patients]);
 
   const fetchPatients = async () => {
     try {
@@ -137,7 +160,7 @@ export function AddFollowupForm({ onFollowupAdded }: AddFollowupFormProps) {
       if (error) throw error;
 
       toast.success('Follow-up created successfully');
-      setOpen(false);
+      handleOpenChange(false);
       setFormData({
         title: '',
         details: '',
@@ -158,13 +181,19 @@ export function AddFollowupForm({ onFollowupAdded }: AddFollowupFormProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Follow-up
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {triggerButton ? (
+        <DialogTrigger asChild>
+          {triggerButton}
+        </DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <Button className="bg-primary hover:bg-primary/90">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Follow-up
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Create New Follow-up</DialogTitle>

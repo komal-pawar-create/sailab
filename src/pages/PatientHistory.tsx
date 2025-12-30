@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +13,7 @@ import PatientReportsTab from "@/components/patient-history/PatientReportsTab";
 import PatientBills from "@/components/patient-history/PatientBills";
 import PatientFollowups from "@/components/patient-history/PatientFollowups";
 import PatientTimeline from "@/components/patient-history/PatientTimeline";
+import QuickActions from "@/components/patient-history/QuickActions";
 import {
   Command,
   CommandEmpty,
@@ -54,8 +54,13 @@ export default function PatientHistory() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("reports");
+  const [refreshKey, setRefreshKey] = useState(0);
   const { user, profile } = useAuth();
   const { toast } = useToast();
+
+  const handleDataRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   useEffect(() => {
     if (user) {
@@ -118,10 +123,15 @@ export default function PatientHistory() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Patient History</h1>
-        <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Dashboard
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedPatient && (
+            <QuickActions patientId={selectedPatient.id} onDataChanged={handleDataRefresh} />
+          )}
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Dashboard
+          </Button>
+        </div>
       </div>
 
       {/* Patient Search + Badge */}
