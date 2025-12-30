@@ -11,12 +11,6 @@ import {
   ClipboardList,
   Globe,
   AlertCircle,
-  Users,
-  TestTube,
-  FileText,
-  Receipt,
-  MessageSquare,
-  Wallet,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -67,14 +61,6 @@ const superAdminItems: NavItem[] = [
   { title: 'Data Management', url: '/super-admin/data-management', icon: Database, roles: ['super_admin'] },
 ];
 
-const dataItems: NavItem[] = [
-  { title: 'Patients', url: '/dashboard?tab=patients', icon: Users },
-  { title: 'Test Reports', url: '/dashboard?tab=reports', icon: TestTube },
-  { title: 'Documents', url: '/dashboard?tab=documents', icon: FileText },
-  { title: 'Bills', url: '/dashboard?tab=bills', icon: Receipt },
-  { title: 'Feedback', url: '/dashboard?tab=feedback', icon: MessageSquare },
-  { title: 'Ledger', url: '/dashboard?tab=ledger', icon: Wallet },
-];
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -83,21 +69,7 @@ export function AppSidebar() {
   const { profile, signOut } = useAuth();
   const { toast } = useToast();
   const currentPath = location.pathname;
-  const currentTab = new URLSearchParams(location.search).get('tab');
-
   const isCollapsed = state === "collapsed";
-
-  const isDataItemActive = (url: string) => {
-    const tabParam = new URL(url, 'http://x').searchParams.get('tab');
-    const isOnDashboard = currentPath === '/dashboard';
-    
-    // If on dashboard with no tab param, 'patients' is default
-    if (isOnDashboard && !currentTab && tabParam === 'patients') {
-      return true;
-    }
-    
-    return isOnDashboard && currentTab === tabParam;
-  };
 
   const filterByRole = (items: NavItem[]) => {
     if (!profile) return [];
@@ -140,7 +112,7 @@ export function AppSidebar() {
   };
 
   const filteredMainItems = filterByRole(mainItems);
-  const filteredDataItems = filterByRole(dataItems);
+  
   const filteredAdminItems = filterByRole(adminItems);
   const filteredSuperAdminItems = filterByRole(superAdminItems);
 
@@ -176,32 +148,6 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        {/* Data Navigation */}
-        {filteredDataItems.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Data</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {filteredDataItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link 
-                        to={item.url}
-                        className={cn(
-                          "flex items-center gap-2 hover:bg-sidebar-accent transition-colors",
-                          isDataItemActive(item.url) && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                        )}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {!isCollapsed && <span>{item.title}</span>}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
 
         {/* Admin Navigation */}
         {filteredAdminItems.length > 0 && (
