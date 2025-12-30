@@ -25,9 +25,10 @@ const shortcuts: Shortcut[] = [
   { keys: ['Alt', '1'], description: 'Go to Patients', category: 'Data Tabs' },
   { keys: ['Alt', '2'], description: 'Go to Test Reports', category: 'Data Tabs' },
   { keys: ['Alt', '3'], description: 'Go to Documents', category: 'Data Tabs' },
-  { keys: ['Alt', '4'], description: 'Go to Bills', category: 'Data Tabs' },
-  { keys: ['Alt', '5'], description: 'Go to Feedback', category: 'Data Tabs' },
-  { keys: ['Alt', '6'], description: 'Go to Ledger', category: 'Data Tabs' },
+  { keys: ['Alt', '4'], description: 'Go to Follow-ups', category: 'Data Tabs' },
+  { keys: ['Alt', '5'], description: 'Go to Bills', category: 'Data Tabs' },
+  { keys: ['Alt', '6'], description: 'Go to Feedback', category: 'Data Tabs' },
+  { keys: ['Alt', '7'], description: 'Go to Ledger', category: 'Data Tabs' },
   { keys: ['Esc'], description: 'Close dialogs and menus', category: 'General' },
   { keys: ['⌘', 'B'], description: 'Toggle sidebar', category: 'General' },
 ];
@@ -36,9 +37,10 @@ const dataTabRoutes: Record<string, string> = {
   '1': '/dashboard?tab=patients',
   '2': '/dashboard?tab=reports',
   '3': '/dashboard?tab=documents',
-  '4': '/dashboard?tab=bills',
-  '5': '/dashboard?tab=feedback',
-  '6': '/dashboard?tab=ledger',
+  '4': '/dashboard?tab=followups',
+  '5': '/dashboard?tab=bills',
+  '6': '/dashboard?tab=feedback',
+  '7': '/dashboard?tab=ledger',
 };
 
 export function KeyboardShortcuts() {

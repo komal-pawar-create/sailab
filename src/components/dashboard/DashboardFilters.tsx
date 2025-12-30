@@ -1,5 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, CalendarDays, CalendarRange, Infinity, Building2 } from "lucide-react";
+import { Calendar, CalendarDays, CalendarRange, Infinity, Building2, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export type TimePeriod = 'today' | 'week' | 'month' | 'all';
+export type TimePeriod = 'today' | 'week' | 'month' | 'lastMonth' | 'lastQuarter' | 'lastYear' | 'all';
 
 export interface Branch {
   id: string;
@@ -23,6 +23,9 @@ interface DashboardFiltersProps {
     today: number;
     week: number;
     month: number;
+    lastMonth: number;
+    lastQuarter: number;
+    lastYear: number;
     all: number;
   };
   branches?: Branch[];
@@ -44,6 +47,9 @@ export function DashboardFilters({
     { id: 'today' as const, label: 'Today', icon: Calendar, count: counts?.today },
     { id: 'week' as const, label: 'This Week', icon: CalendarDays, count: counts?.week },
     { id: 'month' as const, label: 'This Month', icon: CalendarRange, count: counts?.month },
+    { id: 'lastMonth' as const, label: 'Last Month', icon: History, count: counts?.lastMonth },
+    { id: 'lastQuarter' as const, label: 'Last Quarter', icon: History, count: counts?.lastQuarter },
+    { id: 'lastYear' as const, label: 'Last Year', icon: History, count: counts?.lastYear },
     { id: 'all' as const, label: 'All Time', icon: Infinity, count: counts?.all },
   ];
 

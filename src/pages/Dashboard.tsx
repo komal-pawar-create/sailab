@@ -10,7 +10,7 @@ import { DashboardFilters, TimePeriod, Branch } from '@/components/dashboard/Das
 import { StatsRow } from '@/components/dashboard/StatsRow';
 import { DataTabs } from '@/components/dashboard/DataTabs';
 import { useDebounce } from '@/hooks/useDebounce';
-import { format, startOfWeek, startOfMonth } from 'date-fns';
+import { format, startOfWeek, startOfMonth, subMonths, startOfQuarter, subQuarters, startOfYear, subYears, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
 
 interface PaginationState {
   page: number;
@@ -90,14 +90,47 @@ const Dashboard = () => {
     if (!loading && user && profile) fetchBranches();
   }, [user, profile, loading, isAdmin]);
 
-  const getDateFilter = (period: TimePeriod): string | null => {
+  const getDateFilter = (period: TimePeriod): { start: string; end?: string } | null => {
     const now = new Date();
     switch (period) {
-      case 'today': return format(now, 'yyyy-MM-dd');
-      case 'week': return format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-      case 'month': return format(startOfMonth(now), 'yyyy-MM-dd');
-      default: return null;
+      case 'today': 
+        return { start: format(now, 'yyyy-MM-dd') };
+      case 'week': 
+        return { start: format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd') };
+      case 'month': 
+        return { start: format(startOfMonth(now), 'yyyy-MM-dd') };
+      case 'lastMonth': {
+        const lastMonth = subMonths(now, 1);
+        return { 
+          start: format(startOfMonth(lastMonth), 'yyyy-MM-dd'),
+          end: format(endOfMonth(lastMonth), 'yyyy-MM-dd')
+        };
+      }
+      case 'lastQuarter': {
+        const lastQuarter = subQuarters(now, 1);
+        return { 
+          start: format(startOfQuarter(lastQuarter), 'yyyy-MM-dd'),
+          end: format(endOfQuarter(lastQuarter), 'yyyy-MM-dd')
+        };
+      }
+      case 'lastYear': {
+        const lastYear = subYears(now, 1);
+        return { 
+          start: format(startOfYear(lastYear), 'yyyy-MM-dd'),
+          end: format(endOfYear(lastYear), 'yyyy-MM-dd')
+        };
+      }
+      default: 
+        return null;
     }
+  };
+
+  // Helper to apply date filter to a query
+  const applyDateFilter = (query: any, dateFilter: { start: string; end?: string } | null, dateColumn: string) => {
+    if (!dateFilter) return query;
+    query = query.gte(dateColumn, dateFilter.start);
+    if (dateFilter.end) query = query.lte(dateColumn, dateFilter.end);
+    return query;
   };
 
   const getBranchFilter = useCallback(() => {
@@ -117,7 +150,7 @@ const Dashboard = () => {
 
     let query = supabase.from('patients').select('*', { count: 'exact' });
     if (branchFilter) query = query.in('branch_id', branchFilter);
-    if (dateFilter) query = query.gte('created_at', dateFilter);
+    query = applyDateFilter(query, dateFilter, 'created_at');
     if (search) query = query.or(`full_name.ilike.%${search}%,patient_id.ilike.%${search}%,phone.ilike.%${search}%`);
     query = query.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1);
 
@@ -137,7 +170,7 @@ const Dashboard = () => {
 
     let query = supabase.from('test_reports').select('*, patients!test_reports_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
     if (branchFilter) query = query.in('branch_id', branchFilter);
-    if (dateFilter) query = query.gte('test_date', dateFilter);
+    query = applyDateFilter(query, dateFilter, 'test_date');
     if (search) query = query.or(`test_type.ilike.%${search}%`);
     query = query.order('test_date', { ascending: false }).range(offset, offset + pageSize - 1);
 
@@ -156,7 +189,7 @@ const Dashboard = () => {
 
     let query = supabase.from('documents').select('*, patients!documents_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
     if (branchFilter) query = query.in('branch_id', branchFilter);
-    if (dateFilter) query = query.gte('created_at', dateFilter);
+    query = applyDateFilter(query, dateFilter, 'created_at');
     if (search) query = query.ilike('file_name', `%${search}%`);
     query = query.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1);
 
@@ -175,7 +208,7 @@ const Dashboard = () => {
 
     let query = supabase.from('bills').select('*, patients!bills_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
     if (branchFilter) query = query.in('branch_id', branchFilter);
-    if (dateFilter) query = query.gte('bill_date', dateFilter);
+    query = applyDateFilter(query, dateFilter, 'bill_date');
     if (search) query = query.or(`bill_number.ilike.%${search}%`);
     query = query.order('bill_date', { ascending: false }).range(offset, offset + pageSize - 1);
 
@@ -194,7 +227,7 @@ const Dashboard = () => {
 
     let query = supabase.from('patient_followups').select('*, patients!fk_patient_followups_patient(id, full_name, patient_id)', { count: 'exact' });
     if (branchFilter) query = query.in('branch_id', branchFilter);
-    if (dateFilter) query = query.gte('due_at', dateFilter);
+    query = applyDateFilter(query, dateFilter, 'due_at');
     if (search) query = query.ilike('title', `%${search}%`);
     query = query.order('due_at', { ascending: false }).range(offset, offset + pageSize - 1);
 
@@ -213,7 +246,7 @@ const Dashboard = () => {
 
     let query = supabase.from('feedback').select('*, patients!feedback_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
     if (branchFilter) query = query.in('branch_id', branchFilter);
-    if (dateFilter) query = query.gte('created_at', dateFilter);
+    query = applyDateFilter(query, dateFilter, 'created_at');
     if (search) query = query.or(`message.ilike.%${search}%,feedback_type.ilike.%${search}%`);
     query = query.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1);
 
@@ -232,7 +265,7 @@ const Dashboard = () => {
 
     let query = supabase.from('bill_payments').select('*, bills!bill_payments_bill_id_fkey(id, bill_number, total_amount, patients!bills_patient_id_fkey(id, full_name, patient_id))', { count: 'exact' });
     if (branchFilter) query = query.in('branch_id', branchFilter);
-    if (dateFilter) query = query.gte('payment_date', dateFilter);
+    query = applyDateFilter(query, dateFilter, 'payment_date');
     if (search) query = query.or(`payment_method.ilike.%${search}%,reference_number.ilike.%${search}%`);
     query = query.order('payment_date', { ascending: false }).range(offset, offset + pageSize - 1);
 
@@ -243,8 +276,9 @@ const Dashboard = () => {
     // Get total collected
     let totalQuery = supabase.from('bill_payments').select('payment_amount');
     if (branchFilter) totalQuery = totalQuery.in('branch_id', branchFilter);
-    if (dateFilter) totalQuery = totalQuery.gte('payment_date', dateFilter);
+    totalQuery = applyDateFilter(totalQuery, dateFilter, 'payment_date');
     const { data: totalData } = await totalQuery;
+    setTotalCollected(totalData?.reduce((sum, p) => sum + p.payment_amount, 0) || 0);
     setTotalCollected(totalData?.reduce((sum, p) => sum + p.payment_amount, 0) || 0);
   }, [profile, timePeriod, paymentsPag.page, paymentsPag.pageSize, debouncedPaymentsSearch, getBranchFilter]);
 
@@ -266,10 +300,10 @@ const Dashboard = () => {
       bQuery = bQuery.in('branch_id', branchFilter);
     }
     if (dateFilter) {
-      pQuery = pQuery.gte('created_at', dateFilter);
-      rQuery = rQuery.gte('test_date', dateFilter);
-      dQuery = dQuery.gte('created_at', dateFilter);
-      bQuery = bQuery.gte('bill_date', dateFilter);
+      pQuery = applyDateFilter(pQuery, dateFilter, 'created_at');
+      rQuery = applyDateFilter(rQuery, dateFilter, 'test_date');
+      dQuery = applyDateFilter(dQuery, dateFilter, 'created_at');
+      bQuery = applyDateFilter(bQuery, dateFilter, 'bill_date');
     }
 
     const [{ count: pCount }, { count: rCount }, { count: dCount }, { data: billsData }] = await Promise.all([pQuery, rQuery, dQuery, bQuery]);
@@ -350,7 +384,6 @@ const Dashboard = () => {
       <DashboardFilters 
         value={timePeriod} 
         onChange={setTimePeriod}
-        counts={{ today: 0, week: 0, month: 0, all: patientsPag.totalCount }}
         branches={branches}
         selectedBranch={selectedBranch}
         onBranchChange={setSelectedBranch}
