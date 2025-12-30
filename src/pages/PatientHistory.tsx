@@ -1,23 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { format } from "date-fns";
-import { Download, FileText, Calendar, DollarSign, ClipboardList, User, Search, Clock, Star, ArrowLeft } from "lucide-react";
-import PatientOverview from "@/components/patient-history/PatientOverview";
-import PatientTestReports from "@/components/patient-history/PatientTestReports";
-import PatientDocuments from "@/components/patient-history/PatientDocuments";
+import { Search, FileText, IndianRupee, Clock, Activity, ArrowLeft, User, ChevronDown } from "lucide-react";
+import QuickStatsBar from "@/components/patient-history/QuickStatsBar";
+import PatientBadge from "@/components/patient-history/PatientBadge";
+import PatientReportsTab from "@/components/patient-history/PatientReportsTab";
 import PatientBills from "@/components/patient-history/PatientBills";
-import PatientPayments from "@/components/patient-history/PatientPayments";
 import PatientFollowups from "@/components/patient-history/PatientFollowups";
 import PatientTimeline from "@/components/patient-history/PatientTimeline";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface Patient {
   id: string;
@@ -43,6 +52,8 @@ export default function PatientHistory() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("reports");
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
@@ -52,10 +63,9 @@ export default function PatientHistory() {
     }
   }, [user]);
 
-  // Auto-select patient from URL param
   useEffect(() => {
     if (patientId && patients.length > 0) {
-      const patient = patients.find(p => p.id === patientId);
+      const patient = patients.find((p) => p.id === patientId);
       if (patient) {
         setSelectedPatient(patient);
       }
@@ -70,15 +80,13 @@ export default function PatientHistory() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      // Check if user is a branch operator (operator_1, operator_2, operator_3)
-      const isBranchOperator = profile && ['operator_1', 'operator_2', 'operator_3'].includes(profile.role);
-      
+      const isBranchOperator =
+        profile && ["operator_1", "operator_2", "operator_3"].includes(profile.role);
+
       if (isBranchOperator && profile?.branch_id) {
-        // Branch operators only see patients from their branch
         query = query.eq("branch_id", profile.branch_id);
       }
-      // Lab admins will see all organizational data via RLS policies
-      
+
       const { data, error } = await query;
 
       if (error) throw error;
@@ -94,165 +102,147 @@ export default function PatientHistory() {
     }
   };
 
-  const filteredPatients = patients.filter(patient => 
-    patient.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.patient_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.phone?.includes(searchQuery) ||
-    patient.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPatients = patients.filter(
+    (patient) =>
+      patient.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      patient.patient_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      patient.phone?.includes(searchQuery)
   );
 
+  const handleStatClick = (tab: string) => {
+    setActiveTab(tab);
+  };
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Patient History</h1>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
-        </div>
-        
-        {/* Patient Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Patient</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search by name, ID, phone, or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select
-                value={selectedPatient?.id || ""}
-                onValueChange={(value) => {
-                  const patient = patients.find(p => p.id === value);
-                  setSelectedPatient(patient || null);
-                }}
-              >
-                <SelectTrigger className="w-[300px]">
-                  <SelectValue placeholder="Select a patient" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredPatients.map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        <span>{patient.full_name}</span>
-                        <Badge variant="outline" className="ml-2">
-                          {patient.patient_id}
-                        </Badge>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    <div className="container mx-auto p-4 md:p-6 space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Patient History</h1>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Dashboard
+        </Button>
+      </div>
 
-            {selectedPatient && (
-              <div className="flex flex-col gap-4 p-4 bg-muted rounded-lg">
-                <div className="flex items-center gap-4">
-                  <User className="h-8 w-8 text-muted-foreground" />
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{selectedPatient.full_name}</h3>
-                    <div className="flex gap-4 text-sm text-muted-foreground">
-                      <span>ID: {selectedPatient.patient_id}</span>
-                      {selectedPatient.phone && <span>Phone: {selectedPatient.phone}</span>}
-                      {selectedPatient.age_in_months ? (
-                        <span>Age: {selectedPatient.age_in_months < 24 
-                          ? `${selectedPatient.age_in_months} months` 
-                          : `${Math.floor(selectedPatient.age_in_months / 12)} years`}
+      {/* Patient Search + Badge */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full sm:w-[280px] justify-between"
+            >
+              {selectedPatient ? (
+                <span className="truncate">{selectedPatient.full_name}</span>
+              ) : (
+                <span className="text-muted-foreground">Search patient...</span>
+              )}
+              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[280px] p-0" align="start">
+            <Command>
+              <CommandInput
+                placeholder="Search by name, ID, phone..."
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+              />
+              <CommandList>
+                <CommandEmpty>No patient found.</CommandEmpty>
+                <CommandGroup>
+                  {filteredPatients.slice(0, 50).map((patient) => (
+                    <CommandItem
+                      key={patient.id}
+                      value={`${patient.full_name} ${patient.patient_id} ${patient.phone || ""}`}
+                      onSelect={() => {
+                        setSelectedPatient(patient);
+                        setOpen(false);
+                        setSearchQuery("");
+                      }}
+                    >
+                      <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{patient.full_name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {patient.patient_id} {patient.phone && `• ${patient.phone}`}
                         </span>
-                      ) : selectedPatient.age && (
-                        <span>Age: {selectedPatient.age} years</span>
-                      )}
-                      {selectedPatient.gender && <span>Gender: {selectedPatient.gender}</span>}
-                    </div>
-                  </div>
-                </div>
-                {selectedPatient.patient_history && (
-                  <div className="text-sm">
-                    <span className="font-medium text-muted-foreground">History:</span>
-                    <p className="mt-1 text-foreground">{selectedPatient.patient_history}</p>
-                  </div>
-                )}
-                {(selectedPatient.referred_by_doctor_name || selectedPatient.referred_by_doctor_phone) && (
-                  <div className="text-sm">
-                    <span className="font-medium text-muted-foreground">Referred by:</span>
-                    <div className="mt-1 text-foreground">
-                      {selectedPatient.referred_by_doctor_name && <p>{selectedPatient.referred_by_doctor_name}</p>}
-                      {selectedPatient.referred_by_doctor_phone && <p>{selectedPatient.referred_by_doctor_phone}</p>}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
-        {/* Patient Data Tabs */}
-        {selectedPatient ? (
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="test-reports">Test Reports</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="bills">Bills</TabsTrigger>
-              <TabsTrigger value="payments">Payments</TabsTrigger>
-              <TabsTrigger value="followups">Follow-ups</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="overview">
-              <PatientOverview patient={selectedPatient} />
-            </TabsContent>
-            
-            <TabsContent value="test-reports">
-              <PatientTestReports patientId={selectedPatient.id} />
-            </TabsContent>
-            
-            <TabsContent value="documents">
-              <PatientDocuments 
-                patientId={selectedPatient.id} 
+        {selectedPatient && (
+          <PatientBadge
+            patient={selectedPatient}
+            onClear={() => setSelectedPatient(null)}
+          />
+        )}
+      </div>
+
+      {/* Quick Stats Bar */}
+      {selectedPatient && (
+        <QuickStatsBar patientId={selectedPatient.id} onStatClick={handleStatClick} />
+      )}
+
+      {/* Consolidated 4 Tabs */}
+      {selectedPatient ? (
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:inline-flex">
+            <TabsTrigger value="reports" className="gap-1.5 text-xs sm:text-sm">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Reports</span>
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="gap-1.5 text-xs sm:text-sm">
+              <IndianRupee className="h-4 w-4" />
+              <span className="hidden sm:inline">Billing</span>
+            </TabsTrigger>
+            <TabsTrigger value="followups" className="gap-1.5 text-xs sm:text-sm">
+              <Clock className="h-4 w-4" />
+              <span className="hidden sm:inline">Follow-ups</span>
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="gap-1.5 text-xs sm:text-sm">
+              <Activity className="h-4 w-4" />
+              <span className="hidden sm:inline">Activity</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="mt-4">
+            <TabsContent value="reports" className="m-0">
+              <PatientReportsTab
+                patientId={selectedPatient.id}
                 patientName={selectedPatient.full_name}
                 doctorPhone={selectedPatient.referred_by_doctor_phone}
               />
             </TabsContent>
-            
-            <TabsContent value="bills">
+
+            <TabsContent value="billing" className="m-0">
               <PatientBills patientId={selectedPatient.id} />
             </TabsContent>
-            
-            <TabsContent value="payments">
-              <PatientPayments patientId={selectedPatient.id} />
-            </TabsContent>
-            
-            <TabsContent value="followups">
+
+            <TabsContent value="followups" className="m-0">
               <PatientFollowups patientId={selectedPatient.id} />
             </TabsContent>
-            
-            <TabsContent value="timeline">
+
+            <TabsContent value="activity" className="m-0">
               <PatientTimeline patientId={selectedPatient.id} />
             </TabsContent>
-          </Tabs>
-        ) : (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <User className="h-12 w-12 mb-4" />
-              <p className="text-lg">Select a patient to view their history</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+          </div>
+        </Tabs>
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <Search className="h-10 w-10 mb-3 opacity-50" />
+            <p className="text-lg font-medium">Select a patient</p>
+            <p className="text-sm">Search and select a patient to view their history</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
