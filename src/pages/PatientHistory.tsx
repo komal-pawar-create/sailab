@@ -14,6 +14,7 @@ import PatientBills from "@/components/patient-history/PatientBills";
 import PatientFollowups from "@/components/patient-history/PatientFollowups";
 import PatientTimeline from "@/components/patient-history/PatientTimeline";
 import QuickActions from "@/components/patient-history/QuickActions";
+import PatientHistoryExport from "@/components/patient-history/PatientHistoryExport";
 import {
   Command,
   CommandEmpty,
@@ -125,7 +126,10 @@ export default function PatientHistory() {
         <h1 className="text-2xl font-bold">Patient History</h1>
         <div className="flex items-center gap-2">
           {selectedPatient && (
-            <QuickActions patientId={selectedPatient.id} onDataChanged={handleDataRefresh} />
+            <>
+              <PatientHistoryExport patient={selectedPatient} />
+              <QuickActions patientId={selectedPatient.id} onDataChanged={handleDataRefresh} />
+            </>
           )}
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
