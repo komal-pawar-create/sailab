@@ -78,6 +78,28 @@ export default function PatientHistory() {
     }
   }, [patientId, patients]);
 
+  // Keyboard shortcuts for tab navigation (Alt+1-4)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedPatient || !e.altKey) return;
+      
+      const tabMap: Record<string, string> = {
+        "1": "reports",
+        "2": "billing",
+        "3": "followups",
+        "4": "activity",
+      };
+      
+      if (tabMap[e.key]) {
+        e.preventDefault();
+        setActiveTab(tabMap[e.key]);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedPatient]);
+
   const fetchPatients = async () => {
     setLoading(true);
     try {
