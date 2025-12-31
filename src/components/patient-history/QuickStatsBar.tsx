@@ -35,7 +35,7 @@ export default function QuickStatsBar({ patientId, onStatClick }: QuickStatsBarP
       const [testsRes, billsRes, followupsRes, feedbackRes] = await Promise.all([
         supabase.from("test_reports").select("id", { count: "exact" }).eq("patient_id", patientId),
         supabase.from("bills").select("due_amount").eq("patient_id", patientId),
-        supabase.from("patient_followups").select("id", { count: "exact" }).eq("patient_id", patientId).eq("status", "pending"),
+        supabase.from("patient_followups").select("id", { count: "exact" }).eq("patient_id", patientId).eq("status", "open"),
         supabase.from("feedback").select("rating").eq("patient_id", patientId).not("rating", "is", null),
       ]);
 

@@ -201,7 +201,7 @@ export default function PatientHistory() {
 
       {/* Quick Stats Bar */}
       {selectedPatient && (
-        <QuickStatsBar patientId={selectedPatient.id} onStatClick={handleStatClick} />
+        <QuickStatsBar patientId={selectedPatient.id} onStatClick={handleStatClick} key={`stats-${refreshKey}`} />
       )}
 
       {/* Consolidated 4 Tabs */}
@@ -229,6 +229,7 @@ export default function PatientHistory() {
           <div className="mt-4">
             <TabsContent value="reports" className="m-0">
               <PatientReportsTab
+                key={`reports-${refreshKey}`}
                 patientId={selectedPatient.id}
                 patientName={selectedPatient.full_name}
                 doctorPhone={selectedPatient.referred_by_doctor_phone}
@@ -236,15 +237,15 @@ export default function PatientHistory() {
             </TabsContent>
 
             <TabsContent value="billing" className="m-0">
-              <PatientBills patientId={selectedPatient.id} />
+              <PatientBills patientId={selectedPatient.id} key={`bills-${refreshKey}`} />
             </TabsContent>
 
             <TabsContent value="followups" className="m-0">
-              <PatientFollowups patientId={selectedPatient.id} />
+              <PatientFollowups patientId={selectedPatient.id} key={`followups-${refreshKey}`} />
             </TabsContent>
 
             <TabsContent value="activity" className="m-0">
-              <PatientTimeline patientId={selectedPatient.id} />
+              <PatientTimeline patientId={selectedPatient.id} key={`timeline-${refreshKey}`} />
             </TabsContent>
           </div>
         </Tabs>
