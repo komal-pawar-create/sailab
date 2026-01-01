@@ -34,6 +34,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useGlobalActions } from '@/contexts/GlobalActionsContext';
+import { useRecentPatients } from '@/hooks/useRecentPatients';
 
 interface Patient {
   id: string;
@@ -50,6 +51,7 @@ export function CommandPalette() {
   const { profile, signOut } = useAuth();
   const { toast } = useToast();
   const { openDialog } = useGlobalActions();
+  const { recentPatients } = useRecentPatients();
 
   // Keyboard shortcuts for command palette and quick actions
   useEffect(() => {
@@ -150,7 +152,31 @@ export function CommandPalette() {
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
 
-        {/* Patients */}
+        {/* Recently Viewed Patients */}
+        {!search && recentPatients.length > 0 && (
+          <>
+            <CommandGroup heading="Recently Viewed">
+              {recentPatients.map((patient) => (
+                <CommandItem
+                  key={patient.id}
+                  onSelect={() => handlePatientSelect(patient.id)}
+                  className="cursor-pointer"
+                >
+                  <History className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="flex flex-col">
+                    <span>{patient.full_name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {patient.patient_id} {patient.phone && `• ${patient.phone}`}
+                    </span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
+
+        {/* Patients Search Results */}
         {search && patients.length > 0 && (
           <>
             <CommandGroup heading="Patients">

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useRecentPatients } from "@/hooks/useRecentPatients";
 import { Search, FileText, IndianRupee, Clock, Activity, ArrowLeft, User, ChevronDown } from "lucide-react";
 import QuickStatsBar from "@/components/patient-history/QuickStatsBar";
 import PatientBadge from "@/components/patient-history/PatientBadge";
@@ -58,6 +59,7 @@ export default function PatientHistory() {
   const [refreshKey, setRefreshKey] = useState(0);
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { addRecentPatient } = useRecentPatients();
 
   const handleDataRefresh = () => {
     setRefreshKey((prev) => prev + 1);
@@ -77,6 +79,18 @@ export default function PatientHistory() {
       }
     }
   }, [patientId, patients]);
+
+  // Track recently viewed patients
+  useEffect(() => {
+    if (selectedPatient) {
+      addRecentPatient({
+        id: selectedPatient.id,
+        patient_id: selectedPatient.patient_id,
+        full_name: selectedPatient.full_name,
+        phone: selectedPatient.phone,
+      });
+    }
+  }, [selectedPatient?.id, addRecentPatient]);
 
   // Keyboard shortcuts for tab navigation (Alt+1-4)
   useEffect(() => {
