@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Trash2, Plus, Save, Star, Layout, BarChart3, Sparkles, ListOrdered, CreditCard, HelpCircle, MessageCircle, Pencil } from 'lucide-react';
+import { Trash2, Plus, Save, Star, Layout, BarChart3, Sparkles, ListOrdered, CreditCard, HelpCircle, MessageCircle, Pencil, FileText, CheckCircle, MousePointerClick, Link as LinkIcon } from 'lucide-react';
 
 interface HeroContent {
   id: string;
@@ -85,11 +85,56 @@ interface TestimonialItem {
   is_active: boolean;
 }
 
+interface SectionItem {
+  id: string;
+  section_key: string;
+  content: string;
+  is_active: boolean;
+}
+
+interface BenefitItem {
+  id: string;
+  benefit_text: string;
+  display_order: number;
+  is_active: boolean;
+}
+
+interface TourStepItem {
+  id: string;
+  icon_name: string;
+  title: string;
+  description: string | null;
+  mockup_type: string;
+  display_order: number;
+  is_active: boolean;
+}
+
+interface CtaItem {
+  id: string;
+  section_key: string;
+  title: string;
+  subtitle: string | null;
+  button_text: string | null;
+  button_url: string | null;
+  footer_text: string | null;
+  is_active: boolean;
+}
+
+interface FooterItem {
+  id: string;
+  brand_name: string;
+  copyright_text: string;
+  nav_links: Array<{ label: string; href: string }>;
+  is_active: boolean;
+}
+
 const iconOptions = [
   'Users', 'TestTube', 'CreditCard', 'BarChart3', 'Shield', 'Building2', 
   'FileText', 'Clock', 'Smartphone', 'Globe', 'Zap', 'Heart', 'Star', 
-  'CheckCircle2', 'Settings', 'Mail', 'Phone', 'Calendar'
+  'CheckCircle2', 'Settings', 'Mail', 'Phone', 'Calendar', 'TrendingUp', 'Receipt'
 ];
+
+const mockupTypes = ['patient', 'test', 'billing', 'analytics'];
 
 export function LandingPageManager() {
   const [hero, setHero] = useState<HeroContent | null>(null);
@@ -99,6 +144,11 @@ export function LandingPageManager() {
   const [pricing, setPricing] = useState<PricingItem[]>([]);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
+  const [sections, setSections] = useState<SectionItem[]>([]);
+  const [benefits, setBenefits] = useState<BenefitItem[]>([]);
+  const [tourSteps, setTourSteps] = useState<TourStepItem[]>([]);
+  const [ctaItems, setCtaItems] = useState<CtaItem[]>([]);
+  const [footer, setFooter] = useState<FooterItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -109,6 +159,10 @@ export function LandingPageManager() {
   const [editingPricing, setEditingPricing] = useState<(PricingItem & { featuresText?: string }) | null>(null);
   const [editingFaq, setEditingFaq] = useState<FaqItem | null>(null);
   const [editingTestimonial, setEditingTestimonial] = useState<TestimonialItem | null>(null);
+  const [editingSection, setEditingSection] = useState<SectionItem | null>(null);
+  const [editingBenefit, setEditingBenefit] = useState<BenefitItem | null>(null);
+  const [editingTourStep, setEditingTourStep] = useState<TourStepItem | null>(null);
+  const [editingCta, setEditingCta] = useState<CtaItem | null>(null);
 
   const [newStat, setNewStat] = useState({ value: 0, suffix: '', label: '', display_order: 0 });
   const [newFeature, setNewFeature] = useState({ icon_name: 'Users', title: '', description: '', display_order: 0 });
@@ -122,6 +176,11 @@ export function LandingPageManager() {
     name: '', role: '', location: '', rating: 5, 
     testimonial_text: '', avatar_initials: '', display_order: 0 
   });
+  const [newSection, setNewSection] = useState({ section_key: '', content: '' });
+  const [newBenefit, setNewBenefit] = useState({ benefit_text: '', display_order: 0 });
+  const [newTourStep, setNewTourStep] = useState({ icon_name: 'Users', title: '', description: '', mockup_type: 'patient', display_order: 0 });
+  const [newCta, setNewCta] = useState({ section_key: '', title: '', subtitle: '', button_text: '', button_url: '', footer_text: '' });
+  const [newNavLink, setNewNavLink] = useState({ label: '', href: '' });
 
   useEffect(() => {
     fetchAllData();
@@ -129,14 +188,19 @@ export function LandingPageManager() {
 
   const fetchAllData = async () => {
     try {
-      const [heroRes, statsRes, featuresRes, stepsRes, pricingRes, faqsRes, testimonialsRes] = await Promise.all([
+      const [heroRes, statsRes, featuresRes, stepsRes, pricingRes, faqsRes, testimonialsRes, sectionsRes, benefitsRes, tourStepsRes, ctaRes, footerRes] = await Promise.all([
         supabase.from('landing_hero').select('*').limit(1).single(),
         supabase.from('landing_stats').select('*').order('display_order'),
         supabase.from('landing_features').select('*').order('display_order'),
         supabase.from('landing_steps').select('*').order('step_number'),
         supabase.from('landing_pricing').select('*').order('display_order'),
         supabase.from('landing_faqs').select('*').order('display_order'),
-        supabase.from('landing_testimonials').select('*').order('display_order')
+        supabase.from('landing_testimonials').select('*').order('display_order'),
+        supabase.from('landing_sections').select('*').order('section_key'),
+        supabase.from('landing_benefits').select('*').order('display_order'),
+        supabase.from('landing_tour_steps').select('*').order('display_order'),
+        supabase.from('landing_cta').select('*').order('section_key'),
+        supabase.from('landing_footer').select('*').limit(1).single()
       ]);
 
       if (heroRes.data) setHero(heroRes.data);
@@ -151,6 +215,16 @@ export function LandingPageManager() {
       }
       if (faqsRes.data) setFaqs(faqsRes.data);
       if (testimonialsRes.data) setTestimonials(testimonialsRes.data);
+      if (sectionsRes.data) setSections(sectionsRes.data);
+      if (benefitsRes.data) setBenefits(benefitsRes.data);
+      if (tourStepsRes.data) setTourSteps(tourStepsRes.data);
+      if (ctaRes.data) setCtaItems(ctaRes.data);
+      if (footerRes.data) setFooter({
+        ...footerRes.data,
+        nav_links: Array.isArray(footerRes.data.nav_links) 
+          ? (footerRes.data.nav_links as Array<{ label: string; href: string }>)
+          : []
+      });
     } catch (error) {
       console.error('Error fetching landing page data:', error);
     } finally {
@@ -363,6 +437,148 @@ export function LandingPageManager() {
     else toast.error('Failed');
   };
 
+  // Section handlers
+  const addSection = async () => {
+    const { error } = await supabase.from('landing_sections').insert(newSection);
+    if (!error) { toast.success('Added'); setNewSection({ section_key: '', content: '' }); fetchAllData(); }
+    else toast.error('Failed');
+  };
+  const toggleSectionActive = async (id: string, val: boolean) => {
+    await supabase.from('landing_sections').update({ is_active: !val }).eq('id', id);
+    fetchAllData();
+  };
+  const deleteSection = async (id: string) => {
+    if (!confirm('Delete?')) return;
+    await supabase.from('landing_sections').delete().eq('id', id);
+    fetchAllData();
+  };
+  const saveSection = async () => {
+    if (!editingSection) return;
+    const { error } = await supabase.from('landing_sections').update({
+      content: editingSection.content
+    }).eq('id', editingSection.id);
+    if (!error) { toast.success('Updated'); setEditingSection(null); fetchAllData(); }
+    else toast.error('Failed');
+  };
+
+  // Benefits handlers
+  const addBenefit = async () => {
+    const { error } = await supabase.from('landing_benefits').insert(newBenefit);
+    if (!error) { toast.success('Added'); setNewBenefit({ benefit_text: '', display_order: 0 }); fetchAllData(); }
+    else toast.error('Failed');
+  };
+  const toggleBenefitActive = async (id: string, val: boolean) => {
+    await supabase.from('landing_benefits').update({ is_active: !val }).eq('id', id);
+    fetchAllData();
+  };
+  const deleteBenefit = async (id: string) => {
+    if (!confirm('Delete?')) return;
+    await supabase.from('landing_benefits').delete().eq('id', id);
+    fetchAllData();
+  };
+  const saveBenefit = async () => {
+    if (!editingBenefit) return;
+    const { error } = await supabase.from('landing_benefits').update({
+      benefit_text: editingBenefit.benefit_text,
+      display_order: editingBenefit.display_order
+    }).eq('id', editingBenefit.id);
+    if (!error) { toast.success('Updated'); setEditingBenefit(null); fetchAllData(); }
+    else toast.error('Failed');
+  };
+
+  // Tour Steps handlers
+  const addTourStep = async () => {
+    const { error } = await supabase.from('landing_tour_steps').insert(newTourStep);
+    if (!error) { toast.success('Added'); setNewTourStep({ icon_name: 'Users', title: '', description: '', mockup_type: 'patient', display_order: 0 }); fetchAllData(); }
+    else toast.error('Failed');
+  };
+  const toggleTourStepActive = async (id: string, val: boolean) => {
+    await supabase.from('landing_tour_steps').update({ is_active: !val }).eq('id', id);
+    fetchAllData();
+  };
+  const deleteTourStep = async (id: string) => {
+    if (!confirm('Delete?')) return;
+    await supabase.from('landing_tour_steps').delete().eq('id', id);
+    fetchAllData();
+  };
+  const saveTourStep = async () => {
+    if (!editingTourStep) return;
+    const { error } = await supabase.from('landing_tour_steps').update({
+      icon_name: editingTourStep.icon_name,
+      title: editingTourStep.title,
+      description: editingTourStep.description,
+      mockup_type: editingTourStep.mockup_type,
+      display_order: editingTourStep.display_order
+    }).eq('id', editingTourStep.id);
+    if (!error) { toast.success('Updated'); setEditingTourStep(null); fetchAllData(); }
+    else toast.error('Failed');
+  };
+
+  // CTA handlers
+  const addCta = async () => {
+    const { error } = await supabase.from('landing_cta').insert(newCta);
+    if (!error) { toast.success('Added'); setNewCta({ section_key: '', title: '', subtitle: '', button_text: '', button_url: '', footer_text: '' }); fetchAllData(); }
+    else toast.error('Failed');
+  };
+  const toggleCtaActive = async (id: string, val: boolean) => {
+    await supabase.from('landing_cta').update({ is_active: !val }).eq('id', id);
+    fetchAllData();
+  };
+  const deleteCta = async (id: string) => {
+    if (!confirm('Delete?')) return;
+    await supabase.from('landing_cta').delete().eq('id', id);
+    fetchAllData();
+  };
+  const saveCta = async () => {
+    if (!editingCta) return;
+    const { error } = await supabase.from('landing_cta').update({
+      title: editingCta.title,
+      subtitle: editingCta.subtitle,
+      button_text: editingCta.button_text,
+      button_url: editingCta.button_url,
+      footer_text: editingCta.footer_text
+    }).eq('id', editingCta.id);
+    if (!error) { toast.success('Updated'); setEditingCta(null); fetchAllData(); }
+    else toast.error('Failed');
+  };
+
+  // Footer handlers
+  const saveFooter = async () => {
+    if (!footer) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('landing_footer').update({
+        brand_name: footer.brand_name,
+        copyright_text: footer.copyright_text,
+        nav_links: footer.nav_links,
+        updated_at: new Date().toISOString()
+      }).eq('id', footer.id);
+      if (error) throw error;
+      toast.success('Footer updated');
+    } catch {
+      toast.error('Failed to update footer');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addNavLink = () => {
+    if (!footer || !newNavLink.label || !newNavLink.href) return;
+    setFooter({
+      ...footer,
+      nav_links: [...footer.nav_links, newNavLink]
+    });
+    setNewNavLink({ label: '', href: '' });
+  };
+
+  const removeNavLink = (index: number) => {
+    if (!footer) return;
+    setFooter({
+      ...footer,
+      nav_links: footer.nav_links.filter((_, i) => i !== index)
+    });
+  };
+
   if (loading) return <div className="text-center py-8">Loading...</div>;
 
   return (
@@ -376,6 +592,11 @@ export function LandingPageManager() {
           <TabsTrigger value="pricing" className="flex items-center gap-1"><CreditCard className="h-4 w-4" />Pricing</TabsTrigger>
           <TabsTrigger value="faqs" className="flex items-center gap-1"><HelpCircle className="h-4 w-4" />FAQs</TabsTrigger>
           <TabsTrigger value="testimonials" className="flex items-center gap-1"><MessageCircle className="h-4 w-4" />Testimonials</TabsTrigger>
+          <TabsTrigger value="sections" className="flex items-center gap-1"><FileText className="h-4 w-4" />Sections</TabsTrigger>
+          <TabsTrigger value="benefits" className="flex items-center gap-1"><CheckCircle className="h-4 w-4" />Benefits</TabsTrigger>
+          <TabsTrigger value="tour" className="flex items-center gap-1"><MousePointerClick className="h-4 w-4" />Tour</TabsTrigger>
+          <TabsTrigger value="cta" className="flex items-center gap-1"><Star className="h-4 w-4" />CTA</TabsTrigger>
+          <TabsTrigger value="footer" className="flex items-center gap-1"><LinkIcon className="h-4 w-4" />Footer</TabsTrigger>
         </TabsList>
 
         {/* Hero Section */}
@@ -654,6 +875,203 @@ export function LandingPageManager() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Sections */}
+        <TabsContent value="sections">
+          <Card className="mb-6">
+            <CardHeader><CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" />Add Section Text</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div><Label>Section Key (e.g., features_title)</Label><Input value={newSection.section_key} onChange={(e) => setNewSection({ ...newSection, section_key: e.target.value })} /></div>
+                <div><Label>Content</Label><Input value={newSection.content} onChange={(e) => setNewSection({ ...newSection, content: e.target.value })} /></div>
+              </div>
+              <Button onClick={addSection} disabled={!newSection.section_key || !newSection.content}>Add Section</Button>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Section Texts ({sections.length})</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader><TableRow><TableHead>Key</TableHead><TableHead>Content</TableHead><TableHead>Active</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {sections.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell className="font-mono text-sm">{s.section_key}</TableCell>
+                      <TableCell className="max-w-md truncate">{s.content}</TableCell>
+                      <TableCell><Switch checked={s.is_active} onCheckedChange={() => toggleSectionActive(s.id, s.is_active)} /></TableCell>
+                      <TableCell className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => setEditingSection(s)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => deleteSection(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Benefits */}
+        <TabsContent value="benefits">
+          <Card className="mb-6">
+            <CardHeader><CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" />Add Benefit</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div><Label>Benefit Text</Label><Input value={newBenefit.benefit_text} onChange={(e) => setNewBenefit({ ...newBenefit, benefit_text: e.target.value })} /></div>
+                <div><Label>Order</Label><Input type="number" value={newBenefit.display_order} onChange={(e) => setNewBenefit({ ...newBenefit, display_order: Number(e.target.value) })} /></div>
+              </div>
+              <Button onClick={addBenefit} disabled={!newBenefit.benefit_text}>Add Benefit</Button>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Benefits ({benefits.length})</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader><TableRow><TableHead>Order</TableHead><TableHead>Benefit</TableHead><TableHead>Active</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {benefits.map((b) => (
+                    <TableRow key={b.id}>
+                      <TableCell>{b.display_order}</TableCell>
+                      <TableCell>{b.benefit_text}</TableCell>
+                      <TableCell><Switch checked={b.is_active} onCheckedChange={() => toggleBenefitActive(b.id, b.is_active)} /></TableCell>
+                      <TableCell className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => setEditingBenefit(b)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => deleteBenefit(b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tour Steps */}
+        <TabsContent value="tour">
+          <Card className="mb-6">
+            <CardHeader><CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" />Add Tour Step</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-5 gap-4 mb-4">
+                <div><Label>Icon</Label>
+                  <Select value={newTourStep.icon_name} onValueChange={(v) => setNewTourStep({ ...newTourStep, icon_name: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{iconOptions.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Title</Label><Input value={newTourStep.title} onChange={(e) => setNewTourStep({ ...newTourStep, title: e.target.value })} /></div>
+                <div><Label>Description</Label><Input value={newTourStep.description} onChange={(e) => setNewTourStep({ ...newTourStep, description: e.target.value })} /></div>
+                <div><Label>Mockup Type</Label>
+                  <Select value={newTourStep.mockup_type} onValueChange={(v) => setNewTourStep({ ...newTourStep, mockup_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{mockupTypes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Order</Label><Input type="number" value={newTourStep.display_order} onChange={(e) => setNewTourStep({ ...newTourStep, display_order: Number(e.target.value) })} /></div>
+              </div>
+              <Button onClick={addTourStep} disabled={!newTourStep.title}>Add Tour Step</Button>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Tour Steps ({tourSteps.length})</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader><TableRow><TableHead>Order</TableHead><TableHead>Icon</TableHead><TableHead>Title</TableHead><TableHead>Mockup</TableHead><TableHead>Active</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {tourSteps.map((t) => (
+                    <TableRow key={t.id}>
+                      <TableCell>{t.display_order}</TableCell>
+                      <TableCell>{t.icon_name}</TableCell>
+                      <TableCell>{t.title}</TableCell>
+                      <TableCell>{t.mockup_type}</TableCell>
+                      <TableCell><Switch checked={t.is_active} onCheckedChange={() => toggleTourStepActive(t.id, t.is_active)} /></TableCell>
+                      <TableCell className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => setEditingTourStep(t)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => deleteTourStep(t.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* CTA */}
+        <TabsContent value="cta">
+          <Card className="mb-6">
+            <CardHeader><CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" />Add CTA Block</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div><Label>Section Key</Label><Input value={newCta.section_key} onChange={(e) => setNewCta({ ...newCta, section_key: e.target.value })} placeholder="e.g., final_cta" /></div>
+                <div><Label>Title</Label><Input value={newCta.title} onChange={(e) => setNewCta({ ...newCta, title: e.target.value })} /></div>
+                <div><Label>Subtitle</Label><Input value={newCta.subtitle} onChange={(e) => setNewCta({ ...newCta, subtitle: e.target.value })} /></div>
+                <div><Label>Button Text</Label><Input value={newCta.button_text} onChange={(e) => setNewCta({ ...newCta, button_text: e.target.value })} /></div>
+                <div><Label>Button URL</Label><Input value={newCta.button_url} onChange={(e) => setNewCta({ ...newCta, button_url: e.target.value })} /></div>
+                <div><Label>Footer Text</Label><Input value={newCta.footer_text} onChange={(e) => setNewCta({ ...newCta, footer_text: e.target.value })} /></div>
+              </div>
+              <Button onClick={addCta} disabled={!newCta.section_key || !newCta.title}>Add CTA</Button>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>CTA Blocks ({ctaItems.length})</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader><TableRow><TableHead>Key</TableHead><TableHead>Title</TableHead><TableHead>Button</TableHead><TableHead>Active</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {ctaItems.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="font-mono text-sm">{c.section_key}</TableCell>
+                      <TableCell>{c.title}</TableCell>
+                      <TableCell>{c.button_text}</TableCell>
+                      <TableCell><Switch checked={c.is_active} onCheckedChange={() => toggleCtaActive(c.id, c.is_active)} /></TableCell>
+                      <TableCell className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => setEditingCta(c)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => deleteCta(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Footer */}
+        <TabsContent value="footer">
+          <Card>
+            <CardHeader><CardTitle>Footer Settings</CardTitle></CardHeader>
+            <CardContent className="space-y-6">
+              {footer && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><Label>Brand Name</Label><Input value={footer.brand_name} onChange={(e) => setFooter({ ...footer, brand_name: e.target.value })} /></div>
+                    <div><Label>Copyright Text</Label><Input value={footer.copyright_text} onChange={(e) => setFooter({ ...footer, copyright_text: e.target.value })} /></div>
+                  </div>
+
+                  <div>
+                    <Label className="mb-2 block">Navigation Links</Label>
+                    <div className="space-y-2 mb-4">
+                      {footer.nav_links.map((link, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 rounded bg-muted">
+                          <span className="flex-1">{link.label}</span>
+                          <span className="text-muted-foreground text-sm">{link.href}</span>
+                          <Button variant="ghost" size="sm" onClick={() => removeNavLink(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input placeholder="Label" value={newNavLink.label} onChange={(e) => setNewNavLink({ ...newNavLink, label: e.target.value })} />
+                      <Input placeholder="URL (e.g., #features or /page)" value={newNavLink.href} onChange={(e) => setNewNavLink({ ...newNavLink, href: e.target.value })} />
+                      <Button onClick={addNavLink} disabled={!newNavLink.label || !newNavLink.href}><Plus className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+
+                  <Button onClick={saveFooter} disabled={saving} className="gap-2"><Save className="h-4 w-4" />{saving ? 'Saving...' : 'Save Footer'}</Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Edit Stat Dialog */}
@@ -686,7 +1104,7 @@ export function LandingPageManager() {
               </div>
               <div><Label>Title</Label><Input value={editingFeature.title} onChange={(e) => setEditingFeature({ ...editingFeature, title: e.target.value })} /></div>
               <div><Label>Description</Label><Textarea value={editingFeature.description || ''} onChange={(e) => setEditingFeature({ ...editingFeature, description: e.target.value })} /></div>
-              <div><Label>Display Order</Label><Input type="number" value={editingFeature.display_order} onChange={(e) => setEditingFeature({ ...editingFeature, display_order: Number(e.target.value) })} /></div>
+              <div><Label>Order</Label><Input type="number" value={editingFeature.display_order} onChange={(e) => setEditingFeature({ ...editingFeature, display_order: Number(e.target.value) })} /></div>
             </div>
           )}
           <DialogFooter><Button onClick={saveFeature}>Save</Button></DialogFooter>
@@ -710,15 +1128,16 @@ export function LandingPageManager() {
 
       {/* Edit Pricing Dialog */}
       <Dialog open={!!editingPricing} onOpenChange={(open) => !open && setEditingPricing(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Edit Pricing Plan</DialogTitle></DialogHeader>
           {editingPricing && (
             <div className="space-y-4">
+              <div><Label>Name</Label><Input value={editingPricing.name} onChange={(e) => setEditingPricing({ ...editingPricing, name: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Name</Label><Input value={editingPricing.name} onChange={(e) => setEditingPricing({ ...editingPricing, name: e.target.value })} /></div>
-                <div><Label>Display Order</Label><Input type="number" value={editingPricing.display_order} onChange={(e) => setEditingPricing({ ...editingPricing, display_order: Number(e.target.value) })} /></div>
                 <div><Label>Price (₹)</Label><Input type="number" value={editingPricing.price} onChange={(e) => setEditingPricing({ ...editingPricing, price: Number(e.target.value) })} /></div>
                 <div><Label>AMC (₹)</Label><Input type="number" value={editingPricing.amc_price} onChange={(e) => setEditingPricing({ ...editingPricing, amc_price: Number(e.target.value) })} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div><Label>Discount %</Label><Input type="number" value={editingPricing.discount || 0} onChange={(e) => setEditingPricing({ ...editingPricing, discount: Number(e.target.value) })} /></div>
                 <div><Label>Min Labs</Label><Input type="number" value={editingPricing.min_labs || 0} onChange={(e) => setEditingPricing({ ...editingPricing, min_labs: Number(e.target.value) })} /></div>
               </div>
@@ -727,6 +1146,7 @@ export function LandingPageManager() {
                 <label className="flex items-center gap-2"><input type="checkbox" checked={editingPricing.is_popular} onChange={(e) => setEditingPricing({ ...editingPricing, is_popular: e.target.checked })} />Popular</label>
                 <label className="flex items-center gap-2"><input type="checkbox" checked={editingPricing.is_enterprise} onChange={(e) => setEditingPricing({ ...editingPricing, is_enterprise: e.target.checked })} />Enterprise</label>
               </div>
+              <div><Label>Display Order</Label><Input type="number" value={editingPricing.display_order} onChange={(e) => setEditingPricing({ ...editingPricing, display_order: Number(e.target.value) })} /></div>
             </div>
           )}
           <DialogFooter><Button onClick={savePricing}>Save</Button></DialogFooter>
@@ -739,21 +1159,19 @@ export function LandingPageManager() {
           <DialogHeader><DialogTitle>Edit FAQ</DialogTitle></DialogHeader>
           {editingFaq && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>Category</Label>
-                  <Select value={editingFaq.category} onValueChange={(v) => setEditingFaq({ ...editingFaq, category: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pricing">Pricing</SelectItem>
-                      <SelectItem value="features">Features</SelectItem>
-                      <SelectItem value="support">Support</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div><Label>Display Order</Label><Input type="number" value={editingFaq.display_order} onChange={(e) => setEditingFaq({ ...editingFaq, display_order: Number(e.target.value) })} /></div>
+              <div><Label>Category</Label>
+                <Select value={editingFaq.category} onValueChange={(v) => setEditingFaq({ ...editingFaq, category: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pricing">Pricing</SelectItem>
+                    <SelectItem value="features">Features</SelectItem>
+                    <SelectItem value="support">Support</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div><Label>Question</Label><Input value={editingFaq.question} onChange={(e) => setEditingFaq({ ...editingFaq, question: e.target.value })} /></div>
               <div><Label>Answer</Label><Textarea value={editingFaq.answer} onChange={(e) => setEditingFaq({ ...editingFaq, answer: e.target.value })} rows={4} /></div>
+              <div><Label>Order</Label><Input type="number" value={editingFaq.display_order} onChange={(e) => setEditingFaq({ ...editingFaq, display_order: Number(e.target.value) })} /></div>
             </div>
           )}
           <DialogFooter><Button onClick={saveFaq}>Save</Button></DialogFooter>
@@ -766,18 +1184,95 @@ export function LandingPageManager() {
           <DialogHeader><DialogTitle>Edit Testimonial</DialogTitle></DialogHeader>
           {editingTestimonial && (
             <div className="space-y-4">
+              <div><Label>Name</Label><Input value={editingTestimonial.name} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, name: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Name</Label><Input value={editingTestimonial.name} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, name: e.target.value })} /></div>
                 <div><Label>Role</Label><Input value={editingTestimonial.role || ''} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, role: e.target.value })} /></div>
                 <div><Label>Location</Label><Input value={editingTestimonial.location || ''} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, location: e.target.value })} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div><Label>Rating (1-5)</Label><Input type="number" min={1} max={5} value={editingTestimonial.rating} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, rating: Number(e.target.value) })} /></div>
                 <div><Label>Initials</Label><Input value={editingTestimonial.avatar_initials || ''} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, avatar_initials: e.target.value })} maxLength={3} /></div>
-                <div><Label>Display Order</Label><Input type="number" value={editingTestimonial.display_order} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, display_order: Number(e.target.value) })} /></div>
               </div>
-              <div><Label>Testimonial Text</Label><Textarea value={editingTestimonial.testimonial_text} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, testimonial_text: e.target.value })} rows={4} /></div>
+              <div><Label>Testimonial</Label><Textarea value={editingTestimonial.testimonial_text} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, testimonial_text: e.target.value })} rows={4} /></div>
+              <div><Label>Order</Label><Input type="number" value={editingTestimonial.display_order} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, display_order: Number(e.target.value) })} /></div>
             </div>
           )}
           <DialogFooter><Button onClick={saveTestimonial}>Save</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Section Dialog */}
+      <Dialog open={!!editingSection} onOpenChange={(open) => !open && setEditingSection(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Section Text</DialogTitle></DialogHeader>
+          {editingSection && (
+            <div className="space-y-4">
+              <div><Label>Section Key</Label><Input value={editingSection.section_key} disabled /></div>
+              <div><Label>Content</Label><Textarea value={editingSection.content} onChange={(e) => setEditingSection({ ...editingSection, content: e.target.value })} rows={4} /></div>
+            </div>
+          )}
+          <DialogFooter><Button onClick={saveSection}>Save</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Benefit Dialog */}
+      <Dialog open={!!editingBenefit} onOpenChange={(open) => !open && setEditingBenefit(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Benefit</DialogTitle></DialogHeader>
+          {editingBenefit && (
+            <div className="space-y-4">
+              <div><Label>Benefit Text</Label><Textarea value={editingBenefit.benefit_text} onChange={(e) => setEditingBenefit({ ...editingBenefit, benefit_text: e.target.value })} rows={3} /></div>
+              <div><Label>Display Order</Label><Input type="number" value={editingBenefit.display_order} onChange={(e) => setEditingBenefit({ ...editingBenefit, display_order: Number(e.target.value) })} /></div>
+            </div>
+          )}
+          <DialogFooter><Button onClick={saveBenefit}>Save</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Tour Step Dialog */}
+      <Dialog open={!!editingTourStep} onOpenChange={(open) => !open && setEditingTourStep(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Tour Step</DialogTitle></DialogHeader>
+          {editingTourStep && (
+            <div className="space-y-4">
+              <div><Label>Icon</Label>
+                <Select value={editingTourStep.icon_name} onValueChange={(v) => setEditingTourStep({ ...editingTourStep, icon_name: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{iconOptions.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Title</Label><Input value={editingTourStep.title} onChange={(e) => setEditingTourStep({ ...editingTourStep, title: e.target.value })} /></div>
+              <div><Label>Description</Label><Textarea value={editingTourStep.description || ''} onChange={(e) => setEditingTourStep({ ...editingTourStep, description: e.target.value })} rows={3} /></div>
+              <div><Label>Mockup Type</Label>
+                <Select value={editingTourStep.mockup_type} onValueChange={(v) => setEditingTourStep({ ...editingTourStep, mockup_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{mockupTypes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Order</Label><Input type="number" value={editingTourStep.display_order} onChange={(e) => setEditingTourStep({ ...editingTourStep, display_order: Number(e.target.value) })} /></div>
+            </div>
+          )}
+          <DialogFooter><Button onClick={saveTourStep}>Save</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit CTA Dialog */}
+      <Dialog open={!!editingCta} onOpenChange={(open) => !open && setEditingCta(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit CTA Block</DialogTitle></DialogHeader>
+          {editingCta && (
+            <div className="space-y-4">
+              <div><Label>Section Key</Label><Input value={editingCta.section_key} disabled /></div>
+              <div><Label>Title</Label><Input value={editingCta.title} onChange={(e) => setEditingCta({ ...editingCta, title: e.target.value })} /></div>
+              <div><Label>Subtitle</Label><Textarea value={editingCta.subtitle || ''} onChange={(e) => setEditingCta({ ...editingCta, subtitle: e.target.value })} rows={2} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><Label>Button Text</Label><Input value={editingCta.button_text || ''} onChange={(e) => setEditingCta({ ...editingCta, button_text: e.target.value })} /></div>
+                <div><Label>Button URL</Label><Input value={editingCta.button_url || ''} onChange={(e) => setEditingCta({ ...editingCta, button_url: e.target.value })} /></div>
+              </div>
+              <div><Label>Footer Text</Label><Input value={editingCta.footer_text || ''} onChange={(e) => setEditingCta({ ...editingCta, footer_text: e.target.value })} /></div>
+            </div>
+          )}
+          <DialogFooter><Button onClick={saveCta}>Save</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </>
