@@ -25,6 +25,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
 import { CommandPalette } from "./components/CommandPalette";
 import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
+import { GlobalActionsProvider } from "./contexts/GlobalActionsContext";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "./hooks/useAuth";
 
@@ -109,34 +110,36 @@ const AppContent = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <AppHeader />
-          <main className="flex-1 overflow-auto">
-            <Routes>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/outstanding-report" element={<OutstandingReport />} />
-              <Route path="/super-admin" element={<SuperAdmin />} />
-              <Route path="/super-admin/data-management" element={<DataManagement />} />
-              <Route path="/audit-logs" element={<AuditLogs />} />
-              <Route path="/api-settings" element={<ApiSettings />} />
-              <Route path="/lab-profile" element={<LabProfile />} />
-              <Route path="/branch-settings" element={<BranchSettings />} />
-              <Route path="/patient-history" element={<PatientHistory />} />
-              <Route path="/patient/:patientId" element={<PatientHistory />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/followups" element={<Followups />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
+    <GlobalActionsProvider>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <div className="flex-1 flex flex-col min-w-0">
+            <AppHeader />
+            <main className="flex-1 overflow-auto">
+              <Routes>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/outstanding-report" element={<OutstandingReport />} />
+                <Route path="/super-admin" element={<SuperAdmin />} />
+                <Route path="/super-admin/data-management" element={<DataManagement />} />
+                <Route path="/audit-logs" element={<AuditLogs />} />
+                <Route path="/api-settings" element={<ApiSettings />} />
+                <Route path="/lab-profile" element={<LabProfile />} />
+                <Route path="/branch-settings" element={<BranchSettings />} />
+                <Route path="/patient-history" element={<PatientHistory />} />
+                <Route path="/patient/:patientId" element={<PatientHistory />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/followups" element={<Followups />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
         </div>
-      </div>
-      <CommandPalette />
-      <KeyboardShortcuts />
-    </SidebarProvider>
+        <CommandPalette />
+        <KeyboardShortcuts />
+      </SidebarProvider>
+    </GlobalActionsProvider>
   );
 };
 

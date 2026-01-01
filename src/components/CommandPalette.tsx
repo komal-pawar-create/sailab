@@ -23,11 +23,17 @@ import {
   HelpCircle,
   LogOut,
   Pencil,
-  RotateCcw
+  RotateCcw,
+  UserPlus,
+  TestTube,
+  Receipt,
+  FileText,
+  CalendarPlus
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useGlobalActions } from '@/contexts/GlobalActionsContext';
 
 interface Patient {
   id: string;
@@ -43,6 +49,7 @@ export function CommandPalette() {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
   const { toast } = useToast();
+  const { openDialog } = useGlobalActions();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -207,7 +214,62 @@ export function CommandPalette() {
           </>
         )}
 
-        {/* Actions */}
+        {/* Quick Actions */}
+        <CommandSeparator />
+        <CommandGroup heading="Quick Actions">
+          <CommandItem 
+            onSelect={() => {
+              setOpen(false);
+              openDialog('patient');
+            }} 
+            className="cursor-pointer"
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            <span>Add Patient</span>
+          </CommandItem>
+          <CommandItem 
+            onSelect={() => {
+              setOpen(false);
+              openDialog('report');
+            }} 
+            className="cursor-pointer"
+          >
+            <TestTube className="mr-2 h-4 w-4" />
+            <span>Add Test Report</span>
+          </CommandItem>
+          <CommandItem 
+            onSelect={() => {
+              setOpen(false);
+              openDialog('bill');
+            }} 
+            className="cursor-pointer"
+          >
+            <Receipt className="mr-2 h-4 w-4" />
+            <span>Create Bill</span>
+          </CommandItem>
+          <CommandItem 
+            onSelect={() => {
+              setOpen(false);
+              openDialog('document');
+            }} 
+            className="cursor-pointer"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            <span>Upload Document</span>
+          </CommandItem>
+          <CommandItem 
+            onSelect={() => {
+              setOpen(false);
+              openDialog('followup');
+            }} 
+            className="cursor-pointer"
+          >
+            <CalendarPlus className="mr-2 h-4 w-4" />
+            <span>Add Follow-up</span>
+          </CommandItem>
+        </CommandGroup>
+
+        {/* Other Actions */}
         <CommandSeparator />
         <CommandGroup heading="Actions">
           <CommandItem 
