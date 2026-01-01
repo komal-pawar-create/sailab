@@ -100,6 +100,37 @@ interface TestimonialItem {
   avatar_url: string | null;
 }
 
+interface SectionContent {
+  [key: string]: string;
+}
+
+interface BenefitItem {
+  id: string;
+  benefit_text: string;
+}
+
+interface TourStepItem {
+  id: string;
+  icon_name: string;
+  title: string;
+  description: string | null;
+  mockup_type: string;
+}
+
+interface CtaContent {
+  title: string;
+  subtitle: string | null;
+  button_text: string | null;
+  button_url: string | null;
+  footer_text: string | null;
+}
+
+interface FooterContent {
+  brand_name: string;
+  copyright_text: string;
+  nav_links: Array<{ label: string; href: string }>;
+}
+
 // Dynamic icon component - map icon names to components
 const getIconComponent = (name: string): React.ElementType => {
   const iconMap: Record<string, React.ElementType> = {
@@ -902,6 +933,10 @@ const Index = () => {
   const [pricingPlans, setPricingPlans] = useState<PricingItem[]>([]);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
+  const [sectionContent, setSectionContent] = useState<SectionContent>({});
+  const [benefits, setBenefits] = useState<BenefitItem[]>([]);
+  const [ctaContent, setCtaContent] = useState<CtaContent | null>(null);
+  const [footerContent, setFooterContent] = useState<FooterContent | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -913,6 +948,25 @@ const Index = () => {
   useEffect(() => {
     const fetchLandingContent = async () => {
       try {
+        // Fetch new tables
+        const [sectionsRes, benefitsRes, ctaRes, footerRes] = await Promise.all([
+          supabase.from('landing_sections').select('section_key, content').eq('is_active', true),
+          supabase.from('landing_benefits').select('id, benefit_text').eq('is_active', true).order('display_order'),
+          supabase.from('landing_cta').select('*').eq('section_key', 'final_cta').eq('is_active', true).single(),
+          supabase.from('landing_footer').select('*').eq('is_active', true).single()
+        ]);
+        
+        if (sectionsRes.data) {
+          const contentMap: SectionContent = {};
+          sectionsRes.data.forEach((s: any) => { contentMap[s.section_key] = s.content; });
+          setSectionContent(contentMap);
+        }
+        if (benefitsRes.data) setBenefits(benefitsRes.data);
+        if (ctaRes.data) setCtaContent(ctaRes.data);
+        if (footerRes.data) setFooterContent({
+          ...footerRes.data,
+          nav_links: Array.isArray(footerRes.data.nav_links) ? footerRes.data.nav_links as Array<{ label: string; href: string }> : []
+        });
         const [heroRes, statsRes, featuresRes, stepsRes, pricingRes, faqsRes, testimonialsRes] = await Promise.all([
           supabase.from('landing_hero').select('*').eq('is_active', true).single(),
           supabase.from('landing_stats').select('*').eq('is_active', true).order('display_order'),

@@ -802,6 +802,72 @@ export type Database = {
           },
         ]
       }
+      landing_benefits: {
+        Row: {
+          benefit_text: string
+          created_at: string | null
+          created_by: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+        }
+        Insert: {
+          benefit_text: string
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+        }
+        Update: {
+          benefit_text?: string
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+        }
+        Relationships: []
+      }
+      landing_cta: {
+        Row: {
+          button_text: string | null
+          button_url: string | null
+          footer_text: string | null
+          id: string
+          is_active: boolean | null
+          section_key: string
+          subtitle: string | null
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          button_text?: string | null
+          button_url?: string | null
+          footer_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          section_key: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          button_text?: string | null
+          button_url?: string | null
+          footer_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          section_key?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       landing_faqs: {
         Row: {
           answer: string
@@ -865,6 +931,36 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           title?: string
+        }
+        Relationships: []
+      }
+      landing_footer: {
+        Row: {
+          brand_name: string
+          copyright_text: string
+          id: string
+          is_active: boolean | null
+          nav_links: Json | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          brand_name?: string
+          copyright_text?: string
+          id?: string
+          is_active?: boolean | null
+          nav_links?: Json | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          brand_name?: string
+          copyright_text?: string
+          id?: string
+          is_active?: boolean | null
+          nav_links?: Json | null
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -949,6 +1045,33 @@ export type Database = {
           min_labs?: number | null
           name?: string
           price?: number
+        }
+        Relationships: []
+      }
+      landing_sections: {
+        Row: {
+          content: string
+          id: string
+          is_active: boolean | null
+          section_key: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          content: string
+          id?: string
+          is_active?: boolean | null
+          section_key: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          id?: string
+          is_active?: boolean | null
+          section_key?: string
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -1057,6 +1180,42 @@ export type Database = {
           rating?: number | null
           role?: string | null
           testimonial_text?: string
+        }
+        Relationships: []
+      }
+      landing_tour_steps: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          icon_name: string
+          id: string
+          is_active: boolean | null
+          mockup_type: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon_name: string
+          id?: string
+          is_active?: boolean | null
+          mockup_type: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon_name?: string
+          id?: string
+          is_active?: boolean | null
+          mockup_type?: string
+          title?: string
         }
         Relationships: []
       }
