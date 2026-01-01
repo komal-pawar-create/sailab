@@ -51,17 +51,41 @@ export function CommandPalette() {
   const { toast } = useToast();
   const { openDialog } = useGlobalActions();
 
+  // Keyboard shortcuts for command palette and quick actions
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      // Cmd/Ctrl+K to toggle command palette
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((open) => !open);
+        return;
+      }
+
+      // Alt+key shortcuts for quick actions (only when not in input fields)
+      if (e.altKey && !e.metaKey && !e.ctrlKey) {
+        const target = e.target as HTMLElement;
+        const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+        
+        if (!isInputField) {
+          const shortcutMap: Record<string, () => void> = {
+            'p': () => openDialog('patient'),
+            'r': () => openDialog('report'),
+            'b': () => openDialog('bill'),
+            'd': () => openDialog('document'),
+            'f': () => openDialog('followup'),
+          };
+
+          if (shortcutMap[e.key.toLowerCase()]) {
+            e.preventDefault();
+            shortcutMap[e.key.toLowerCase()]();
+          }
+        }
       }
     };
 
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
-  }, []);
+  }, [openDialog]);
 
   // Fetch patients when search changes
   useEffect(() => {
@@ -226,6 +250,7 @@ export function CommandPalette() {
           >
             <UserPlus className="mr-2 h-4 w-4" />
             <span>Add Patient</span>
+            <span className="ml-auto text-xs text-muted-foreground">Alt+P</span>
           </CommandItem>
           <CommandItem 
             onSelect={() => {
@@ -236,6 +261,7 @@ export function CommandPalette() {
           >
             <TestTube className="mr-2 h-4 w-4" />
             <span>Add Test Report</span>
+            <span className="ml-auto text-xs text-muted-foreground">Alt+R</span>
           </CommandItem>
           <CommandItem 
             onSelect={() => {
@@ -246,6 +272,7 @@ export function CommandPalette() {
           >
             <Receipt className="mr-2 h-4 w-4" />
             <span>Create Bill</span>
+            <span className="ml-auto text-xs text-muted-foreground">Alt+B</span>
           </CommandItem>
           <CommandItem 
             onSelect={() => {
@@ -256,6 +283,7 @@ export function CommandPalette() {
           >
             <FileText className="mr-2 h-4 w-4" />
             <span>Upload Document</span>
+            <span className="ml-auto text-xs text-muted-foreground">Alt+D</span>
           </CommandItem>
           <CommandItem 
             onSelect={() => {
@@ -266,6 +294,7 @@ export function CommandPalette() {
           >
             <CalendarPlus className="mr-2 h-4 w-4" />
             <span>Add Follow-up</span>
+            <span className="ml-auto text-xs text-muted-foreground">Alt+F</span>
           </CommandItem>
         </CommandGroup>
 
