@@ -583,7 +583,8 @@ const DemoSection = () => {
     }
   };
 
-  const tourSteps = [
+  // Default tour steps (fallback)
+  const defaultTourSteps = [
     {
       icon: Users,
       title: 'Patient Registration',
@@ -825,7 +826,7 @@ const DemoSection = () => {
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           {/* Tour Steps */}
           <div className="space-y-4">
-            {tourSteps.map((step, index) => (
+            {defaultTourSteps.map((step, index) => (
               <button
                 key={index}
                 onClick={() => setTourStep(index)}
@@ -871,23 +872,23 @@ const DemoSection = () => {
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">
                     {(() => {
-                      const StepIcon = tourSteps[tourStep].icon;
+                      const StepIcon = defaultTourSteps[tourStep].icon;
                       return <StepIcon className="h-5 w-5 text-primary" />;
                     })()}
                   </div>
-                  <span className="font-semibold text-foreground">{tourSteps[tourStep].title}</span>
+                  <span className="font-semibold text-foreground">{defaultTourSteps[tourStep].title}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">Step {tourStep + 1} of {tourSteps.length}</span>
+                <span className="text-xs text-muted-foreground">Step {tourStep + 1} of {defaultTourSteps.length}</span>
               </div>
               
               {/* Dynamic Mockup */}
               <div className="min-h-[200px]">
-                {renderMockup(tourSteps[tourStep].mockup)}
+                {renderMockup(defaultTourSteps[tourStep].mockup)}
               </div>
 
               {/* Navigation Dots */}
               <div className="flex justify-center gap-2 mt-6">
-                {tourSteps.map((_, index) => (
+                {defaultTourSteps.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setTourStep(index)}
@@ -923,9 +924,6 @@ const DemoSection = () => {
 
 const Index = () => {
   const [scrollY, setScrollY] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Dynamic content state
   const [heroContent, setHeroContent] = useState<HeroContent | null>(null);
   const [stats, setStats] = useState<StatItem[]>([]);
   const [features, setFeatures] = useState<FeatureItem[]>([]);
@@ -935,7 +933,8 @@ const Index = () => {
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
   const [sectionContent, setSectionContent] = useState<SectionContent>({});
   const [benefits, setBenefits] = useState<BenefitItem[]>([]);
-  const [ctaContent, setCtaContent] = useState<CtaContent | null>(null);
+  const [tourSteps, setTourSteps] = useState<TourStepItem[]>([]);
+  const [ctaContent, setCtaContent] = useState<Record<string, CtaContent>>({});
   const [footerContent, setFooterContent] = useState<FooterContent | null>(null);
 
   useEffect(() => {
@@ -944,55 +943,68 @@ const Index = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Fetch all landing page content
   useEffect(() => {
     const fetchLandingContent = async () => {
-      try {
-        // Fetch new tables
-        const [sectionsRes, benefitsRes, ctaRes, footerRes] = await Promise.all([
-          supabase.from('landing_sections').select('section_key, content').eq('is_active', true),
-          supabase.from('landing_benefits').select('id, benefit_text').eq('is_active', true).order('display_order'),
-          supabase.from('landing_cta').select('*').eq('section_key', 'final_cta').eq('is_active', true).single(),
-          supabase.from('landing_footer').select('*').eq('is_active', true).single()
-        ]);
-        
-        if (sectionsRes.data) {
-          const contentMap: SectionContent = {};
-          sectionsRes.data.forEach((s: any) => { contentMap[s.section_key] = s.content; });
-          setSectionContent(contentMap);
-        }
-        if (benefitsRes.data) setBenefits(benefitsRes.data);
-        if (ctaRes.data) setCtaContent(ctaRes.data);
-        if (footerRes.data) setFooterContent({
-          ...footerRes.data,
-          nav_links: Array.isArray(footerRes.data.nav_links) ? footerRes.data.nav_links as Array<{ label: string; href: string }> : []
-        });
-        const [heroRes, statsRes, featuresRes, stepsRes, pricingRes, faqsRes, testimonialsRes] = await Promise.all([
-          supabase.from('landing_hero').select('*').eq('is_active', true).single(),
-          supabase.from('landing_stats').select('*').eq('is_active', true).order('display_order'),
-          supabase.from('landing_features').select('*').eq('is_active', true).order('display_order'),
-          supabase.from('landing_steps').select('*').eq('is_active', true).order('step_number'),
-          supabase.from('landing_pricing').select('*').eq('is_active', true).order('display_order'),
-          supabase.from('landing_faqs').select('*').eq('is_active', true).order('display_order'),
-          supabase.from('landing_testimonials').select('*').eq('is_active', true).order('display_order'),
-        ]);
+      const [
+        heroResult,
+        statsResult,
+        featuresResult,
+        stepsResult,
+        pricingResult,
+        faqsResult,
+        testimonialsResult,
+        sectionsResult,
+        benefitsResult,
+        tourStepsResult,
+        ctaResult,
+        footerResult
+      ] = await Promise.all([
+        supabase.from('landing_hero').select('*').eq('is_active', true).limit(1).single(),
+        supabase.from('landing_stats').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('landing_features').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('landing_steps').select('*').eq('is_active', true).order('step_number'),
+        supabase.from('landing_pricing').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('landing_faqs').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('landing_testimonials').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('landing_sections').select('*').eq('is_active', true),
+        supabase.from('landing_benefits').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('landing_tour_steps').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('landing_cta').select('*').eq('is_active', true),
+        supabase.from('landing_footer').select('*').eq('is_active', true).limit(1).single()
+      ]);
 
-        if (heroRes.data) setHeroContent(heroRes.data);
-        if (statsRes.data) setStats(statsRes.data);
-        if (featuresRes.data) setFeatures(featuresRes.data);
-        if (stepsRes.data) setSteps(stepsRes.data);
-        if (pricingRes.data) {
-          setPricingPlans(pricingRes.data.map((p: any) => ({
-            ...p,
-            features: Array.isArray(p.features) ? p.features : []
-          })));
-        }
-        if (faqsRes.data) setFaqs(faqsRes.data);
-        if (testimonialsRes.data) setTestimonials(testimonialsRes.data);
-      } catch (error) {
-        console.error('Error fetching landing content:', error);
-      } finally {
-        setIsLoading(false);
+      if (heroResult.data) setHeroContent(heroResult.data);
+      if (statsResult.data) setStats(statsResult.data);
+      if (featuresResult.data) setFeatures(featuresResult.data);
+      if (stepsResult.data) setSteps(stepsResult.data);
+      if (pricingResult.data) {
+        setPricingPlans(pricingResult.data.map(p => ({
+          ...p,
+          features: Array.isArray(p.features) ? p.features as string[] : []
+        })));
+      }
+      if (faqsResult.data) setFaqs(faqsResult.data);
+      if (testimonialsResult.data) setTestimonials(testimonialsResult.data);
+      if (sectionsResult.data) {
+        const sections: SectionContent = {};
+        sectionsResult.data.forEach(s => { sections[s.section_key] = s.content; });
+        setSectionContent(sections);
+      }
+      if (benefitsResult.data) setBenefits(benefitsResult.data);
+      if (tourStepsResult.data) setTourSteps(tourStepsResult.data);
+      if (ctaResult.data) {
+        const ctas: Record<string, CtaContent> = {};
+        ctaResult.data.forEach(c => { ctas[c.section_key] = c; });
+        setCtaContent(ctas);
+      }
+      if (footerResult.data) {
+        setFooterContent({
+          brand_name: footerResult.data.brand_name,
+          copyright_text: footerResult.data.copyright_text,
+          nav_links: Array.isArray(footerResult.data.nav_links) 
+            ? (footerResult.data.nav_links as Array<{ label: string; href: string }>)
+            : []
+        });
       }
     };
 
@@ -1189,27 +1201,29 @@ const Index = () => {
             <AnimatedSection animation="fade-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
                 <HeartHandshake className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-foreground">Why Choose Us</span>
+                <span className="text-sm font-medium text-foreground">
+                  {sectionContent?.benefits_badge || 'Why Choose Us'}
+                </span>
               </div>
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
-                Built for Modern
-                <span className="gradient-text"> Laboratories</span>
+                {sectionContent?.benefits_title || 'Built for Modern'}
+                <span className="gradient-text"> {sectionContent?.benefits_title_highlight || 'Laboratories'}</span>
               </h2>
               <p className="text-xl text-muted-foreground mb-8">
-                We understand the unique challenges of running a diagnostic lab. Our solution is crafted to address every pain point.
+                {sectionContent?.benefits_subtitle || 'We understand the unique challenges of running a diagnostic lab. Our solution is crafted to address every pain point.'}
               </p>
               
               <div className="space-y-4">
-                {[
-                  'HIPAA-compliant security with role-based access',
-                  'Multi-branch support with centralized management',
-                  'Real-time analytics and AI-powered insights',
-                  'Professional billing with GST and ledger tracking',
-                  'PWA support — works offline, installs like an app'
-                ].map((benefit, index) => (
-                  <div key={index} className="flex items-start gap-3 scroll-animate visible" style={{ transitionDelay: `${index * 100}ms` }}>
+                {(benefits.length > 0 ? benefits : [
+                  { id: '1', benefit_text: 'HIPAA-compliant security with role-based access' },
+                  { id: '2', benefit_text: 'Multi-branch support with centralized management' },
+                  { id: '3', benefit_text: 'Real-time analytics and AI-powered insights' },
+                  { id: '4', benefit_text: 'Professional billing with GST and ledger tracking' },
+                  { id: '5', benefit_text: 'PWA support — works offline, installs like an app' }
+                ]).map((benefit, index) => (
+                  <div key={benefit.id} className="flex items-start gap-3 scroll-animate visible" style={{ transitionDelay: `${index * 100}ms` }}>
                     <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-foreground">{benefit}</span>
+                    <span className="text-foreground">{benefit.benefit_text}</span>
                   </div>
                 ))}
               </div>
@@ -1471,23 +1485,23 @@ const Index = () => {
             
             <div className="relative z-10">
               <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-                Ready to Transform Your Lab?
+                {ctaContent?.final_cta?.title || 'Ready to Transform Your Lab?'}
               </h2>
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Join hundreds of laboratories already using Lab Master to streamline their operations.
+                {ctaContent?.final_cta?.subtitle || 'Join hundreds of laboratories already using Lab Master to streamline their operations.'}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" className="text-lg px-10 py-6 animated-border">
-                  <Link to="/auth" className="flex items-center gap-2">
-                    Start Free Trial
+                  <Link to={ctaContent?.final_cta?.button_url || '/auth'} className="flex items-center gap-2">
+                    {ctaContent?.final_cta?.button_text || 'Start Free Trial'}
                     <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
               </div>
               
               <p className="mt-6 text-sm text-muted-foreground">
-                No credit card required • Free 14-day trial • Cancel anytime
+                {ctaContent?.final_cta?.footer_text || 'No credit card required • Free 14-day trial • Cancel anytime'}
               </p>
             </div>
           </div>
@@ -1502,18 +1516,35 @@ const Index = () => {
               <div className="p-2 rounded-xl bg-primary/10">
                 <TestTube className="h-6 w-6 text-primary" />
               </div>
-              <span className="text-xl font-bold text-foreground">Lab Master</span>
+              <span className="text-xl font-bold text-foreground">
+                {footerContent?.brand_name || 'Lab Master'}
+              </span>
             </div>
             
             <div className="flex items-center gap-8 text-sm text-muted-foreground">
-              <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-              <Link to="/auth" className="hover:text-foreground transition-colors">Login</Link>
-              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
+              {(footerContent?.nav_links && footerContent.nav_links.length > 0 
+                ? footerContent.nav_links 
+                : [
+                    { label: 'Features', href: '#features' },
+                    { label: 'Login', href: '/auth' },
+                    { label: 'Privacy', href: '#' },
+                    { label: 'Terms', href: '#' }
+                  ]
+              ).map((link, index) => (
+                link.href.startsWith('/') || link.href.startsWith('http') ? (
+                  <Link key={index} to={link.href} className="hover:text-foreground transition-colors">
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a key={index} href={link.href} className="hover:text-foreground transition-colors">
+                    {link.label}
+                  </a>
+                )
+              ))}
             </div>
             
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Lab Master. All rights reserved.
+              {footerContent?.copyright_text || `© ${new Date().getFullYear()} Lab Master. All rights reserved.`}
             </p>
           </div>
         </div>
