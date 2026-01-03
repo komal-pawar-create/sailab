@@ -59,6 +59,9 @@ export function ReportFilters({
   const { profile } = useAuth();
   const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
 
+  // Check if user is admin/lab_admin - only they can see all branches
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin' || profile?.role === 'super_admin';
+
   useEffect(() => {
     const fetchBranches = async () => {
       if (!profile?.lab_id) return;
@@ -72,16 +75,24 @@ export function ReportFilters({
     fetchBranches();
   }, [profile?.lab_id]);
 
+  // Auto-set branch for non-admin users
+  useEffect(() => {
+    if (!isAdmin && profile?.branch_id && filters.branch === 'all') {
+      onFiltersChange({ ...filters, branch: profile.branch_id });
+    }
+  }, [isAdmin, profile?.branch_id]);
+
   const handlePresetClick = (preset: typeof datePresets[0]) => {
     const { from, to } = preset.getValue();
     onFiltersChange({ ...filters, dateFrom: from, dateTo: to });
   };
 
   const handleReset = () => {
+    const defaultBranch = isAdmin ? 'all' : (profile?.branch_id || 'all');
     onFiltersChange({
       dateFrom: subDays(new Date(), 29),
       dateTo: new Date(),
-      branch: 'all',
+      branch: defaultBranch,
       status: 'all',
       search: '',
     });
@@ -162,8 +173,8 @@ export function ReportFilters({
           </Popover>
         </div>
 
-        {/* Branch Filter */}
-        {branches.length > 0 && (
+        {/* Branch Filter - Only show for admins */}
+        {isAdmin && branches.length > 0 && (
           <div className="space-y-2">
             <Label className="text-xs">Branch</Label>
             <Select

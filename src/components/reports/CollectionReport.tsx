@@ -52,6 +52,9 @@ export function CollectionReport() {
     search: '',
   });
 
+  // Check if user is admin/lab_admin
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin' || profile?.role === 'super_admin';
+
   const fetchData = async () => {
     if (!profile?.lab_id) return;
     setLoading(true);
@@ -66,7 +69,7 @@ export function CollectionReport() {
         bills!fk_bill_payments_bill(bill_number, patients!bills_patient_id_fkey(full_name)),
         branches!fk_bill_payments_branch(name)
       `)
-      .order('payment_date', { ascending: false });
+      .order('payment_date', { ascending: true }); // Ascending for chronological order
 
     if (filters.dateFrom) {
       query = query.gte('payment_date', format(filters.dateFrom, 'yyyy-MM-dd'));
@@ -74,9 +77,14 @@ export function CollectionReport() {
     if (filters.dateTo) {
       query = query.lte('payment_date', format(filters.dateTo, 'yyyy-MM-dd'));
     }
-    if (filters.branch && filters.branch !== 'all') {
+    
+    // Branch isolation - operators can only see their branch
+    if (!isAdmin && profile?.branch_id) {
+      query = query.eq('branch_id', profile.branch_id);
+    } else if (filters.branch && filters.branch !== 'all') {
       query = query.eq('branch_id', filters.branch);
     }
+    
     if (filters.status && filters.status !== 'all') {
       query = query.eq('payment_method', filters.status);
     }
@@ -118,6 +126,13 @@ export function CollectionReport() {
   useEffect(() => {
     fetchData();
   }, [profile?.lab_id]);
+
+  // Auto-apply branch filter for non-admins
+  useEffect(() => {
+    if (!isAdmin && profile?.branch_id && filters.branch === 'all') {
+      setFilters(prev => ({ ...prev, branch: profile.branch_id! }));
+    }
+  }, [isAdmin, profile?.branch_id]);
 
   const getMethodBadge = (method: string) => {
     const colors: Record<string, string> = {

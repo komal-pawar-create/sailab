@@ -37,9 +37,17 @@ export function DoctorReferralReport() {
     search: '',
   });
 
+  // Check if user is admin/lab_admin
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin' || profile?.role === 'super_admin';
+
   const fetchData = async () => {
     if (!profile?.lab_id) return;
     setLoading(true);
+
+    // Determine branch filter
+    const branchFilter = !isAdmin && profile?.branch_id 
+      ? profile.branch_id 
+      : (filters.branch !== 'all' ? filters.branch : null);
 
     // Fetch patients with referrals
     let patientsQuery = supabase
@@ -54,8 +62,8 @@ export function DoctorReferralReport() {
     if (filters.dateTo) {
       patientsQuery = patientsQuery.lte('created_at', format(filters.dateTo, 'yyyy-MM-dd') + 'T23:59:59');
     }
-    if (filters.branch && filters.branch !== 'all') {
-      patientsQuery = patientsQuery.eq('branch_id', filters.branch);
+    if (branchFilter) {
+      patientsQuery = patientsQuery.eq('branch_id', branchFilter);
     }
 
     const { data: patients, error: patientsError } = await patientsQuery;
@@ -130,6 +138,13 @@ export function DoctorReferralReport() {
   useEffect(() => {
     fetchData();
   }, [profile?.lab_id]);
+
+  // Auto-apply branch filter for non-admins
+  useEffect(() => {
+    if (!isAdmin && profile?.branch_id && filters.branch === 'all') {
+      setFilters(prev => ({ ...prev, branch: profile.branch_id! }));
+    }
+  }, [isAdmin, profile?.branch_id]);
 
   const handleExportExcel = () => {
     const exportData = data.map((d) => ({
