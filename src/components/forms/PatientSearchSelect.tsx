@@ -20,6 +20,7 @@ interface Patient {
   id: string;
   full_name: string;
   patient_id: string;
+  phone?: string;
 }
 
 interface PatientSearchSelectProps {
@@ -47,11 +48,12 @@ export function PatientSearchSelect({
   const selectedPatient = patients.find((p) => p.id === selectedPatientId);
   const isAnonymous = selectedPatientId === "anonymous";
 
-  // Filter patients based on search (by name or patient_id)
+  // Filter patients based on search (by name, patient_id, or phone)
   const filteredPatients = patients.filter(
     (patient) =>
       patient.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      patient.patient_id.toLowerCase().includes(search.toLowerCase())
+      patient.patient_id.toLowerCase().includes(search.toLowerCase()) ||
+      (patient.phone && patient.phone.includes(search))
   );
 
   const displayValue = isAnonymous
@@ -79,7 +81,7 @@ export function PatientSearchSelect({
       <PopoverContent className="w-full min-w-[300px] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder="Search by name or ID..."
+            placeholder="Search by name, ID or phone..."
             value={search}
             onValueChange={setSearch}
           />
