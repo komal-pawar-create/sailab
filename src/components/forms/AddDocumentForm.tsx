@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Plus } from 'lucide-react';
 import { OperatorSelect } from './OperatorSelect';
 import { DocUploadWithLetterhead } from '@/components/ui/doc-upload-with-letterhead';
+import { PatientSearchSelect } from './PatientSearchSelect';
 
 interface Patient {
   id: string;
@@ -62,7 +62,7 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
       let query = supabase
         .from('patients')
         .select('id, full_name, patient_id')
-        .order('full_name');
+        .order('created_at', { ascending: false });
 
       if (targetBranchId) {
         query = query.eq('branch_id', targetBranchId);
@@ -222,18 +222,12 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
           
           <div className="space-y-2">
             <Label htmlFor="patient_id">Patient</Label>
-            <Select value={selectedPatient} onValueChange={setSelectedPatient}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select patient" />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.full_name} ({patient.patient_id})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <PatientSearchSelect
+              patients={patients}
+              selectedPatientId={selectedPatient}
+              onPatientSelect={setSelectedPatient}
+              placeholder="Search and select patient"
+            />
           </div>
           
           <DocUploadWithLetterhead

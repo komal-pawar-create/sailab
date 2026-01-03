@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { CapitalizedInput } from '@/components/ui/capitalized-input';
 import { CapitalizedTextarea } from '@/components/ui/capitalized-textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { PatientSearchSelect } from './PatientSearchSelect';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -89,7 +89,7 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
       let query = supabase
         .from('patients')
         .select('id, full_name, patient_id')
-        .order('full_name');
+        .order('created_at', { ascending: false });
 
       // Filter by branch if available
       if (targetBranchId) {
@@ -300,20 +300,12 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="patient_id">Patient</Label>
-                <Select value={formData.patient_id} onValueChange={(value) => setFormData({ ...formData, patient_id: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select patient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patients
-                      .filter(patient => patient.id && patient.id.trim() !== '')
-                      .map((patient) => (
-                        <SelectItem key={patient.id} value={patient.id}>
-                          {patient.full_name} ({patient.patient_id})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                <PatientSearchSelect
+                  patients={patients}
+                  selectedPatientId={formData.patient_id}
+                  onPatientSelect={(value) => setFormData({ ...formData, patient_id: value })}
+                  placeholder="Search and select patient"
+                />
               </div>
               
               <div className="space-y-2">

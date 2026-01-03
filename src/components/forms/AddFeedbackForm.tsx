@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, Star } from 'lucide-react';
 import { OperatorSelect } from './OperatorSelect';
+import { PatientSearchSelect } from './PatientSearchSelect';
 
 interface Patient {
   id: string;
@@ -62,7 +62,7 @@ export const AddFeedbackForm = ({ onFeedbackAdded }: AddFeedbackFormProps) => {
       let query = supabase
         .from('patients')
         .select('id, full_name, patient_id')
-        .order('full_name');
+        .order('created_at', { ascending: false });
 
       if (targetBranchId) {
         query = query.eq('branch_id', targetBranchId);
@@ -142,21 +142,13 @@ export const AddFeedbackForm = ({ onFeedbackAdded }: AddFeedbackFormProps) => {
           
           <div className="space-y-2">
             <Label htmlFor="patient_id">Patient (Optional)</Label>
-            <Select value={formData.patient_id} onValueChange={(value) => setFormData({ ...formData, patient_id: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select patient (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="anonymous">Anonymous</SelectItem>
-                {patients
-                  .filter((patient) => patient.id && patient.id.trim() !== '')
-                  .map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      {patient.full_name} ({patient.patient_id})
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            <PatientSearchSelect
+              patients={patients}
+              selectedPatientId={formData.patient_id}
+              onPatientSelect={(value) => setFormData({ ...formData, patient_id: value })}
+              placeholder="Search patient (optional)"
+              showAnonymous
+            />
           </div>
           
           <div className="space-y-2">

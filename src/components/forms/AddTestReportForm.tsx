@@ -13,6 +13,7 @@ import { JpgUpload } from '@/components/ui/jpg-upload';
 import { DocUpload } from '@/components/ui/doc-upload';
 import { OperatorSelect } from './OperatorSelect';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PatientSearchSelect } from './PatientSearchSelect';
 
 interface Patient {
   id: string;
@@ -77,7 +78,7 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
       let query = supabase
         .from('patients')
         .select('id, full_name, patient_id')
-        .order('full_name');
+        .order('created_at', { ascending: false });
 
       if (targetBranchId) {
         query = query.eq('branch_id', targetBranchId);
@@ -267,23 +268,14 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
             
             <div className="space-y-2">
               <Label htmlFor="patient_id">Patient *</Label>
-              <Select 
-                name="patient_id" 
-                required 
-                onValueChange={handlePatientSelect}
-                value={selectedPatient?.id || undefined}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select patient" />
-                </SelectTrigger>
-                <SelectContent>
-                  {patients.map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      {patient.full_name} ({patient.patient_id})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <PatientSearchSelect
+                patients={patients}
+                selectedPatientId={selectedPatient?.id || ''}
+                onPatientSelect={handlePatientSelect}
+                placeholder="Search and select patient"
+                required
+              />
+              <input type="hidden" name="patient_id" value={selectedPatient?.id || ''} />
             </div>
 
             <div className="space-y-2">
