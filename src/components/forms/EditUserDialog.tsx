@@ -272,14 +272,20 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
         throw new Error('Could not find user');
       }
 
-      // Use admin API to update password
-      const { error } = await supabase.auth.admin.updateUserById(
-        profileData.user_id,
-        { password: newPassword }
-      );
+      // Call Edge Function to update password (requires service role key)
+      const { data, error } = await supabase.functions.invoke('admin-update-password', {
+        body: {
+          targetUserId: profileData.user_id,
+          newPassword: newPassword
+        }
+      });
 
       if (error) {
         throw error;
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       toast({
