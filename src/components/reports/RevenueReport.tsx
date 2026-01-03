@@ -7,7 +7,7 @@ import { ExportButtons } from './ExportButtons';
 import { exportToExcel, exportToPDF, printReport, formatCurrency, ExportColumn } from '@/lib/exportUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { format, subDays, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { TrendingUp } from 'lucide-react';
 
 interface RevenueRow {
@@ -39,9 +39,17 @@ export function RevenueReport() {
     search: '',
   });
 
+  // Check if user is admin/lab_admin
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin' || profile?.role === 'super_admin';
+
   const fetchData = async () => {
     if (!profile?.lab_id || !filters.dateFrom || !filters.dateTo) return;
     setLoading(true);
+
+    // Determine branch filter
+    const branchFilter = !isAdmin && profile?.branch_id 
+      ? profile.branch_id 
+      : (filters.branch !== 'all' ? filters.branch : null);
 
     // Fetch bills
     let billsQuery = supabase
@@ -51,8 +59,8 @@ export function RevenueReport() {
       .gte('bill_date', format(filters.dateFrom, 'yyyy-MM-dd'))
       .lte('bill_date', format(filters.dateTo, 'yyyy-MM-dd'));
 
-    if (filters.branch && filters.branch !== 'all') {
-      billsQuery = billsQuery.eq('branch_id', filters.branch);
+    if (branchFilter) {
+      billsQuery = billsQuery.eq('branch_id', branchFilter);
     }
 
     // Fetch payments
@@ -62,8 +70,8 @@ export function RevenueReport() {
       .gte('payment_date', format(filters.dateFrom, 'yyyy-MM-dd'))
       .lte('payment_date', format(filters.dateTo, 'yyyy-MM-dd'));
 
-    if (filters.branch && filters.branch !== 'all') {
-      paymentsQuery = paymentsQuery.eq('branch_id', filters.branch);
+    if (branchFilter) {
+      paymentsQuery = paymentsQuery.eq('branch_id', branchFilter);
     }
 
     const [billsResult, paymentsResult] = await Promise.all([billsQuery, paymentsQuery]);
@@ -103,7 +111,11 @@ export function RevenueReport() {
         }
       });
 
-      const processedData = Object.values(revenueByDate).reverse();
+      // Sort by date ascending (chronological order)
+      const processedData = Object.entries(revenueByDate)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([, value]) => value);
+        
       setData(processedData);
       setTotals({
         revenue: processedData.reduce((sum, r) => sum + r.total_revenue, 0),
@@ -118,6 +130,13 @@ export function RevenueReport() {
   useEffect(() => {
     fetchData();
   }, [profile?.lab_id]);
+
+  // Auto-apply branch filter for non-admins
+  useEffect(() => {
+    if (!isAdmin && profile?.branch_id && filters.branch === 'all') {
+      setFilters(prev => ({ ...prev, branch: profile.branch_id! }));
+    }
+  }, [isAdmin, profile?.branch_id]);
 
   const handleExportExcel = () => {
     const exportData = data.map((r) => ({

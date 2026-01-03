@@ -34,86 +34,58 @@ export function DailyActivityReport() {
     search: '',
   });
 
+  // Check if user is admin/lab_admin
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin' || profile?.role === 'super_admin';
+
   const fetchData = async () => {
     if (!profile?.lab_id || !filters.dateFrom) return;
     setLoading(true);
 
     const dateStr = format(filters.dateFrom, 'yyyy-MM-dd');
-    const branchFilter = filters.branch !== 'all' ? filters.branch : null;
+    
+    // Determine branch filter
+    const branchFilter = !isAdmin && profile?.branch_id 
+      ? profile.branch_id 
+      : (filters.branch !== 'all' ? filters.branch : null);
 
-    // Parallel queries
+    // Build queries with branch filter
+    let patientsQuery = supabase
+      .from('patients')
+      .select('id', { count: 'exact' })
+      .eq('lab_id', profile.lab_id)
+      .gte('created_at', dateStr)
+      .lte('created_at', dateStr + 'T23:59:59');
+
+    let billsQuery = supabase
+      .from('bills')
+      .select('total_amount')
+      .eq('lab_id', profile.lab_id)
+      .eq('bill_date', dateStr);
+
+    let testsQuery = supabase
+      .from('test_reports')
+      .select('id', { count: 'exact' })
+      .eq('lab_id', profile.lab_id)
+      .eq('test_date', dateStr);
+
+    let paymentsQuery = supabase
+      .from('bill_payments')
+      .select('payment_amount')
+      .eq('payment_date', dateStr);
+
+    // Apply branch filter if needed
+    if (branchFilter) {
+      patientsQuery = patientsQuery.eq('branch_id', branchFilter);
+      billsQuery = billsQuery.eq('branch_id', branchFilter);
+      testsQuery = testsQuery.eq('branch_id', branchFilter);
+      paymentsQuery = paymentsQuery.eq('branch_id', branchFilter);
+    }
+
     const [patientsResult, billsResult, testsResult, paymentsResult] = await Promise.all([
-      // New patients
-      supabase
-        .from('patients')
-        .select('id', { count: 'exact' })
-        .eq('lab_id', profile.lab_id)
-        .gte('created_at', dateStr)
-        .lte('created_at', dateStr + 'T23:59:59')
-        .then((res) => {
-          if (branchFilter) {
-            return supabase
-              .from('patients')
-              .select('id', { count: 'exact' })
-              .eq('lab_id', profile.lab_id)
-              .eq('branch_id', branchFilter)
-              .gte('created_at', dateStr)
-              .lte('created_at', dateStr + 'T23:59:59');
-          }
-          return res;
-        }),
-
-      // Bills
-      supabase
-        .from('bills')
-        .select('total_amount')
-        .eq('lab_id', profile.lab_id)
-        .eq('bill_date', dateStr)
-        .then((res) => {
-          if (branchFilter && !res.error) {
-            return supabase
-              .from('bills')
-              .select('total_amount')
-              .eq('lab_id', profile.lab_id)
-              .eq('branch_id', branchFilter)
-              .eq('bill_date', dateStr);
-          }
-          return res;
-        }),
-
-      // Test reports
-      supabase
-        .from('test_reports')
-        .select('id', { count: 'exact' })
-        .eq('lab_id', profile.lab_id)
-        .eq('test_date', dateStr)
-        .then((res) => {
-          if (branchFilter && !res.error) {
-            return supabase
-              .from('test_reports')
-              .select('id', { count: 'exact' })
-              .eq('lab_id', profile.lab_id)
-              .eq('branch_id', branchFilter)
-              .eq('test_date', dateStr);
-          }
-          return res;
-        }),
-
-      // Payments
-      supabase
-        .from('bill_payments')
-        .select('payment_amount')
-        .eq('payment_date', dateStr)
-        .then((res) => {
-          if (branchFilter && !res.error) {
-            return supabase
-              .from('bill_payments')
-              .select('payment_amount')
-              .eq('branch_id', branchFilter)
-              .eq('payment_date', dateStr);
-          }
-          return res;
-        }),
+      patientsQuery,
+      billsQuery,
+      testsQuery,
+      paymentsQuery,
     ]);
 
     const billsTotal = billsResult.data?.reduce((sum: number, b: any) => sum + b.total_amount, 0) || 0;
@@ -132,6 +104,13 @@ export function DailyActivityReport() {
   useEffect(() => {
     fetchData();
   }, [profile?.lab_id]);
+
+  // Auto-apply branch filter for non-admins
+  useEffect(() => {
+    if (!isAdmin && profile?.branch_id && filters.branch === 'all') {
+      setFilters(prev => ({ ...prev, branch: profile.branch_id! }));
+    }
+  }, [isAdmin, profile?.branch_id]);
 
   const handleExportExcel = () => {
     const exportData = data.map((d) => ({

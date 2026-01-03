@@ -52,6 +52,9 @@ export function BillsReport() {
     search: '',
   });
 
+  // Check if user is admin/lab_admin
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin' || profile?.role === 'super_admin';
+
   const fetchData = async () => {
     if (!profile?.lab_id) return;
     setLoading(true);
@@ -69,7 +72,7 @@ export function BillsReport() {
         branches!fk_bills_branch(name)
       `)
       .eq('lab_id', profile.lab_id)
-      .order('bill_date', { ascending: false });
+      .order('bill_date', { ascending: true }); // Ascending for chronological order
 
     if (filters.dateFrom) {
       query = query.gte('bill_date', format(filters.dateFrom, 'yyyy-MM-dd'));
@@ -77,9 +80,14 @@ export function BillsReport() {
     if (filters.dateTo) {
       query = query.lte('bill_date', format(filters.dateTo, 'yyyy-MM-dd'));
     }
-    if (filters.branch && filters.branch !== 'all') {
+    
+    // Branch isolation - operators can only see their branch
+    if (!isAdmin && profile?.branch_id) {
+      query = query.eq('branch_id', profile.branch_id);
+    } else if (filters.branch && filters.branch !== 'all') {
       query = query.eq('branch_id', filters.branch);
     }
+    
     if (filters.status && filters.status !== 'all') {
       query = query.eq('status', filters.status);
     }
@@ -120,6 +128,13 @@ export function BillsReport() {
   useEffect(() => {
     fetchData();
   }, [profile?.lab_id]);
+
+  // Auto-apply branch filter for non-admins
+  useEffect(() => {
+    if (!isAdmin && profile?.branch_id && filters.branch === 'all') {
+      setFilters(prev => ({ ...prev, branch: profile.branch_id! }));
+    }
+  }, [isAdmin, profile?.branch_id]);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive'> = {
