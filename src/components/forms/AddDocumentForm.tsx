@@ -14,6 +14,7 @@ interface Patient {
   id: string;
   full_name: string;
   patient_id: string;
+  phone?: string;
 }
 
 interface AddDocumentFormProps {
@@ -61,7 +62,7 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
 
       let query = supabase
         .from('patients')
-        .select('id, full_name, patient_id')
+        .select('id, full_name, patient_id, phone')
         .order('created_at', { ascending: false });
 
       if (targetBranchId) {

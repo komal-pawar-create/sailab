@@ -16,6 +16,7 @@ interface Patient {
   id: string;
   full_name: string;
   patient_id: string;
+  phone?: string;
 }
 
 interface BillItem {
@@ -88,7 +89,7 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
 
       let query = supabase
         .from('patients')
-        .select('id, full_name, patient_id')
+        .select('id, full_name, patient_id, phone')
         .order('created_at', { ascending: false });
 
       // Filter by branch if available
