@@ -60,7 +60,7 @@ const Dashboard = () => {
   const [feedback, setFeedback] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [totalCollected, setTotalCollected] = useState(0);
-  const [stats, setStats] = useState({ patients: 0, tests: 0, documents: 0, bills: 0, revenue: 0, pending: 0 });
+  const [stats, setStats] = useState({ patients: 0, tests: 0, documents: 0, bills: 0, jpegImages: 0, pending: 0 });
 
   useFollowupReminders();
 
@@ -291,29 +291,32 @@ const Dashboard = () => {
     let pQuery = supabase.from('patients').select('id', { count: 'exact', head: true });
     let rQuery = supabase.from('test_reports').select('id', { count: 'exact', head: true });
     let dQuery = supabase.from('documents').select('id', { count: 'exact', head: true });
-    let bQuery = supabase.from('bills').select('total_amount, due_amount');
+    let bQuery = supabase.from('bills').select('due_amount');
+    let jpgQuery = supabase.from('documents').select('id', { count: 'exact', head: true }).eq('file_type', 'image/jpeg');
 
     if (branchFilter) {
       pQuery = pQuery.in('branch_id', branchFilter);
       rQuery = rQuery.in('branch_id', branchFilter);
       dQuery = dQuery.in('branch_id', branchFilter);
       bQuery = bQuery.in('branch_id', branchFilter);
+      jpgQuery = jpgQuery.in('branch_id', branchFilter);
     }
     if (dateFilter) {
       pQuery = applyDateFilter(pQuery, dateFilter, 'created_at');
       rQuery = applyDateFilter(rQuery, dateFilter, 'test_date');
       dQuery = applyDateFilter(dQuery, dateFilter, 'created_at');
       bQuery = applyDateFilter(bQuery, dateFilter, 'bill_date');
+      jpgQuery = applyDateFilter(jpgQuery, dateFilter, 'created_at');
     }
 
-    const [{ count: pCount }, { count: rCount }, { count: dCount }, { data: billsData }] = await Promise.all([pQuery, rQuery, dQuery, bQuery]);
+    const [{ count: pCount }, { count: rCount }, { count: dCount }, { data: billsData }, { count: jpgCount }] = await Promise.all([pQuery, rQuery, dQuery, bQuery, jpgQuery]);
     
     setStats({
       patients: pCount || 0,
       tests: rCount || 0,
       documents: dCount || 0,
       bills: billsData?.length || 0,
-      revenue: billsData?.reduce((sum, b) => sum + (b.total_amount || 0), 0) || 0,
+      jpegImages: jpgCount || 0,
       pending: billsData?.reduce((sum, b) => sum + (b.due_amount || 0), 0) || 0,
     });
   }, [profile, timePeriod, getBranchFilter]);
