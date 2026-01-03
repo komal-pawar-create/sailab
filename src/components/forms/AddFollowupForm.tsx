@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { PatientSearchSelect } from './PatientSearchSelect';
 
 interface Patient {
   id: string;
@@ -83,7 +84,7 @@ export function AddFollowupForm({ onFollowupAdded, preSelectedPatientId, trigger
       let query = supabase
         .from('patients')
         .select('id, full_name, patient_id')
-        .order('full_name');
+        .order('created_at', { ascending: false });
 
       // Filter by branch for non-admin users
       if (profile?.branch_id) {
@@ -212,22 +213,13 @@ export function AddFollowupForm({ onFollowupAdded, preSelectedPatientId, trigger
 
           <div>
             <Label htmlFor="patient">Patient *</Label>
-            <Select
-              value={formData.patient_id}
-              onValueChange={(value) => setFormData({ ...formData, patient_id: value })}
+            <PatientSearchSelect
+              patients={patients}
+              selectedPatientId={formData.patient_id}
+              onPatientSelect={(value) => setFormData({ ...formData, patient_id: value })}
+              placeholder="Search and select patient"
               required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select patient" />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.full_name} ({patient.patient_id})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           <div>
