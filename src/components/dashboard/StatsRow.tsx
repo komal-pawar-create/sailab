@@ -1,4 +1,4 @@
-import { Users, TestTube, FileText, Receipt, DollarSign, CreditCard } from "lucide-react";
+import { Users, TestTube, FileText, Receipt, FileImage, CreditCard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ interface StatsRowProps {
     tests: number;
     documents: number;
     bills: number;
-    revenue: number;
+    jpegImages: number;
     pending: number;
   };
 }
@@ -22,7 +22,7 @@ export function StatsRow({ stats }: StatsRowProps) {
     { label: "Test Reports", value: stats.tests, icon: TestTube, color: "text-green-500" },
     { label: "Documents", value: stats.documents, icon: FileText, color: "text-purple-500" },
     { label: "Total Bills", value: stats.bills, icon: Receipt, color: "text-orange-500" },
-    { label: "Total Revenue", value: `₹${stats.revenue.toLocaleString()}`, icon: DollarSign, color: "text-emerald-500" },
+    { label: "Total JPG Images", value: stats.jpegImages, icon: FileImage, color: "text-emerald-500" },
     { label: "Pending Amount", value: `₹${stats.pending.toLocaleString()}`, icon: CreditCard, color: "text-destructive", highlight: true, clickable: true },
   ];
 
