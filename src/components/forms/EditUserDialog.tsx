@@ -32,9 +32,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { KeyRound, ChevronDown, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, ChevronDown, Eye, EyeOff, Trash2, Loader2 } from 'lucide-react';
 
 interface User {
   id: string;
@@ -42,6 +43,7 @@ interface User {
   full_name: string;
   role: string;
   branch_id?: string;
+  is_active?: boolean;
 }
 
 interface EditUserDialogProps {
@@ -67,6 +69,7 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
   const [role, setRole] = useState<string>('');
   const [organizationId, setOrganizationId] = useState<string>('');
   const [branchId, setBranchId] = useState<string>('');
+  const [isActive, setIsActive] = useState(true);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,6 +79,8 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
   const [showPassword, setShowPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showPasswordConfirmDialog, setShowPasswordConfirmDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   // Load initial user data and reset password fields
@@ -84,6 +89,7 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
       setFullName(user.full_name);
       setRole(user.role);
       setBranchId(user.branch_id || '');
+      setIsActive(user.is_active !== false); // Default to true if not set
     }
     // Reset password fields when dialog opens/closes
     setNewPassword('');
@@ -169,6 +175,7 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
       const updateData: any = {
         full_name: fullName,
         role,
+        is_active: isActive,
         updated_at: new Date().toISOString(),
       };
 
@@ -333,9 +340,56 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
     }
   };
 
+  const handleDeleteUser = async () => {
+    if (!user) return;
+
+    setIsDeleting(true);
+
+    try {
+      // Get the user_id from the profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profileData) {
+        throw new Error('Could not find user profile');
+      }
+
+      // Delete the profile first (this will cascade due to RLS)
+      const { error: deleteError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      toast({
+        title: "User deleted",
+        description: `${user.full_name} has been removed from the system.`,
+      });
+
+      setShowDeleteConfirm(false);
+      onSuccess();
+      onClose();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete user",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
@@ -373,6 +427,21 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
                 <SelectItem value="operator_3">Operator 3</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Account Status Toggle */}
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="is-active">Account Status</Label>
+              <p className="text-sm text-muted-foreground">
+                {isActive ? 'User can log in and access the system' : 'User is disabled and cannot log in'}
+              </p>
+            </div>
+            <Switch
+              id="is-active"
+              checked={isActive}
+              onCheckedChange={setIsActive}
+            />
           </div>
 
           {needsOrganizationAssignment(role) && (
@@ -471,6 +540,23 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
               </Button>
             </CollapsibleContent>
           </Collapsible>
+
+          {/* Danger Zone */}
+          <div className="rounded-lg border border-destructive/50 p-3 space-y-2">
+            <h4 className="font-medium text-destructive">Danger Zone</h4>
+            <p className="text-sm text-muted-foreground">
+              Permanently delete this user account. This action cannot be undone.
+            </p>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isDeleting}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete User
+            </Button>
+          </div>
         </div>
 
         <DialogFooter>
@@ -497,6 +583,36 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleChangePassword}>
               Change Password
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <span className="font-semibold">{user?.full_name}</span> ({user?.email})?
+              This action cannot be undone and all user data will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete User'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
