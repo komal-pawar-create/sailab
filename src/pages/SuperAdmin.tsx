@@ -196,7 +196,12 @@ export default function SuperAdmin() {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-primary">Super Admin Dashboard</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-primary">Super Admin Dashboard</h1>
+              <Badge variant={profile?.role === 'super_admin' ? 'default' : 'secondary'} className="capitalize">
+                {profile?.role?.replace(/_/g, ' ')}
+              </Badge>
+            </div>
             <p className="text-sm text-muted-foreground">
               Welcome, {profile?.full_name || profile?.email}
             </p>
