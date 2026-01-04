@@ -122,7 +122,12 @@ export function PatientSearchSelect({
                       selectedPatientId === patient.id ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {patient.full_name} ({patient.patient_id})
+                  <div className="flex flex-col">
+                    <span>{patient.full_name} ({patient.patient_id})</span>
+                    {patient.phone && (
+                      <span className="text-xs text-muted-foreground">{patient.phone}</span>
+                    )}
+                  </div>
                 </CommandItem>
               ))}
             </CommandGroup>
