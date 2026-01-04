@@ -198,7 +198,13 @@ export default function SuperAdmin() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-primary">Super Admin Dashboard</h1>
-              <Badge variant={profile?.role === 'super_admin' ? 'default' : 'secondary'} className="capitalize">
+              <Badge 
+                variant={
+                  profile?.role === 'super_admin' ? 'success' : 
+                  profile?.role === 'lab_admin' ? 'info' : 'muted'
+                } 
+                className="capitalize"
+              >
                 {profile?.role?.replace(/_/g, ' ')}
               </Badge>
             </div>
