@@ -18,6 +18,35 @@ import { LandingPageManager } from '@/components/forms/LandingPageManager';
 import EditUserDialog from '@/components/forms/EditUserDialog';
 import EditBranchDialog from '@/components/forms/EditBranchDialog';
 import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+const rolePermissions: Record<string, string[]> = {
+  super_admin: [
+    'Full system access',
+    'Manage all organizations & labs',
+    'Create & manage users',
+    'Change user passwords',
+    'Access all branches',
+    'View audit logs',
+    'Manage landing page content',
+  ],
+  lab_admin: [
+    'Manage lab settings',
+    'Access all branches in lab',
+    'Create & manage operators',
+    'View lab-wide reports',
+    'Manage test types',
+  ],
+  branch_operator: [
+    'Access assigned branch only',
+    'Manage patients & bills',
+    'Upload documents',
+    'Create followups',
+  ],
+  operator_1: ['Branch-level access', 'Patient management', 'Billing operations'],
+  operator_2: ['Branch-level access', 'Patient management', 'Billing operations'],
+  operator_3: ['Branch-level access', 'Patient management', 'Billing operations'],
+};
 
 interface Organization {
   id: string;
@@ -198,15 +227,31 @@ export default function SuperAdmin() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-primary">Super Admin Dashboard</h1>
-              <Badge 
-                variant={
-                  profile?.role === 'super_admin' ? 'success' : 
-                  profile?.role === 'lab_admin' ? 'info' : 'muted'
-                } 
-                className="capitalize"
-              >
-                {profile?.role?.replace(/_/g, ' ')}
-              </Badge>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge 
+                      variant={
+                        profile?.role === 'super_admin' ? 'success' : 
+                        profile?.role === 'lab_admin' ? 'info' : 'muted'
+                      } 
+                      className="capitalize cursor-help"
+                    >
+                      {profile?.role?.replace(/_/g, ' ')}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <div className="space-y-1">
+                      <p className="font-semibold capitalize">{profile?.role?.replace(/_/g, ' ')} Permissions:</p>
+                      <ul className="text-xs space-y-0.5">
+                        {(rolePermissions[profile?.role || ''] || ['Standard access']).map((perm, idx) => (
+                          <li key={idx}>• {perm}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <p className="text-sm text-muted-foreground">
               Welcome, {profile?.full_name || profile?.email}
