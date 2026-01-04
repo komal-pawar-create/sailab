@@ -15,9 +15,12 @@ import { AddUserForm } from '@/components/forms/AddUserForm';
 import { AddTestTypeForm } from '@/components/forms/AddTestTypeForm';
 import { AddDemoVideoForm } from '@/components/forms/AddDemoVideoForm';
 import { LandingPageManager } from '@/components/forms/LandingPageManager';
+import { AddLabForm } from '@/components/forms/AddLabForm';
+import { EditLabDialog } from '@/components/forms/EditLabDialog';
+import { EditOrganizationDialog } from '@/components/forms/EditOrganizationDialog';
 import EditUserDialog from '@/components/forms/EditUserDialog';
 import EditBranchDialog from '@/components/forms/EditBranchDialog';
-import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout } from 'lucide-react';
+import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const rolePermissions: Record<string, string[]> = {
@@ -51,10 +54,38 @@ const rolePermissions: Record<string, string[]> = {
 interface Organization {
   id: string;
   name: string;
-  description: string;
-  contact_email: string;
-  contact_phone: string;
+  description: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
   created_at: string;
+}
+
+interface Lab {
+  id: string;
+  name: string;
+  initials: string;
+  organization_id: string | null;
+  location: string | null;
+  phone: string | null;
+  admin_mobile_number: string | null;
+  registration_number: string | null;
+  gst_number: string | null;
+  website: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  footer_text: string | null;
+  terms_conditions: string | null;
+  organization?: {
+    name: string;
+  };
 }
 
 interface Branch {
@@ -81,6 +112,7 @@ interface User {
   full_name: string;
   role: string;
   branch_id?: string;
+  is_active?: boolean;
   branch: {
     name: string;
     organization: {
@@ -106,6 +138,7 @@ export default function SuperAdmin() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [labs, setLabs] = useState<Lab[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [demoVideos, setDemoVideos] = useState<DemoVideo[]>([]);
@@ -114,6 +147,10 @@ export default function SuperAdmin() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
   const [isEditBranchDialogOpen, setIsEditBranchDialogOpen] = useState(false);
+  const [editingLab, setEditingLab] = useState<Lab | null>(null);
+  const [isEditLabDialogOpen, setIsEditLabDialogOpen] = useState(false);
+  const [editingOrganization, setEditingOrganization] = useState<Organization | null>(null);
+  const [isEditOrgDialogOpen, setIsEditOrgDialogOpen] = useState(false);
 
   useEffect(() => {
     // Allow both super_admin and lab_admin to access this page
@@ -129,8 +166,12 @@ export default function SuperAdmin() {
 
   const fetchData = async () => {
     try {
-      const [organizationsRes, branchesRes, usersRes, demoVideosRes] = await Promise.all([
+      const [organizationsRes, labsRes, branchesRes, usersRes, demoVideosRes] = await Promise.all([
         supabase.from('organizations').select('*').order('name'),
+        supabase.from('labs').select(`
+          *,
+          organization:organizations(name)
+        `).order('name'),
         supabase.from('branches').select(`
           *,
           organization:organizations(id, name),
@@ -147,6 +188,7 @@ export default function SuperAdmin() {
       ]);
 
       setOrganizations(organizationsRes.data || []);
+      setLabs(labsRes.data as Lab[] || []);
       setBranches(branchesRes.data as Branch[] || []);
       setUsers(usersRes.data || []);
       setDemoVideos(demoVideosRes.data || []);
@@ -298,7 +340,7 @@ export default function SuperAdmin() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -307,6 +349,17 @@ export default function SuperAdmin() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{organizations.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Labs
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{labs.length}</div>
             </CardContent>
           </Card>
 
@@ -329,6 +382,9 @@ export default function SuperAdmin() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{users.length}</div>
+              <p className="text-xs text-muted-foreground">
+                {users.filter(u => u.is_active !== false).length} active
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -336,6 +392,10 @@ export default function SuperAdmin() {
         <Tabs defaultValue="organizations" className="space-y-4">
           <TabsList className="flex flex-wrap">
             <TabsTrigger value="organizations">Organizations</TabsTrigger>
+            <TabsTrigger value="labs" className="flex items-center gap-1">
+              <Building2 className="h-4 w-4" />
+              Labs
+            </TabsTrigger>
             <TabsTrigger value="branches">Branches</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="test-types">Test Types</TabsTrigger>
@@ -365,6 +425,7 @@ export default function SuperAdmin() {
                       <TableHead>Contact Email</TableHead>
                       <TableHead>Contact Phone</TableHead>
                       <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -375,10 +436,81 @@ export default function SuperAdmin() {
                         <TableCell>{org.contact_email || '-'}</TableCell>
                         <TableCell>{org.contact_phone || '-'}</TableCell>
                         <TableCell>{new Date(org.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingOrganization(org);
+                              setIsEditOrgDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Labs Tab */}
+          <TabsContent value="labs" className="space-y-6">
+            <AddLabForm onSuccess={fetchData} />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Labs ({labs.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {labs.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">
+                    No labs yet. Add your first lab above.
+                  </p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Lab Name</TableHead>
+                        <TableHead>Initials</TableHead>
+                        <TableHead>Organization</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {labs.map((lab) => (
+                        <TableRow key={lab.id}>
+                          <TableCell className="font-medium">{lab.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{lab.initials}</Badge>
+                          </TableCell>
+                          <TableCell>{lab.organization?.name || '-'}</TableCell>
+                          <TableCell>{lab.location || lab.city || '-'}</TableCell>
+                          <TableCell>{lab.phone || '-'}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingLab(lab);
+                                setIsEditLabDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -440,6 +572,7 @@ export default function SuperAdmin() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Status</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
@@ -450,7 +583,23 @@ export default function SuperAdmin() {
                   </TableHeader>
                   <TableBody>
                     {users.map((user) => (
-                      <TableRow key={user.id}>
+                      <TableRow key={user.id} className={user.is_active === false ? 'opacity-60' : ''}>
+                        <TableCell>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                {user.is_active !== false ? (
+                                  <UserCheck className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <UserX className="h-4 w-4 text-destructive" />
+                                )}
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {user.is_active !== false ? 'Active' : 'Disabled'}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
                         <TableCell className="font-medium">{user.full_name}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
@@ -478,7 +627,7 @@ export default function SuperAdmin() {
                 </Table>
               </CardContent>
             </Card>
-        </TabsContent>
+          </TabsContent>
         
         <TabsContent value="test-types" className="space-y-4 overflow-auto">
           <AddTestTypeForm />
@@ -589,6 +738,26 @@ export default function SuperAdmin() {
         onClose={() => {
           setIsEditBranchDialogOpen(false);
           setEditingBranch(null);
+        }}
+        onSuccess={fetchData}
+      />
+
+      <EditLabDialog
+        lab={editingLab}
+        open={isEditLabDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditLabDialogOpen(open);
+          if (!open) setEditingLab(null);
+        }}
+        onSuccess={fetchData}
+      />
+
+      <EditOrganizationDialog
+        organization={editingOrganization}
+        open={isEditOrgDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditOrgDialogOpen(open);
+          if (!open) setEditingOrganization(null);
         }}
         onSuccess={fetchData}
       />
