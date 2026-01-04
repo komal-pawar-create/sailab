@@ -20,7 +20,7 @@ import { EditLabDialog } from '@/components/forms/EditLabDialog';
 import { EditOrganizationDialog } from '@/components/forms/EditOrganizationDialog';
 import EditUserDialog from '@/components/forms/EditUserDialog';
 import EditBranchDialog from '@/components/forms/EditBranchDialog';
-import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck } from 'lucide-react';
+import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const rolePermissions: Record<string, string[]> = {
@@ -83,6 +83,14 @@ interface Lab {
   postal_code: string | null;
   footer_text: string | null;
   terms_conditions: string | null;
+  // License fields
+  license_number: string | null;
+  license_type: string | null;
+  license_issue_date: string | null;
+  license_expiry_date: string | null;
+  license_status: string | null;
+  license_notes: string | null;
+  license_reminder_days: number | null;
   organization?: {
     name: string;
   };
@@ -241,6 +249,38 @@ export default function SuperAdmin() {
     }
   };
 
+  // License status helpers
+  const getLicenseStatus = (lab: Lab) => {
+    if (!lab.license_expiry_date) return null;
+    const expiry = new Date(lab.license_expiry_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysUntil = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return { daysUntil, expiry };
+  };
+
+  const getLicenseStatusBadge = (lab: Lab) => {
+    const status = getLicenseStatus(lab);
+    if (!status) return <span className="text-muted-foreground">No license</span>;
+    
+    const { daysUntil } = status;
+    if (daysUntil < 0) {
+      return <Badge variant="destructive" className="flex items-center gap-1 text-xs"><AlertTriangle className="h-3 w-3" /> Expired</Badge>;
+    } else if (daysUntil <= 7) {
+      return <Badge variant="destructive" className="flex items-center gap-1 text-xs"><AlertTriangle className="h-3 w-3" /> {daysUntil}d</Badge>;
+    } else if (daysUntil <= 30) {
+      return <Badge className="flex items-center gap-1 text-xs bg-amber-500 text-white"><Clock className="h-3 w-3" /> {daysUntil}d</Badge>;
+    } else {
+      return <Badge variant="success" className="flex items-center gap-1 text-xs"><CheckCircle className="h-3 w-3" /> Valid</Badge>;
+    }
+  };
+
+  // Count expiring licenses
+  const expiringLicensesCount = labs.filter(lab => {
+    const status = getLicenseStatus(lab);
+    return status && status.daysUntil <= 30;
+  }).length;
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
@@ -387,6 +427,23 @@ export default function SuperAdmin() {
               </p>
             </CardContent>
           </Card>
+
+          {expiringLicensesCount > 0 && (
+            <Card className="border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-amber-600" />
+                  License Alerts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-amber-600">{expiringLicensesCount}</div>
+                <p className="text-xs text-muted-foreground">
+                  Expiring within 30 days
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <Tabs defaultValue="organizations" className="space-y-4">
@@ -395,6 +452,9 @@ export default function SuperAdmin() {
             <TabsTrigger value="labs" className="flex items-center gap-1">
               <Building2 className="h-4 w-4" />
               Labs
+              {expiringLicensesCount > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 px-1.5">{expiringLicensesCount}</Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="branches">Branches</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
@@ -479,21 +539,36 @@ export default function SuperAdmin() {
                         <TableHead>Lab Name</TableHead>
                         <TableHead>Initials</TableHead>
                         <TableHead>Organization</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead>Phone</TableHead>
+                        <TableHead>License</TableHead>
+                        <TableHead>Expiry</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {labs.map((lab) => (
-                        <TableRow key={lab.id}>
+                      {labs.map((lab) => {
+                        const licenseStatus = getLicenseStatus(lab);
+                        return (
+                        <TableRow key={lab.id} className={licenseStatus && licenseStatus.daysUntil < 0 ? 'bg-destructive/5' : licenseStatus && licenseStatus.daysUntil <= 7 ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''}>
                           <TableCell className="font-medium">{lab.name}</TableCell>
                           <TableCell>
                             <Badge variant="secondary">{lab.initials}</Badge>
                           </TableCell>
                           <TableCell>{lab.organization?.name || '-'}</TableCell>
-                          <TableCell>{lab.location || lab.city || '-'}</TableCell>
-                          <TableCell>{lab.phone || '-'}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="text-sm">{lab.license_number || '-'}</span>
+                              {lab.license_type && (
+                                <span className="text-xs text-muted-foreground">{lab.license_type}</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {lab.license_expiry_date ? (
+                              <span className="text-sm">{new Date(lab.license_expiry_date).toLocaleDateString()}</span>
+                            ) : '-'}
+                          </TableCell>
+                          <TableCell>{getLicenseStatusBadge(lab)}</TableCell>
                           <TableCell>
                             <Button
                               variant="ghost"
@@ -507,7 +582,7 @@ export default function SuperAdmin() {
                             </Button>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      );})}
                     </TableBody>
                   </Table>
                 )}

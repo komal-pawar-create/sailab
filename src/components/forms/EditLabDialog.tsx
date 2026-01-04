@@ -4,6 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -21,9 +28,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, Shield, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 
 interface Lab {
   id: string;
@@ -43,6 +52,14 @@ interface Lab {
   website: string | null;
   footer_text: string | null;
   terms_conditions: string | null;
+  // License fields
+  license_number: string | null;
+  license_type: string | null;
+  license_issue_date: string | null;
+  license_expiry_date: string | null;
+  license_status: string | null;
+  license_notes: string | null;
+  license_reminder_days: number | null;
 }
 
 interface EditLabDialogProps {
@@ -72,8 +89,40 @@ export function EditLabDialog({ lab, open, onOpenChange, onSuccess }: EditLabDia
     website: '',
     footer_text: '',
     terms_conditions: '',
+    // License fields
+    license_number: '',
+    license_type: '',
+    license_issue_date: '',
+    license_expiry_date: '',
+    license_notes: '',
+    license_reminder_days: '30',
   });
   const { toast } = useToast();
+
+  // Calculate days until expiry
+  const getDaysUntilExpiry = () => {
+    if (!formData.license_expiry_date) return null;
+    const expiry = new Date(formData.license_expiry_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return diff;
+  };
+
+  const getLicenseStatusBadge = () => {
+    const days = getDaysUntilExpiry();
+    if (days === null) return null;
+    
+    if (days < 0) {
+      return <Badge variant="destructive" className="flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Expired ({Math.abs(days)} days ago)</Badge>;
+    } else if (days <= 7) {
+      return <Badge variant="destructive" className="flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Expires in {days} days</Badge>;
+    } else if (days <= 30) {
+      return <Badge className="flex items-center gap-1 bg-amber-500 text-white"><Clock className="h-3 w-3" /> Expires in {days} days</Badge>;
+    } else {
+      return <Badge variant="success" className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Valid ({days} days)</Badge>;
+    }
+  };
 
   useEffect(() => {
     if (lab) {
@@ -93,6 +142,12 @@ export function EditLabDialog({ lab, open, onOpenChange, onSuccess }: EditLabDia
         website: lab.website || '',
         footer_text: lab.footer_text || '',
         terms_conditions: lab.terms_conditions || '',
+        license_number: lab.license_number || '',
+        license_type: lab.license_type || '',
+        license_issue_date: lab.license_issue_date || '',
+        license_expiry_date: lab.license_expiry_date || '',
+        license_notes: lab.license_notes || '',
+        license_reminder_days: lab.license_reminder_days?.toString() || '30',
       });
     }
   }, [lab]);
@@ -111,6 +166,21 @@ export function EditLabDialog({ lab, open, onOpenChange, onSuccess }: EditLabDia
     }
 
     setIsLoading(true);
+
+    // Calculate license status
+    let licenseStatus = 'active';
+    if (formData.license_expiry_date) {
+      const expiry = new Date(formData.license_expiry_date);
+      const today = new Date();
+      const daysUntil = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const reminderDays = parseInt(formData.license_reminder_days) || 30;
+      
+      if (daysUntil < 0) {
+        licenseStatus = 'expired';
+      } else if (daysUntil <= reminderDays) {
+        licenseStatus = 'expiring_soon';
+      }
+    }
 
     try {
       const { error } = await supabase
@@ -131,6 +201,14 @@ export function EditLabDialog({ lab, open, onOpenChange, onSuccess }: EditLabDia
           website: formData.website.trim() || null,
           footer_text: formData.footer_text.trim() || null,
           terms_conditions: formData.terms_conditions.trim() || null,
+          // License fields
+          license_number: formData.license_number.trim() || null,
+          license_type: formData.license_type || null,
+          license_issue_date: formData.license_issue_date || null,
+          license_expiry_date: formData.license_expiry_date || null,
+          license_notes: formData.license_notes.trim() || null,
+          license_reminder_days: parseInt(formData.license_reminder_days) || 30,
+          license_status: licenseStatus,
           updated_at: new Date().toISOString(),
         })
         .eq('id', lab.id);
@@ -356,6 +434,91 @@ export function EditLabDialog({ lab, open, onOpenChange, onSuccess }: EditLabDia
                 onChange={(e) => handleChange('terms_conditions', e.target.value)}
                 rows={3}
               />
+            </div>
+
+            {/* License Information Section */}
+            <Separator className="my-4" />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-lg font-semibold">
+                  <Shield className="h-5 w-5 text-primary" />
+                  License Information
+                </div>
+                {getLicenseStatusBadge()}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-license-number">License Number</Label>
+                  <Input
+                    id="edit-license-number"
+                    value={formData.license_number}
+                    onChange={(e) => handleChange('license_number', e.target.value)}
+                    placeholder="e.g., NABL-12345"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-license-type">License Type</Label>
+                  <Select
+                    value={formData.license_type}
+                    onValueChange={(value) => handleChange('license_type', value)}
+                  >
+                    <SelectTrigger id="edit-license-type">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NABL">NABL</SelectItem>
+                      <SelectItem value="NABH">NABH</SelectItem>
+                      <SelectItem value="State License">State License</SelectItem>
+                      <SelectItem value="ISO Certification">ISO Certification</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-license-issue">Issue Date</Label>
+                  <Input
+                    id="edit-license-issue"
+                    type="date"
+                    value={formData.license_issue_date}
+                    onChange={(e) => handleChange('license_issue_date', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-license-expiry">Expiry Date</Label>
+                  <Input
+                    id="edit-license-expiry"
+                    type="date"
+                    value={formData.license_expiry_date}
+                    onChange={(e) => handleChange('license_expiry_date', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-reminder-days">Reminder Days</Label>
+                  <Input
+                    id="edit-reminder-days"
+                    type="number"
+                    value={formData.license_reminder_days}
+                    onChange={(e) => handleChange('license_reminder_days', e.target.value)}
+                    min="1"
+                    max="365"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-license-notes">License Notes</Label>
+                <Textarea
+                  id="edit-license-notes"
+                  value={formData.license_notes}
+                  onChange={(e) => handleChange('license_notes', e.target.value)}
+                  rows={2}
+                  placeholder="Additional notes about the license..."
+                />
+              </div>
             </div>
 
             <DialogFooter className="flex justify-between gap-2">

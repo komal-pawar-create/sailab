@@ -17,9 +17,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Building2 } from 'lucide-react';
+import { Loader2, Building2, Shield } from 'lucide-react';
 
 interface Organization {
   id: string;
@@ -50,6 +51,13 @@ export function AddLabForm({ onSuccess }: AddLabFormProps) {
     website: '',
     footer_text: '',
     terms_conditions: '',
+    // License fields
+    license_number: '',
+    license_type: '',
+    license_issue_date: '',
+    license_expiry_date: '',
+    license_notes: '',
+    license_reminder_days: '30',
   });
   const { toast } = useToast();
 
@@ -103,6 +111,15 @@ export function AddLabForm({ onSuccess }: AddLabFormProps) {
         website: formData.website.trim() || null,
         footer_text: formData.footer_text.trim() || null,
         terms_conditions: formData.terms_conditions.trim() || null,
+        // License fields
+        license_number: formData.license_number.trim() || null,
+        license_type: formData.license_type || null,
+        license_issue_date: formData.license_issue_date || null,
+        license_expiry_date: formData.license_expiry_date || null,
+        license_notes: formData.license_notes.trim() || null,
+        license_reminder_days: parseInt(formData.license_reminder_days) || 30,
+        license_status: formData.license_expiry_date ? 
+          (new Date(formData.license_expiry_date) < new Date() ? 'expired' : 'active') : 'active',
       });
 
       if (error) throw error;
@@ -129,6 +146,12 @@ export function AddLabForm({ onSuccess }: AddLabFormProps) {
         website: '',
         footer_text: '',
         terms_conditions: '',
+        license_number: '',
+        license_type: '',
+        license_issue_date: '',
+        license_expiry_date: '',
+        license_notes: '',
+        license_reminder_days: '30',
       });
 
       onSuccess?.();
@@ -332,6 +355,89 @@ export function AddLabForm({ onSuccess }: AddLabFormProps) {
               placeholder="Terms and conditions for bills/reports"
               rows={3}
             />
+          </div>
+
+          {/* License Information Section */}
+          <Separator className="my-6" />
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-lg font-semibold">
+              <Shield className="h-5 w-5 text-primary" />
+              License Information
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="license_number">License Number</Label>
+                <Input
+                  id="license_number"
+                  value={formData.license_number}
+                  onChange={(e) => handleChange('license_number', e.target.value)}
+                  placeholder="e.g., NABL-12345"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="license_type">License Type</Label>
+                <Select
+                  value={formData.license_type}
+                  onValueChange={(value) => handleChange('license_type', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NABL">NABL</SelectItem>
+                    <SelectItem value="NABH">NABH</SelectItem>
+                    <SelectItem value="State License">State License</SelectItem>
+                    <SelectItem value="ISO Certification">ISO Certification</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="license_reminder_days">Reminder Days Before Expiry</Label>
+                <Input
+                  id="license_reminder_days"
+                  type="number"
+                  value={formData.license_reminder_days}
+                  onChange={(e) => handleChange('license_reminder_days', e.target.value)}
+                  placeholder="30"
+                  min="1"
+                  max="365"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="license_issue_date">Issue Date</Label>
+                <Input
+                  id="license_issue_date"
+                  type="date"
+                  value={formData.license_issue_date}
+                  onChange={(e) => handleChange('license_issue_date', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="license_expiry_date">Expiry Date</Label>
+                <Input
+                  id="license_expiry_date"
+                  type="date"
+                  value={formData.license_expiry_date}
+                  onChange={(e) => handleChange('license_expiry_date', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="license_notes">License Notes</Label>
+              <Textarea
+                id="license_notes"
+                value={formData.license_notes}
+                onChange={(e) => handleChange('license_notes', e.target.value)}
+                placeholder="Additional notes about the license..."
+                rows={2}
+              />
+            </div>
           </div>
 
           <Button type="submit" disabled={isLoading} className="w-full">

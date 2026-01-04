@@ -710,6 +710,50 @@ export type Database = {
         }
         Relationships: []
       }
+      lab_license_alerts: {
+        Row: {
+          alert_type: string
+          channel: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          lab_id: string
+          sent_at: string | null
+          sent_to: string
+          status: string | null
+        }
+        Insert: {
+          alert_type: string
+          channel: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          lab_id: string
+          sent_at?: string | null
+          sent_to: string
+          status?: string | null
+        }
+        Update: {
+          alert_type?: string
+          channel?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          lab_id?: string
+          sent_at?: string | null
+          sent_to?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_license_alerts_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       labs: {
         Row: {
           address_line1: string | null
@@ -724,7 +768,16 @@ export type Database = {
           gst_number: string | null
           id: string
           initials: string
+          last_license_alert_sent_at: string | null
           letterhead_url: string | null
+          license_document_url: string | null
+          license_expiry_date: string | null
+          license_issue_date: string | null
+          license_notes: string | null
+          license_number: string | null
+          license_reminder_days: number | null
+          license_status: string | null
+          license_type: string | null
           location: string | null
           logo_url: string | null
           name: string
@@ -751,7 +804,16 @@ export type Database = {
           gst_number?: string | null
           id?: string
           initials: string
+          last_license_alert_sent_at?: string | null
           letterhead_url?: string | null
+          license_document_url?: string | null
+          license_expiry_date?: string | null
+          license_issue_date?: string | null
+          license_notes?: string | null
+          license_number?: string | null
+          license_reminder_days?: number | null
+          license_status?: string | null
+          license_type?: string | null
           location?: string | null
           logo_url?: string | null
           name: string
@@ -778,7 +840,16 @@ export type Database = {
           gst_number?: string | null
           id?: string
           initials?: string
+          last_license_alert_sent_at?: string | null
           letterhead_url?: string | null
+          license_document_url?: string | null
+          license_expiry_date?: string | null
+          license_issue_date?: string | null
+          license_notes?: string | null
+          license_number?: string | null
+          license_reminder_days?: number | null
+          license_status?: string | null
+          license_type?: string | null
           location?: string | null
           logo_url?: string | null
           name?: string
