@@ -8,6 +8,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -65,6 +75,7 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showPasswordConfirmDialog, setShowPasswordConfirmDialog] = useState(false);
   const { toast } = useToast();
 
   // Load initial user data and reset password fields
@@ -237,7 +248,7 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
     setBranchId(''); // Reset branch selection when organization changes
   };
 
-  const handleChangePassword = async () => {
+  const validateAndShowConfirmation = () => {
     if (!user) return;
 
     if (newPassword.length < 6) {
@@ -258,6 +269,13 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
       return;
     }
 
+    setShowPasswordConfirmDialog(true);
+  };
+
+  const handleChangePassword = async () => {
+    if (!user) return;
+
+    setShowPasswordConfirmDialog(false);
     setIsChangingPassword(true);
 
     try {
@@ -445,7 +463,7 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
                 />
               </div>
               <Button 
-                onClick={handleChangePassword} 
+                onClick={validateAndShowConfirmation} 
                 disabled={isChangingPassword || !newPassword || !confirmPassword}
                 className="w-full"
               >
@@ -464,6 +482,25 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Password Change Confirmation Dialog */}
+      <AlertDialog open={showPasswordConfirmDialog} onOpenChange={setShowPasswordConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Password Change</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to change the password for <span className="font-semibold">{user?.email}</span>? 
+              This action cannot be undone and the user will need to use the new password to log in.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleChangePassword}>
+              Change Password
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
