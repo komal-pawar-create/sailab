@@ -269,8 +269,11 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
         .single();
 
       if (profileError || !profileData) {
-        throw new Error('Could not find user');
+        console.error('Profile fetch error:', profileError);
+        throw new Error('Could not find user profile');
       }
+
+      console.log('Calling admin-update-password for user:', profileData.user_id);
 
       // Call Edge Function to update password (requires service role key)
       const { data, error } = await supabase.functions.invoke('admin-update-password', {
@@ -280,11 +283,15 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
         }
       });
 
+      console.log('Edge function response:', { data, error });
+
       if (error) {
-        throw error;
+        console.error('Edge function invocation error:', error);
+        throw new Error(error.message || 'Failed to call password update service');
       }
 
       if (data?.error) {
+        console.error('Edge function returned error:', data.error);
         throw new Error(data.error);
       }
 
@@ -300,7 +307,7 @@ export default function EditUserDialog({ user, isOpen, onClose, onSuccess }: Edi
       console.error('Error changing password:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to change password",
+        description: error.message || "Failed to change password. Make sure you're logged in as a super admin.",
         variant: "destructive",
       });
     } finally {
