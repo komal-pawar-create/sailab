@@ -1290,6 +1290,74 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          contact_email: string | null
+          contact_name: string
+          contact_phone: string | null
+          converted_to_lab_id: string | null
+          created_at: string | null
+          created_by: string
+          demo_date: string | null
+          expected_value: number | null
+          follow_up_date: string | null
+          id: string
+          lab_name: string
+          location: string | null
+          notes: string | null
+          source: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          contact_email?: string | null
+          contact_name: string
+          contact_phone?: string | null
+          converted_to_lab_id?: string | null
+          created_at?: string | null
+          created_by: string
+          demo_date?: string | null
+          expected_value?: number | null
+          follow_up_date?: string | null
+          id?: string
+          lab_name: string
+          location?: string | null
+          notes?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          contact_email?: string | null
+          contact_name?: string
+          contact_phone?: string | null
+          converted_to_lab_id?: string | null
+          created_at?: string | null
+          created_by?: string
+          demo_date?: string | null
+          expected_value?: number | null
+          follow_up_date?: string | null
+          id?: string
+          lab_name?: string
+          location?: string | null
+          notes?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_converted_to_lab_id_fkey"
+            columns: ["converted_to_lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           address_line1: string | null
@@ -1597,6 +1665,68 @@ export type Database = {
           },
           {
             foreignKeyName: "profiles_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          amount: number
+          auto_renew: boolean | null
+          billing_cycle: string | null
+          created_at: string | null
+          created_by: string
+          currency: string | null
+          end_date: string | null
+          id: string
+          lab_id: string
+          notes: string | null
+          payment_method: string | null
+          plan_name: string
+          start_date: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          auto_renew?: boolean | null
+          billing_cycle?: string | null
+          created_at?: string | null
+          created_by: string
+          currency?: string | null
+          end_date?: string | null
+          id?: string
+          lab_id: string
+          notes?: string | null
+          payment_method?: string | null
+          plan_name: string
+          start_date: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          auto_renew?: boolean | null
+          billing_cycle?: string | null
+          created_at?: string | null
+          created_by?: string
+          currency?: string | null
+          end_date?: string | null
+          id?: string
+          lab_id?: string
+          notes?: string | null
+          payment_method?: string | null
+          plan_name?: string
+          start_date?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_lab_id_fkey"
             columns: ["lab_id"]
             isOneToOne: false
             referencedRelation: "labs"

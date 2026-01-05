@@ -12,6 +12,8 @@ import {
   Globe,
   AlertCircle,
   FileSpreadsheet,
+  Users,
+  CreditCard,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -41,13 +43,14 @@ interface NavItem {
   roles?: string[];
 }
 
+// Main items - exclude operational items for super_admin
 const mainItems: NavItem[] = [
-  { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'Reports', url: '/reports', icon: FileSpreadsheet },
+  { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'lab_admin', 'operator_1', 'operator_2', 'operator_3', 'branch_operator'] },
+  { title: 'Reports', url: '/reports', icon: FileSpreadsheet, roles: ['admin', 'lab_admin', 'operator_1', 'operator_2', 'operator_3', 'branch_operator'] },
   { title: 'Outstanding Report', url: '/outstanding-report', icon: AlertCircle, roles: ['admin', 'lab_admin', 'operator_1', 'operator_2', 'operator_3', 'branch_operator'] },
-  { title: 'Patient History', url: '/patient-history', icon: History },
-  { title: 'Follow-ups', url: '/followups', icon: ClipboardList },
-  { title: 'Analytics', url: '/analytics', icon: BarChart3, roles: ['admin', 'lab_admin', 'super_admin', 'branch_operator'] },
+  { title: 'Patient History', url: '/patient-history', icon: History, roles: ['admin', 'lab_admin', 'operator_1', 'operator_2', 'operator_3', 'branch_operator'] },
+  { title: 'Follow-ups', url: '/followups', icon: ClipboardList, roles: ['admin', 'lab_admin', 'operator_1', 'operator_2', 'operator_3', 'branch_operator'] },
+  { title: 'Analytics', url: '/analytics', icon: BarChart3, roles: ['admin', 'lab_admin', 'branch_operator'] },
 ];
 
 const adminItems: NavItem[] = [
@@ -59,6 +62,8 @@ const adminItems: NavItem[] = [
 
 const superAdminItems: NavItem[] = [
   { title: 'Super Admin', url: '/super-admin', icon: ShieldCheck, roles: ['super_admin'] },
+  { title: 'Sales & Leads', url: '/super-admin?tab=leads', icon: Users, roles: ['super_admin'] },
+  { title: 'Subscriptions', url: '/super-admin?tab=subscriptions', icon: CreditCard, roles: ['super_admin'] },
   { title: 'Landing Page', url: '/super-admin?tab=landing', icon: Globe, roles: ['super_admin'] },
   { title: 'Data Management', url: '/super-admin/data-management', icon: Database, roles: ['super_admin'] },
 ];

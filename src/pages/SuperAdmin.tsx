@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,10 @@ import { EditLabDialog } from '@/components/forms/EditLabDialog';
 import { EditOrganizationDialog } from '@/components/forms/EditOrganizationDialog';
 import EditUserDialog from '@/components/forms/EditUserDialog';
 import EditBranchDialog from '@/components/forms/EditBranchDialog';
-import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { AddLeadForm } from '@/components/forms/AddLeadForm';
+import { LeadsPipeline } from '@/components/super-admin/LeadsPipeline';
+import { SubscriptionsTab } from '@/components/super-admin/SubscriptionsTab';
+import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock, Users, IndianRupee, TrendingUp, CreditCard } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const rolePermissions: Record<string, string[]> = {
@@ -144,12 +147,15 @@ interface DemoVideo {
 
 export default function SuperAdmin() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, signOut } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [labs, setLabs] = useState<Lab[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [demoVideos, setDemoVideos] = useState<DemoVideo[]>([]);
+  const [leadsCount, setLeadsCount] = useState(0);
+  const [subscriptionsData, setSubscriptionsData] = useState<{ mrr: number; activeCount: number }>({ mrr: 0, activeCount: 0 });
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -159,6 +165,9 @@ export default function SuperAdmin() {
   const [isEditLabDialogOpen, setIsEditLabDialogOpen] = useState(false);
   const [editingOrganization, setEditingOrganization] = useState<Organization | null>(null);
   const [isEditOrgDialogOpen, setIsEditOrgDialogOpen] = useState(false);
+
+  // Get active tab from URL
+  const activeTab = searchParams.get('tab') || 'overview';
 
   useEffect(() => {
     // Allow both super_admin and lab_admin to access this page
@@ -174,7 +183,7 @@ export default function SuperAdmin() {
 
   const fetchData = async () => {
     try {
-      const [organizationsRes, labsRes, branchesRes, usersRes, demoVideosRes] = await Promise.all([
+      const [organizationsRes, labsRes, branchesRes, usersRes, demoVideosRes, leadsRes, subscriptionsRes] = await Promise.all([
         supabase.from('organizations').select('*').order('name'),
         supabase.from('labs').select(`
           *,
@@ -192,7 +201,9 @@ export default function SuperAdmin() {
             organization:organizations(name)
           )
         `).order('full_name'),
-        supabase.from('demo_videos').select('*').order('display_order')
+        supabase.from('demo_videos').select('*').order('display_order'),
+        supabase.from('leads').select('id, status'),
+        supabase.from('subscriptions').select('amount, billing_cycle, status')
       ]);
 
       setOrganizations(organizationsRes.data || []);
@@ -200,6 +211,19 @@ export default function SuperAdmin() {
       setBranches(branchesRes.data as Branch[] || []);
       setUsers(usersRes.data || []);
       setDemoVideos(demoVideosRes.data || []);
+      
+      // Calculate leads count
+      setLeadsCount(leadsRes.data?.length || 0);
+      
+      // Calculate MRR
+      const activeSubscriptions = subscriptionsRes.data?.filter(s => s.status === 'active') || [];
+      const mrr = activeSubscriptions.reduce((total, sub) => {
+        if (sub.billing_cycle === 'yearly') {
+          return total + (sub.amount / 12);
+        }
+        return total + sub.amount;
+      }, 0);
+      setSubscriptionsData({ mrr, activeCount: activeSubscriptions.length });
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to fetch data');
@@ -380,21 +404,28 @@ export default function SuperAdmin() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Business Metrics Dashboard */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Organizations
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-green-500" />
+                MRR
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{organizations.length}</div>
+              <div className="flex items-baseline gap-1">
+                <IndianRupee className="h-4 w-4" />
+                <span className="text-2xl font-bold">{subscriptionsData.mrr.toLocaleString()}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">{subscriptionsData.activeCount} active subs</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-blue-500" />
                 Total Labs
               </CardTitle>
             </CardHeader>
@@ -405,9 +436,19 @@ export default function SuperAdmin() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Branches
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Users className="h-4 w-4 text-purple-500" />
+                Leads
               </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{leadsCount}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Branches</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{branches.length}</div>
@@ -416,19 +457,15 @@ export default function SuperAdmin() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Users
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Users</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{users.length}</div>
-              <p className="text-xs text-muted-foreground">
-                {users.filter(u => u.is_active !== false).length} active
-              </p>
+              <p className="text-xs text-muted-foreground">{users.filter(u => u.is_active !== false).length} active</p>
             </CardContent>
           </Card>
 
-          {expiringLicensesCount > 0 && (
+          {expiringLicensesCount > 0 ? (
             <Card className="border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -438,17 +475,32 @@ export default function SuperAdmin() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-amber-600">{expiringLicensesCount}</div>
-                <p className="text-xs text-muted-foreground">
-                  Expiring within 30 days
-                </p>
+                <p className="text-xs text-muted-foreground">Expiring soon</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Organizations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{organizations.length}</div>
               </CardContent>
             </Card>
           )}
         </div>
 
-        <Tabs defaultValue="organizations" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={(value) => setSearchParams({ tab: value })} className="space-y-4">
           <TabsList className="flex flex-wrap">
-            <TabsTrigger value="organizations">Organizations</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="leads" className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              Sales & Leads
+            </TabsTrigger>
+            <TabsTrigger value="subscriptions" className="flex items-center gap-1">
+              <CreditCard className="h-4 w-4" />
+              Subscriptions
+            </TabsTrigger>
             <TabsTrigger value="labs" className="flex items-center gap-1">
               <Building2 className="h-4 w-4" />
               Labs
@@ -456,6 +508,7 @@ export default function SuperAdmin() {
                 <Badge variant="destructive" className="ml-1 h-5 px-1.5">{expiringLicensesCount}</Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="organizations">Organizations</TabsTrigger>
             <TabsTrigger value="branches">Branches</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="test-types">Test Types</TabsTrigger>
@@ -463,11 +516,125 @@ export default function SuperAdmin() {
               <Video className="h-4 w-4" />
               Demo Videos
             </TabsTrigger>
-            <TabsTrigger value="landing-page" className="flex items-center gap-1">
+            <TabsTrigger value="landing" className="flex items-center gap-1">
               <Layout className="h-4 w-4" />
               Landing Page
             </TabsTrigger>
           </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSearchParams({ tab: 'leads' })}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-purple-500" />
+                    Sales Pipeline
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Manage leads, schedule demos, and convert prospects to customers.
+                  </p>
+                  <div className="mt-4 text-2xl font-bold">{leadsCount} leads</div>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSearchParams({ tab: 'subscriptions' })}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-green-500" />
+                    Subscriptions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Track MRR, manage billing, and monitor renewals.
+                  </p>
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <IndianRupee className="h-5 w-5" />
+                    <span className="text-2xl font-bold">{subscriptionsData.mrr.toLocaleString()}</span>
+                    <span className="text-sm text-muted-foreground">MRR</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSearchParams({ tab: 'labs' })}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-blue-500" />
+                    Labs & Licenses
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Manage labs, track license expiry, and send renewal reminders.
+                  </p>
+                  <div className="mt-4">
+                    <span className="text-2xl font-bold">{labs.length} labs</span>
+                    {expiringLicensesCount > 0 && (
+                      <Badge variant="destructive" className="ml-2">{expiringLicensesCount} expiring</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSearchParams({ tab: 'users' })}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-amber-500" />
+                    User Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Create users, manage roles, and control access.
+                  </p>
+                  <div className="mt-4 text-2xl font-bold">{users.length} users</div>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSearchParams({ tab: 'landing' })}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Layout className="h-5 w-5 text-pink-500" />
+                    Landing Page CMS
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Manage hero, features, pricing, and other landing page content.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSearchParams({ tab: 'demo-videos' })}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Video className="h-5 w-5 text-red-500" />
+                    Demo Videos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Manage product demo videos for marketing.
+                  </p>
+                  <div className="mt-4 text-2xl font-bold">{demoVideos.length} videos</div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Sales & Leads Tab */}
+          <TabsContent value="leads" className="space-y-6">
+            <AddLeadForm onSuccess={fetchData} />
+            <LeadsPipeline onRefresh={fetchData} />
+          </TabsContent>
+
+          {/* Subscriptions Tab */}
+          <TabsContent value="subscriptions" className="space-y-6">
+            <SubscriptionsTab labs={labs.map(l => ({ id: l.id, name: l.name, initials: l.initials }))} onRefresh={fetchData} />
+          </TabsContent>
 
           <TabsContent value="organizations" className="space-y-6">
             <AddOrganizationForm onSuccess={fetchData} />
@@ -791,7 +958,7 @@ export default function SuperAdmin() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="landing-page" className="space-y-6">
+        <TabsContent value="landing" className="space-y-6">
           <LandingPageManager />
         </TabsContent>
       </Tabs>
