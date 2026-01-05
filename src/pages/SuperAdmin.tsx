@@ -23,7 +23,8 @@ import EditBranchDialog from '@/components/forms/EditBranchDialog';
 import { AddLeadForm } from '@/components/forms/AddLeadForm';
 import { LeadsPipeline } from '@/components/super-admin/LeadsPipeline';
 import { SubscriptionsTab } from '@/components/super-admin/SubscriptionsTab';
-import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock, Users, IndianRupee, TrendingUp, CreditCard } from 'lucide-react';
+import { OnboardingWizard } from '@/components/super-admin/OnboardingWizard';
+import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock, Users, IndianRupee, TrendingUp, CreditCard, Rocket } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const rolePermissions: Record<string, string[]> = {
@@ -493,6 +494,10 @@ export default function SuperAdmin() {
         <Tabs value={activeTab} onValueChange={(value) => setSearchParams({ tab: value })} className="space-y-4">
           <TabsList className="flex flex-wrap">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="onboarding" className="flex items-center gap-1">
+              <Rocket className="h-4 w-4" />
+              Onboard Lab
+            </TabsTrigger>
             <TabsTrigger value="leads" className="flex items-center gap-1">
               <Users className="h-4 w-4" />
               Sales & Leads
@@ -525,6 +530,25 @@ export default function SuperAdmin() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Onboarding Card - Highlighted */}
+              <Card className="cursor-pointer hover:shadow-md transition-shadow border-primary/50 bg-primary/5" onClick={() => setSearchParams({ tab: 'onboarding' })}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Rocket className="h-5 w-5 text-primary" />
+                    Onboard New Lab
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Step-by-step wizard to set up organization, lab, branch, admin user, and subscription.
+                  </p>
+                  <Button className="mt-4 gap-2" size="sm">
+                    <Rocket className="h-4 w-4" />
+                    Start Onboarding
+                  </Button>
+                </CardContent>
+              </Card>
+
               <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSearchParams({ tab: 'leads' })}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -623,6 +647,17 @@ export default function SuperAdmin() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Onboarding Tab */}
+          <TabsContent value="onboarding" className="space-y-6">
+            <OnboardingWizard 
+              onComplete={() => {
+                fetchData();
+                setSearchParams({ tab: 'overview' });
+              }}
+              onClose={() => setSearchParams({ tab: 'overview' })}
+            />
           </TabsContent>
 
           {/* Sales & Leads Tab */}
