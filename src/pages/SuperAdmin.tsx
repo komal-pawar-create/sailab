@@ -24,7 +24,8 @@ import { AddLeadForm } from '@/components/forms/AddLeadForm';
 import { LeadsPipeline } from '@/components/super-admin/LeadsPipeline';
 import { SubscriptionsTab } from '@/components/super-admin/SubscriptionsTab';
 import { OnboardingWizard } from '@/components/super-admin/OnboardingWizard';
-import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock, Users, IndianRupee, TrendingUp, CreditCard, Rocket } from 'lucide-react';
+import { SystemHealthTab } from '@/components/super-admin/SystemHealthTab';
+import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock, Users, IndianRupee, TrendingUp, CreditCard, Rocket, Activity } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const rolePermissions: Record<string, string[]> = {
@@ -515,6 +516,10 @@ export default function SuperAdmin() {
               <CreditCard className="h-4 w-4" />
               Subscriptions
             </TabsTrigger>
+            <TabsTrigger value="health" className="flex items-center gap-1">
+              <Activity className="h-4 w-4" />
+              System Health
+            </TabsTrigger>
             <TabsTrigger value="labs" className="flex items-center gap-1">
               <Building2 className="h-4 w-4" />
               Labs
@@ -694,6 +699,11 @@ export default function SuperAdmin() {
           {/* Subscriptions Tab */}
           <TabsContent value="subscriptions" className="space-y-6">
             <SubscriptionsTab labs={labs.map(l => ({ id: l.id, name: l.name, initials: l.initials }))} onRefresh={fetchData} />
+          </TabsContent>
+
+          {/* System Health Tab */}
+          <TabsContent value="health" className="space-y-6">
+            <SystemHealthTab />
           </TabsContent>
 
           <TabsContent value="organizations" className="space-y-6">
