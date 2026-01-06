@@ -92,12 +92,23 @@ const steps = [
   { id: 5, title: 'Subscription', icon: CreditCard, description: 'Activate subscription' },
 ];
 
+interface LeadData {
+  id: string;
+  lab_name: string;
+  contact_name: string;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  location?: string | null;
+  expected_value?: number | null;
+}
+
 interface OnboardingWizardProps {
   onComplete?: () => void;
   onClose?: () => void;
+  leadData?: LeadData;
 }
 
-export function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps) {
+export function OnboardingWizard({ onComplete, onClose, leadData }: OnboardingWizardProps) {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,16 +120,17 @@ export function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps)
     labId?: string;
     branchId?: string;
     userId?: string;
-  }>({});
+    leadId?: string;
+  }>({ leadId: leadData?.id });
 
-  // Forms for each step
+  // Forms for each step - pre-fill from lead data if available
   const orgForm = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationSchema),
     defaultValues: {
-      name: '',
+      name: leadData?.lab_name || '',
       description: '',
-      contact_email: '',
-      contact_phone: '',
+      contact_email: leadData?.contact_email || '',
+      contact_phone: leadData?.contact_phone || '',
       address_line1: '',
       city: '',
       state: '',
@@ -129,10 +141,10 @@ export function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps)
   const labForm = useForm<LabFormValues>({
     resolver: zodResolver(labSchema),
     defaultValues: {
-      name: '',
-      initials: '',
-      phone: '',
-      admin_mobile_number: '',
+      name: leadData?.lab_name || '',
+      initials: leadData?.lab_name ? leadData.lab_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 5) : '',
+      phone: leadData?.contact_phone || '',
+      admin_mobile_number: leadData?.contact_phone || '',
       registration_number: '',
       gst_number: '',
       license_number: '',
@@ -144,10 +156,10 @@ export function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps)
   const branchForm = useForm<BranchFormValues>({
     resolver: zodResolver(branchSchema),
     defaultValues: {
-      name: '',
-      branch_code: '',
-      location: '',
-      phone: '',
+      name: leadData?.lab_name ? `${leadData.lab_name} - Main` : '',
+      branch_code: 'MAIN',
+      location: leadData?.location || '',
+      phone: leadData?.contact_phone || '',
       address_line1: '',
       city: '',
       state: '',
@@ -157,10 +169,10 @@ export function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps)
   const adminForm = useForm<AdminUserFormValues>({
     resolver: zodResolver(adminUserSchema),
     defaultValues: {
-      full_name: '',
-      email: '',
+      full_name: leadData?.contact_name || '',
+      email: leadData?.contact_email || '',
       password: '',
-      mobile_number: '',
+      mobile_number: leadData?.contact_phone || '',
     },
   });
 
@@ -169,7 +181,7 @@ export function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps)
     defaultValues: {
       plan_name: 'Professional',
       billing_cycle: 'monthly',
-      amount: '',
+      amount: leadData?.expected_value?.toString() || '',
       start_date: new Date().toISOString().split('T')[0],
       end_date: '',
       auto_renew: true,
@@ -324,10 +336,25 @@ export function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps)
   const handleSubscriptionSubmit = async (data: SubscriptionFormValues) => {
     if (!user || !createdIds.labId) return;
     
-    if (data.skip_subscription) {
+    const finalizeOnboarding = async () => {
+      // Update lead status to converted if this was from a lead
+      if (createdIds.leadId) {
+        await supabase
+          .from('leads')
+          .update({ 
+            status: 'won',
+            converted_to_lab_id: createdIds.labId 
+          })
+          .eq('id', createdIds.leadId);
+      }
+      
       setCompletedSteps(prev => [...prev, 5]);
       toast.success('Onboarding complete!');
       onComplete?.();
+    };
+    
+    if (data.skip_subscription) {
+      await finalizeOnboarding();
       return;
     }
     
@@ -350,9 +377,7 @@ export function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps)
 
       if (error) throw error;
       
-      setCompletedSteps(prev => [...prev, 5]);
-      toast.success('Onboarding complete!');
-      onComplete?.();
+      await finalizeOnboarding();
     } catch (error: any) {
       toast.error(error.message || 'Failed to create subscription');
     } finally {

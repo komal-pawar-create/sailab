@@ -166,6 +166,15 @@ export default function SuperAdmin() {
   const [isEditLabDialogOpen, setIsEditLabDialogOpen] = useState(false);
   const [editingOrganization, setEditingOrganization] = useState<Organization | null>(null);
   const [isEditOrgDialogOpen, setIsEditOrgDialogOpen] = useState(false);
+  const [convertingLead, setConvertingLead] = useState<{
+    id: string;
+    lab_name: string;
+    contact_name: string;
+    contact_email: string | null;
+    contact_phone: string | null;
+    location: string | null;
+    expected_value: number | null;
+  } | null>(null);
 
   // Get active tab from URL
   const activeTab = searchParams.get('tab') || 'overview';
@@ -662,8 +671,24 @@ export default function SuperAdmin() {
 
           {/* Sales & Leads Tab */}
           <TabsContent value="leads" className="space-y-6">
-            <AddLeadForm onSuccess={fetchData} />
-            <LeadsPipeline onRefresh={fetchData} />
+            {convertingLead ? (
+              <OnboardingWizard 
+                leadData={convertingLead}
+                onComplete={() => {
+                  setConvertingLead(null);
+                  fetchData();
+                }}
+                onClose={() => setConvertingLead(null)}
+              />
+            ) : (
+              <>
+                <AddLeadForm onSuccess={fetchData} />
+                <LeadsPipeline 
+                  onRefresh={fetchData} 
+                  onConvertLead={(lead) => setConvertingLead(lead)}
+                />
+              </>
+            )}
           </TabsContent>
 
           {/* Subscriptions Tab */}
