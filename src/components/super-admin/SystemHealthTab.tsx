@@ -58,9 +58,61 @@ export function SystemHealthTab() {
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [storageLoading, setStorageLoading] = useState(true);
+
   useEffect(() => {
     fetchHealthStats();
+    fetchStorageUsage();
   }, []);
+
+  const fetchStorageUsage = async () => {
+    try {
+      setStorageLoading(true);
+      
+      // Query storage.objects to get actual file sizes from all buckets
+      const { data: storageData, error } = await supabase
+        .from('documents')
+        .select('file_size');
+      
+      if (error) {
+        console.error('Error fetching storage from documents:', error);
+        // Fallback: try to list storage buckets
+        const buckets = ['documents', 'avatars', 'letterheads', 'signatures', 'reports'];
+        let totalSize = 0;
+        
+        for (const bucket of buckets) {
+          try {
+            const { data: files } = await supabase.storage.from(bucket).list('', { limit: 1000 });
+            if (files) {
+              for (const file of files) {
+                if (file.metadata?.size) {
+                  totalSize += file.metadata.size;
+                }
+              }
+            }
+          } catch (e) {
+            // Bucket might not exist, skip
+          }
+        }
+        
+        setStats(prev => ({
+          ...prev,
+          storageUsageMB: totalSize / (1024 * 1024),
+        }));
+      } else if (storageData) {
+        // Sum up file sizes from documents table
+        const totalBytes = storageData.reduce((sum, doc) => sum + (doc.file_size || 0), 0);
+        setStats(prev => ({
+          ...prev,
+          storageUsageMB: totalBytes / (1024 * 1024),
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch storage usage:', error);
+    } finally {
+      setStorageLoading(false);
+    }
+  };
 
   const fetchHealthStats = async () => {
     try {
@@ -84,38 +136,38 @@ export function SystemHealthTab() {
         supabase.from('bills').select('id', { count: 'exact', head: true }),
         supabase.from('bills').select('id', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
         supabase.from('test_reports').select('id', { count: 'exact', head: true }),
-        supabase.from('documents').select('id', { count: 'exact', head: true }),
+        supabase.from('documents').select('id, file_size', { count: 'exact' }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('labs').select('id', { count: 'exact', head: true }),
         supabase.from('branches').select('id', { count: 'exact', head: true }),
       ]);
 
-      // Fetch daily activity for the last 7 days
-      const activityData: ActivityItem[] = [];
-      for (let i = 0; i < 7; i++) {
+      // Fetch daily activity for the last 7 days in parallel
+      const activityPromises = Array.from({ length: 7 }, (_, i) => {
         const date = subDays(new Date(), i);
         const dateStr = format(date, 'yyyy-MM-dd');
         const startOfDay = `${dateStr}T00:00:00`;
         const endOfDay = `${dateStr}T23:59:59`;
         
-        const { count } = await supabase
+        return supabase
           .from('patients')
           .select('id', { count: 'exact', head: true })
           .gte('created_at', startOfDay)
-          .lte('created_at', endOfDay);
-        
-        activityData.push({
-          type: 'patients',
-          count: count || 0,
-          date: format(date, 'EEE'),
-        });
-      }
+          .lte('created_at', endOfDay)
+          .then(({ count }) => ({
+            type: 'patients',
+            count: count || 0,
+            date: format(date, 'EEE'),
+          }));
+      });
       
+      const activityData = await Promise.all(activityPromises);
       setRecentActivity(activityData.reverse());
 
-      // Estimate storage from document count (rough estimate: 500KB per document)
-      const estimatedStorageMB = ((documentsRes.count || 0) * 0.5);
+      // Calculate actual storage from documents file_size column
+      const documentsData = documentsRes.data || [];
+      const totalStorageBytes = documentsData.reduce((sum, doc) => sum + (doc.file_size || 0), 0);
 
       setStats({
         totalPatients: patientsRes.count || 0,
@@ -128,7 +180,7 @@ export function SystemHealthTab() {
         totalBranches: branchesRes.count || 0,
         recentPatients7Days: recentPatientsRes.count || 0,
         recentBills7Days: recentBillsRes.count || 0,
-        storageUsageMB: estimatedStorageMB,
+        storageUsageMB: totalStorageBytes / (1024 * 1024),
         storageLimitMB: 1024,
       });
     } catch (error: any) {
@@ -276,23 +328,30 @@ export function SystemHealthTab() {
             <CardTitle className="text-base flex items-center gap-2">
               <HardDrive className="h-4 w-4" />
               Storage Usage
+              {storageLoading && (
+                <span className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full" />
+              )}
             </CardTitle>
-            <CardDescription>Estimated based on document count</CardDescription>
+            <CardDescription>Real-time storage from uploaded files</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span>Used</span>
                 <span className="font-medium">
-                  {stats.storageUsageMB.toFixed(1)} MB / {stats.storageLimitMB} MB
+                  {stats.storageUsageMB >= 1024 
+                    ? `${(stats.storageUsageMB / 1024).toFixed(2)} GB` 
+                    : `${stats.storageUsageMB.toFixed(2)} MB`} / {stats.storageLimitMB >= 1024 
+                    ? `${(stats.storageLimitMB / 1024).toFixed(0)} GB` 
+                    : `${stats.storageLimitMB} MB`}
                 </span>
               </div>
               <Progress 
                 value={storagePercentage} 
-                className={`h-3 ${storagePercentage > 80 ? '[&>div]:bg-red-500' : storagePercentage > 60 ? '[&>div]:bg-amber-500' : ''}`}
+                className={`h-3 ${storagePercentage > 80 ? '[&>div]:bg-destructive' : storagePercentage > 60 ? '[&>div]:bg-warning' : ''}`}
               />
               <p className="text-xs text-muted-foreground">
-                {(100 - storagePercentage).toFixed(1)}% remaining
+                {(100 - storagePercentage).toFixed(1)}% remaining ({stats.totalDocuments} files)
               </p>
             </div>
           </CardContent>
