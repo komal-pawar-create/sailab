@@ -25,7 +25,8 @@ import { LeadsPipeline } from '@/components/super-admin/LeadsPipeline';
 import { SubscriptionsTab } from '@/components/super-admin/SubscriptionsTab';
 import { OnboardingWizard } from '@/components/super-admin/OnboardingWizard';
 import { SystemHealthTab } from '@/components/super-admin/SystemHealthTab';
-import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock, Users, IndianRupee, TrendingUp, CreditCard, Rocket, Activity } from 'lucide-react';
+import { RevenueAnalyticsTab } from '@/components/super-admin/RevenueAnalyticsTab';
+import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock, Users, IndianRupee, TrendingUp, CreditCard, Rocket, Activity, PieChart } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const rolePermissions: Record<string, string[]> = {
@@ -520,6 +521,10 @@ export default function SuperAdmin() {
               <Activity className="h-4 w-4" />
               System Health
             </TabsTrigger>
+            <TabsTrigger value="revenue" className="flex items-center gap-1">
+              <PieChart className="h-4 w-4" />
+              Revenue
+            </TabsTrigger>
             <TabsTrigger value="labs" className="flex items-center gap-1">
               <Building2 className="h-4 w-4" />
               Labs
@@ -704,6 +709,11 @@ export default function SuperAdmin() {
           {/* System Health Tab */}
           <TabsContent value="health" className="space-y-6">
             <SystemHealthTab />
+          </TabsContent>
+
+          {/* Revenue Analytics Tab */}
+          <TabsContent value="revenue" className="space-y-6">
+            <RevenueAnalyticsTab />
           </TabsContent>
 
           <TabsContent value="organizations" className="space-y-6">
