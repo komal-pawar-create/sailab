@@ -47,9 +47,10 @@ const sourceColors: Record<string, string> = {
 
 interface LeadsPipelineProps {
   onRefresh?: () => void;
+  onConvertLead?: (lead: Lead) => void;
 }
 
-export function LeadsPipeline({ onRefresh }: LeadsPipelineProps) {
+export function LeadsPipeline({ onRefresh, onConvertLead }: LeadsPipelineProps) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -75,6 +76,15 @@ export function LeadsPipeline({ onRefresh }: LeadsPipelineProps) {
   }, []);
 
   const updateLeadStatus = async (leadId: string, newStatus: string) => {
+    // If moving to 'won', trigger conversion flow instead
+    if (newStatus === 'won' && onConvertLead) {
+      const lead = leads.find(l => l.id === leadId);
+      if (lead) {
+        onConvertLead(lead);
+        return;
+      }
+    }
+    
     try {
       const { error } = await supabase
         .from('leads')
