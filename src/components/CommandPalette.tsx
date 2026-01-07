@@ -143,7 +143,7 @@ export function CommandPalette() {
   };
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
+    <CommandDialog open={open} onOpenChange={setOpen} data-tour="command-palette">
       <CommandInput 
         placeholder="Search patients, navigate, or run commands..." 
         value={search}

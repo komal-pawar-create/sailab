@@ -252,7 +252,7 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogTrigger asChild>
-        <Button>
+        <Button data-tour="add-patient">
           <Plus className="h-4 w-4 mr-2" />
           Add Patient
         </Button>

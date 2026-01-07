@@ -76,7 +76,7 @@ export function DashboardFilters({
       )}
 
       {/* Time Period Filter */}
-      <Tabs value={value} onValueChange={(v) => onChange(v as TimePeriod)}>
+      <Tabs value={value} onValueChange={(v) => onChange(v as TimePeriod)} data-tour="time-filter">
         <TabsList className="h-auto p-1 flex-wrap">
           {tabs.map((tab) => (
             <TabsTrigger

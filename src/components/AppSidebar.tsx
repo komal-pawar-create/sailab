@@ -127,6 +127,7 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
+      data-tour="sidebar"
     >
       <SidebarContent>
         {/* Main Navigation */}
