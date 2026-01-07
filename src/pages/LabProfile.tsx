@@ -9,7 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, X, Building2, FileText, CreditCard, Settings } from 'lucide-react';
+import { Loader2, Upload, X, Building2, FileText, CreditCard, Settings, RotateCcw } from 'lucide-react';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 interface LabProfile {
   id: string;
@@ -33,6 +34,44 @@ interface LabProfile {
   terms_conditions?: string;
   admin_mobile_number?: string;
 }
+
+const OnboardingTourSettings = () => {
+  const { resetTour, isTourDismissed } = useOnboardingTour();
+  const { toast } = useToast();
+
+  const handleResetTour = () => {
+    resetTour();
+    toast({
+      title: "Tour Reset",
+      description: "The onboarding tour will show again when you visit the Dashboard.",
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Onboarding Tour</CardTitle>
+        <CardDescription>Manage the guided tour that helps new users learn the system</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Reset Onboarding Tour</p>
+            <p className="text-xs text-muted-foreground">
+              {isTourDismissed() 
+                ? "You've permanently dismissed the tour. Click to show it again."
+                : "Click to restart the guided tour on the Dashboard."}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleResetTour}>
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset Tour
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function LabProfile() {
   const { profile } = useAuth();
@@ -674,28 +713,32 @@ export default function LabProfile() {
           </TabsContent>
 
           <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security & Recovery Settings</CardTitle>
-                <CardDescription>Configure password recovery options for your organization</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="adminMobile">Admin Mobile Number (For Password Recovery)</Label>
-                  <Input
-                    id="adminMobile"
-                    type="tel"
-                    value={labProfile.admin_mobile_number || ''}
-                    onChange={(e) => setLabProfile({ ...labProfile, admin_mobile_number: e.target.value })}
-                    placeholder="+91 9876543210"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    This mobile number will receive OTP codes when any user in your organization needs to reset their password.
-                    Make sure this is accessible to your lab administrator.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Security & Recovery Settings</CardTitle>
+                  <CardDescription>Configure password recovery options for your organization</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="adminMobile">Admin Mobile Number (For Password Recovery)</Label>
+                    <Input
+                      id="adminMobile"
+                      type="tel"
+                      value={labProfile.admin_mobile_number || ''}
+                      onChange={(e) => setLabProfile({ ...labProfile, admin_mobile_number: e.target.value })}
+                      placeholder="+91 9876543210"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This mobile number will receive OTP codes when any user in your organization needs to reset their password.
+                      Make sure this is accessible to your lab administrator.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <OnboardingTourSettings />
+            </div>
           </TabsContent>
         </Tabs>
 

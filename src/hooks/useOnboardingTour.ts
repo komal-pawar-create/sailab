@@ -1,13 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const TOUR_STORAGE_KEY = 'labmaster_onboarding_completed';
+const TOUR_PERMANENT_DISMISS_KEY = 'labmaster_onboarding_dismissed';
 
 export const useOnboardingTour = () => {
   const [runTour, setRunTour] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
 
   useEffect(() => {
-    // Check if tour has been completed before
+    // Check if tour has been permanently dismissed
+    const permanentlyDismissed = localStorage.getItem(TOUR_PERMANENT_DISMISS_KEY);
+    if (permanentlyDismissed) return;
+
+    // Check if tour has been completed before (session-based)
     const tourCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
     if (!tourCompleted) {
       // Delay tour start to let the page render
@@ -22,8 +27,16 @@ export const useOnboardingTour = () => {
     setStepIndex(0);
   }, []);
 
+  const permanentlyDismiss = useCallback(() => {
+    localStorage.setItem(TOUR_PERMANENT_DISMISS_KEY, 'true');
+    localStorage.setItem(TOUR_STORAGE_KEY, 'true');
+    setRunTour(false);
+    setStepIndex(0);
+  }, []);
+
   const resetTour = useCallback(() => {
     localStorage.removeItem(TOUR_STORAGE_KEY);
+    localStorage.removeItem(TOUR_PERMANENT_DISMISS_KEY);
     setStepIndex(0);
     setRunTour(true);
   }, []);
@@ -32,13 +45,19 @@ export const useOnboardingTour = () => {
     completeTour();
   }, [completeTour]);
 
+  const isTourDismissed = useCallback(() => {
+    return localStorage.getItem(TOUR_PERMANENT_DISMISS_KEY) === 'true';
+  }, []);
+
   return {
     runTour,
     setRunTour,
     stepIndex,
     setStepIndex,
     completeTour,
+    permanentlyDismiss,
     resetTour,
     skipTour,
+    isTourDismissed,
   };
 };
