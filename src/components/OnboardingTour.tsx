@@ -1,8 +1,40 @@
+import { useState } from 'react';
 import Joyride, { CallBackProps, STATUS, Step, EVENTS, ACTIONS } from 'react-joyride';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 import { useTheme } from 'next-themes';
+import { Checkbox } from '@/components/ui/checkbox';
 
-const tourSteps: Step[] = [
+interface FinalStepContentProps {
+  dontShowAgain: boolean;
+  setDontShowAgain: (value: boolean) => void;
+}
+
+const FinalStepContent = ({ dontShowAgain, setDontShowAgain }: FinalStepContentProps) => (
+  <div className="text-center">
+    <h3 className="text-lg font-semibold mb-2">You're All Set! 🚀</h3>
+    <p className="text-sm text-muted-foreground mb-3">
+      You now know the basics of Lab Master. Start by adding your first patient!
+    </p>
+    <p className="text-xs text-muted-foreground mb-4">
+      Tip: Press <kbd className="px-1.5 py-0.5 bg-muted rounded">?</kbd> anytime to see all keyboard shortcuts.
+    </p>
+    <div className="flex items-center justify-center gap-2 pt-2 border-t">
+      <Checkbox
+        id="dont-show-again"
+        checked={dontShowAgain}
+        onCheckedChange={(checked) => setDontShowAgain(checked === true)}
+      />
+      <label
+        htmlFor="dont-show-again"
+        className="text-sm text-muted-foreground cursor-pointer"
+      >
+        Don't show this tour again
+      </label>
+    </div>
+  </div>
+);
+
+const createTourSteps = (finalStepContent: React.ReactNode): Step[] => [
   {
     target: 'body',
     content: (
@@ -114,17 +146,7 @@ const tourSteps: Step[] = [
   },
   {
     target: 'body',
-    content: (
-      <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">You're All Set! 🚀</h3>
-        <p className="text-sm text-muted-foreground mb-3">
-          You now know the basics of Lab Master. Start by adding your first patient!
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Tip: Press <kbd className="px-1.5 py-0.5 bg-muted rounded">?</kbd> anytime to see all keyboard shortcuts.
-        </p>
-      </div>
-    ),
+    content: finalStepContent,
     placement: 'center',
   },
 ];
@@ -134,8 +156,13 @@ interface OnboardingTourProps {
 }
 
 export const OnboardingTour = ({ onRestart }: OnboardingTourProps) => {
-  const { runTour, setRunTour, stepIndex, setStepIndex, completeTour } = useOnboardingTour();
+  const { runTour, setRunTour, stepIndex, setStepIndex, completeTour, permanentlyDismiss } = useOnboardingTour();
   const { theme } = useTheme();
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+
+  const tourSteps = createTourSteps(
+    <FinalStepContent dontShowAgain={dontShowAgain} setDontShowAgain={setDontShowAgain} />
+  );
 
   const handleCallback = (data: CallBackProps) => {
     const { status, action, index, type } = data;
@@ -145,7 +172,11 @@ export const OnboardingTour = ({ onRestart }: OnboardingTourProps) => {
     }
 
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
-      completeTour();
+      if (dontShowAgain) {
+        permanentlyDismiss();
+      } else {
+        completeTour();
+      }
     }
   };
 
