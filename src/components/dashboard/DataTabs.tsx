@@ -49,10 +49,10 @@ export function DataTabs({
   onTabChange
 }: DataTabsProps) {
   const tabs = [
-    { id: "patients", label: "Patients", icon: Users, count: patientsPagination.totalCount },
-    { id: "reports", label: "Test Reports", icon: TestTube, count: reportsPagination.totalCount },
+    { id: "patients", label: "Patients", icon: Users, count: patientsPagination.totalCount, tourId: "patients-tab" },
+    { id: "reports", label: "Test Reports", icon: TestTube, count: reportsPagination.totalCount, tourId: "reports-tab" },
     { id: "documents", label: "Documents", icon: FileText, count: documentsPagination.totalCount },
-    { id: "bills", label: "Bills", icon: Receipt, count: billsPagination.totalCount },
+    { id: "bills", label: "Bills", icon: Receipt, count: billsPagination.totalCount, tourId: "bills-tab" },
     { id: "followups", label: "Follow-ups", icon: Bell, count: followupsPagination.totalCount },
     { id: "feedback", label: "Feedback", icon: MessageSquare, count: feedbackPagination.totalCount },
     { id: "ledger", label: "Ledger", icon: Wallet, count: paymentsPagination.totalCount },
@@ -66,6 +66,7 @@ export function DataTabs({
             key={tab.id}
             value={tab.id}
             className="flex items-center gap-1.5 data-[state=active]:bg-background"
+            data-tour={tab.tourId}
           >
             <tab.icon className="h-4 w-4" />
             <span className="hidden sm:inline">{tab.label}</span>

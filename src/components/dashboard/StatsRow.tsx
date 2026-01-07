@@ -33,7 +33,7 @@ export function StatsRow({ stats }: StatsRowProps) {
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div data-tour="stats-row" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       {statItems.map((item) => (
         <Card 
           key={item.label} 

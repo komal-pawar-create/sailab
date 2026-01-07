@@ -4,13 +4,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { RefreshCw, BarChart3 } from 'lucide-react';
+import { RefreshCw, BarChart3, HelpCircle } from 'lucide-react';
 import { useFollowupReminders } from '@/hooks/useFollowupReminders';
 import { DashboardFilters, TimePeriod, Branch } from '@/components/dashboard/DashboardFilters';
 import { StatsRow } from '@/components/dashboard/StatsRow';
 import { DataTabs } from '@/components/dashboard/DataTabs';
 import { useDebounce } from '@/hooks/useDebounce';
 import { format, startOfWeek, startOfMonth, subMonths, startOfQuarter, subQuarters, startOfYear, subYears, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
+import { OnboardingTour } from '@/components/OnboardingTour';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 interface PaginationState {
   page: number;
@@ -63,6 +65,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ patients: 0, tests: 0, documents: 0, bills: 0, jpegImages: 0, pending: 0 });
 
   useFollowupReminders();
+  const { resetTour } = useOnboardingTour();
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'lab_admin';
 
@@ -366,23 +369,28 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-sm">Welcome back, {profile.full_name}</p>
+    <>
+      <OnboardingTour />
+      <div className="container mx-auto p-4 sm:p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground text-sm">Welcome back, {profile.full_name}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="ghost" size="sm" onClick={resetTour} title="Restart Tour">
+              <HelpCircle className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={fetchAll} disabled={isRefreshing}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/analytics')}>
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={fetchAll} disabled={isRefreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate('/analytics')}>
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
-          </Button>
-        </div>
-      </div>
 
       <DashboardFilters 
         value={timePeriod} 
@@ -415,7 +423,8 @@ const Dashboard = () => {
         activeTab={activeTab}
         onTabChange={handleTabChange}
       />
-    </div>
+      </div>
+    </>
   );
 };
 
