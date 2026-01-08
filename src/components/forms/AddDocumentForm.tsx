@@ -9,6 +9,7 @@ import { Plus } from 'lucide-react';
 import { OperatorSelect } from './OperatorSelect';
 import { DocUploadWithLetterhead } from '@/components/ui/doc-upload-with-letterhead';
 import { PatientSearchSelect } from './PatientSearchSelect';
+import { FeatureTooltip } from '@/components/ui/feature-tooltip';
 
 interface Patient {
   id: string;
@@ -205,12 +206,19 @@ export const AddDocumentForm = ({ onDocumentAdded }: AddDocumentFormProps) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Upload Documents
-        </Button>
-      </DialogTrigger>
+      <FeatureTooltip
+        featureKey="upload-documents"
+        title="Upload Documents"
+        description="Attach prescriptions, medical records, and other patient documents. Files can include your lab's letterhead."
+        side="bottom"
+      >
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Upload Documents
+          </Button>
+        </DialogTrigger>
+      </FeatureTooltip>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Upload Patient Documents</DialogTitle>
