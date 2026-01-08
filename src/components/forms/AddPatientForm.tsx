@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, Loader2 } from 'lucide-react';
 import { OperatorSelect } from './OperatorSelect';
+import { FeatureTooltip } from '@/components/ui/feature-tooltip';
 
 interface AddPatientFormProps {
   onPatientAdded: () => void;
@@ -251,12 +252,19 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogTrigger asChild>
-        <Button data-tour="add-patient">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Patient
-        </Button>
-      </DialogTrigger>
+      <FeatureTooltip
+        featureKey="add-patient"
+        title="Register Patients"
+        description="Add new patients to your lab's database. Patient IDs are auto-generated based on your branch settings."
+        side="bottom"
+      >
+        <DialogTrigger asChild>
+          <Button data-tour="add-patient">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Patient
+          </Button>
+        </DialogTrigger>
+      </FeatureTooltip>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Add New Patient</DialogTitle>

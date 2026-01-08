@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { PatientSearchSelect } from './PatientSearchSelect';
+import { FeatureTooltip } from '@/components/ui/feature-tooltip';
 
 interface Patient {
   id: string;
@@ -189,12 +190,19 @@ export function AddFollowupForm({ onFollowupAdded, preSelectedPatientId, trigger
           {triggerButton}
         </DialogTrigger>
       ) : (
-        <DialogTrigger asChild>
-          <Button className="bg-primary hover:bg-primary/90">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Follow-up
-          </Button>
-        </DialogTrigger>
+        <FeatureTooltip
+          featureKey="add-followup"
+          title="Schedule Follow-ups"
+          description="Create follow-up reminders for patients. Set priority, due dates, and assign to team members."
+          side="bottom"
+        >
+          <DialogTrigger asChild>
+            <Button className="bg-primary hover:bg-primary/90">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Follow-up
+            </Button>
+          </DialogTrigger>
+        </FeatureTooltip>
       )}
       <DialogContent className="max-w-md">
         <DialogHeader>

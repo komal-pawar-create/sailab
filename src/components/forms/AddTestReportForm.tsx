@@ -14,6 +14,7 @@ import { DocUpload } from '@/components/ui/doc-upload';
 import { OperatorSelect } from './OperatorSelect';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PatientSearchSelect } from './PatientSearchSelect';
+import { FeatureTooltip } from '@/components/ui/feature-tooltip';
 
 interface Patient {
   id: string;
@@ -250,12 +251,19 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Test Report
-        </Button>
-      </DialogTrigger>
+      <FeatureTooltip
+        featureKey="add-test-report"
+        title="Upload Test Reports"
+        description="Upload test results with images and documents. Reports can be linked to specific test types and include technician details."
+        side="bottom"
+      >
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Test Report
+          </Button>
+        </DialogTrigger>
+      </FeatureTooltip>
       <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Add New Test Report</DialogTitle>

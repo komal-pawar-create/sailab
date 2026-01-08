@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Plus, Trash2 } from 'lucide-react';
 import { OperatorSelect } from './OperatorSelect';
 import BillPrintModal from '@/components/bills/BillPrintModal';
+import { FeatureTooltip } from '@/components/ui/feature-tooltip';
 
 interface Patient {
   id: string;
@@ -282,12 +283,19 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Bill
-          </Button>
-        </DialogTrigger>
+        <FeatureTooltip
+          featureKey="create-bill"
+          title="Create Bills"
+          description="Generate itemized bills for patients. Add multiple line items, set due dates, and print directly after creation."
+          side="bottom"
+        >
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Bill
+            </Button>
+          </DialogTrigger>
+        </FeatureTooltip>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Bill</DialogTitle>

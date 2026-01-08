@@ -9,8 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, X, Building2, FileText, CreditCard, Settings, RotateCcw } from 'lucide-react';
+import { Loader2, Upload, X, Building2, FileText, CreditCard, Settings, RotateCcw, Lightbulb } from 'lucide-react';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
+import { resetFeatureTooltips } from '@/hooks/useFeatureTooltip';
 
 interface LabProfile {
   id: string;
@@ -66,6 +67,41 @@ const OnboardingTourSettings = () => {
           <Button variant="outline" size="sm" onClick={handleResetTour}>
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset Tour
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const FeatureTooltipsSettings = () => {
+  const { toast } = useToast();
+
+  const handleResetTooltips = () => {
+    resetFeatureTooltips();
+    toast({
+      title: "Feature Tooltips Reset",
+      description: "Contextual tooltips will appear again when you use features for the first time.",
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Feature Tooltips</CardTitle>
+        <CardDescription>Manage contextual help tooltips that appear on first use of features</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Reset Feature Tooltips</p>
+            <p className="text-xs text-muted-foreground">
+              Show helpful tooltips again when using features like creating bills, uploading reports, etc.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleResetTooltips}>
+            <Lightbulb className="h-4 w-4 mr-2" />
+            Reset Tooltips
           </Button>
         </div>
       </CardContent>
@@ -738,6 +774,8 @@ export default function LabProfile() {
               </Card>
 
               <OnboardingTourSettings />
+
+              <FeatureTooltipsSettings />
             </div>
           </TabsContent>
         </Tabs>
