@@ -16,6 +16,7 @@ import PatientFollowups from "@/components/patient-history/PatientFollowups";
 import PatientTimeline from "@/components/patient-history/PatientTimeline";
 import QuickActions from "@/components/patient-history/QuickActions";
 import PatientHistoryExport from "@/components/patient-history/PatientHistoryExport";
+import PatientHistoryTour from "@/components/patient-history/PatientHistoryTour";
 import {
   Command,
   CommandEmpty,
@@ -163,8 +164,12 @@ export default function PatientHistory() {
         <div className="flex items-center gap-2">
           {selectedPatient && (
             <>
-              <PatientHistoryExport patient={selectedPatient} />
-              <QuickActions patientId={selectedPatient.id} onDataChanged={handleDataRefresh} />
+              <div data-tour="export-pdf">
+                <PatientHistoryExport patient={selectedPatient} />
+              </div>
+              <div data-tour="quick-actions">
+                <QuickActions patientId={selectedPatient.id} onDataChanged={handleDataRefresh} />
+              </div>
             </>
           )}
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
@@ -174,8 +179,11 @@ export default function PatientHistory() {
         </div>
       </div>
 
+      {/* Patient History Tour */}
+      <PatientHistoryTour hasPatientSelected={!!selectedPatient} />
+
       {/* Patient Search + Badge */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3" data-tour="patient-search">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -237,22 +245,24 @@ export default function PatientHistory() {
 
       {/* Quick Stats Bar */}
       {selectedPatient && (
-        <QuickStatsBar patientId={selectedPatient.id} onStatClick={handleStatClick} key={`stats-${refreshKey}`} />
+        <div data-tour="quick-stats">
+          <QuickStatsBar patientId={selectedPatient.id} onStatClick={handleStatClick} key={`stats-${refreshKey}`} />
+        </div>
       )}
 
       {/* Consolidated 4 Tabs */}
       {selectedPatient ? (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:inline-flex">
-            <TabsTrigger value="reports" className="gap-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="reports" className="gap-1.5 text-xs sm:text-sm" data-tour="ph-reports-tab">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Reports</span>
             </TabsTrigger>
-            <TabsTrigger value="billing" className="gap-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="billing" className="gap-1.5 text-xs sm:text-sm" data-tour="ph-billing-tab">
               <IndianRupee className="h-4 w-4" />
               <span className="hidden sm:inline">Billing</span>
             </TabsTrigger>
-            <TabsTrigger value="followups" className="gap-1.5 text-xs sm:text-sm">
+            <TabsTrigger value="followups" className="gap-1.5 text-xs sm:text-sm" data-tour="ph-followups-tab">
               <Clock className="h-4 w-4" />
               <span className="hidden sm:inline">Follow-ups</span>
             </TabsTrigger>
