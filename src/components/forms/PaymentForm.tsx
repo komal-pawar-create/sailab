@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { CreditCard } from 'lucide-react';
+import { FeatureTooltip } from '@/components/ui/feature-tooltip';
+import { useFeatureTooltip } from '@/hooks/useFeatureTooltip';
 
 interface PaymentFormProps {
   billId: string;
@@ -21,6 +23,7 @@ export const PaymentForm = ({ billId, dueAmount, onPaymentAdded }: PaymentFormPr
   const [loading, setLoading] = useState(false);
   const { profile } = useAuth();
   const { toast } = useToast();
+  const { markAsSeen } = useFeatureTooltip('payment-form');
 
   const [formData, setFormData] = useState({
     payment_amount: '',
@@ -81,14 +84,27 @@ export const PaymentForm = ({ billId, dueAmount, onPaymentAdded }: PaymentFormPr
     }
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen) {
+      markAsSeen();
+    }
+    setOpen(newOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <CreditCard className="h-4 w-4 mr-2" />
-          Add Payment
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <FeatureTooltip
+        featureKey="payment-form"
+        title="Record Payments"
+        description="Track partial or full payments against bills. Supports multiple payment methods."
+      >
+        <DialogTrigger asChild>
+          <Button size="sm">
+            <CreditCard className="h-4 w-4 mr-2" />
+            Add Payment
+          </Button>
+        </DialogTrigger>
+      </FeatureTooltip>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Record Payment</DialogTitle>
