@@ -1,3 +1,4 @@
+import React, { memo } from "react";
 import { Users, TestTube, FileText, Receipt, FileImage, CreditCard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ interface StatsRowProps {
   };
 }
 
-export function StatsRow({ stats }: StatsRowProps) {
+export const StatsRow = memo(function StatsRow({ stats }: StatsRowProps) {
   const navigate = useNavigate();
 
   const statItems = [
@@ -61,4 +62,4 @@ export function StatsRow({ stats }: StatsRowProps) {
       ))}
     </div>
   );
-}
+});

@@ -1,26 +1,9 @@
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import SuperAdmin from "./pages/SuperAdmin";
-import LabProfile from "./pages/LabProfile";
-import BranchSettings from "./pages/BranchSettings";
-import PatientHistory from "./pages/PatientHistory";
-import DataManagement from "./pages/DataManagement";
-import AuditLogs from "./pages/AuditLogs";
-import ApiSettings from "./pages/ApiSettings";
-import Analytics from "./pages/Analytics";
-import Followups from "./pages/Followups";
-import OutstandingReport from "./pages/OutstandingReport";
-import Reports from "./pages/Reports";
-import ForgotPassword from "./pages/ForgotPassword";
-import PublicFeedback from "./pages/PublicFeedback";
-import NotFound from "./pages/NotFound";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
@@ -29,8 +12,37 @@ import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
 import { GlobalActionsProvider } from "./contexts/GlobalActionsContext";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "./hooks/useAuth";
+import { PageLoader } from "./components/ui/page-loader";
 
-const queryClient = new QueryClient();
+// Lazy load all page components for code splitting
+const Index = React.lazy(() => import("./pages/Index"));
+const Auth = React.lazy(() => import("./pages/Auth"));
+const Dashboard = React.lazy(() => import("./pages/Dashboard"));
+const SuperAdmin = React.lazy(() => import("./pages/SuperAdmin"));
+const LabProfile = React.lazy(() => import("./pages/LabProfile"));
+const BranchSettings = React.lazy(() => import("./pages/BranchSettings"));
+const PatientHistory = React.lazy(() => import("./pages/PatientHistory"));
+const DataManagement = React.lazy(() => import("./pages/DataManagement"));
+const AuditLogs = React.lazy(() => import("./pages/AuditLogs"));
+const ApiSettings = React.lazy(() => import("./pages/ApiSettings"));
+const Analytics = React.lazy(() => import("./pages/Analytics"));
+const Followups = React.lazy(() => import("./pages/Followups"));
+const OutstandingReport = React.lazy(() => import("./pages/OutstandingReport"));
+const Reports = React.lazy(() => import("./pages/Reports"));
+const ForgotPassword = React.lazy(() => import("./pages/ForgotPassword"));
+const PublicFeedback = React.lazy(() => import("./pages/PublicFeedback"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 2 * 60 * 1000, // 2 minutes default stale time
+      gcTime: 10 * 60 * 1000, // 10 minutes garbage collection time
+      refetchOnWindowFocus: true,
+      retry: 1,
+    },
+  },
+});
 
 const AppHeader = () => {
   const { profile } = useAuth();
@@ -100,13 +112,15 @@ const AppContent = () => {
 
   if (!showSidebar) {
     return (
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/feedback" element={<PublicFeedback />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/feedback" element={<PublicFeedback />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     );
   }
 
@@ -118,23 +132,25 @@ const AppContent = () => {
           <div className="flex-1 flex flex-col min-w-0">
             <AppHeader />
             <main className="flex-1 overflow-auto">
-              <Routes>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/outstanding-report" element={<OutstandingReport />} />
-                <Route path="/super-admin" element={<SuperAdmin />} />
-                <Route path="/super-admin/data-management" element={<DataManagement />} />
-                <Route path="/audit-logs" element={<AuditLogs />} />
-                <Route path="/api-settings" element={<ApiSettings />} />
-                <Route path="/lab-profile" element={<LabProfile />} />
-                <Route path="/branch-settings" element={<BranchSettings />} />
-                <Route path="/patient-history" element={<PatientHistory />} />
-                <Route path="/patient/:patientId" element={<PatientHistory />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/followups" element={<Followups />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/outstanding-report" element={<OutstandingReport />} />
+                  <Route path="/super-admin" element={<SuperAdmin />} />
+                  <Route path="/super-admin/data-management" element={<DataManagement />} />
+                  <Route path="/audit-logs" element={<AuditLogs />} />
+                  <Route path="/api-settings" element={<ApiSettings />} />
+                  <Route path="/lab-profile" element={<LabProfile />} />
+                  <Route path="/branch-settings" element={<BranchSettings />} />
+                  <Route path="/patient-history" element={<PatientHistory />} />
+                  <Route path="/patient/:patientId" element={<PatientHistory />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/followups" element={<Followups />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
             </main>
           </div>
         </div>
