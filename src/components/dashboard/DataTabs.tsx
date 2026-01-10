@@ -1,3 +1,4 @@
+import React, { memo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, TestTube, FileText, Receipt, Bell, MessageSquare, Wallet } from "lucide-react";
 import { PatientsTable } from "./PatientsTable";
@@ -39,7 +40,7 @@ interface DataTabsProps {
   onTabChange?: (tab: string) => void;
 }
 
-export function DataTabs({ 
+export const DataTabs = memo(function DataTabs({ 
   patients, reports, documents, bills, followups, feedback, payments,
   totalCollected,
   patientsPagination, reportsPagination, documentsPagination, billsPagination,
@@ -177,4 +178,4 @@ export function DataTabs({
       </TabsContent>
     </Tabs>
   );
-}
+});
