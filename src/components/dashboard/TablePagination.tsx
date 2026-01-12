@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TablePaginationProps {
   currentPage: number;
@@ -25,6 +26,7 @@ export function TablePagination({
   onPageSizeChange,
   isLoading = false,
 }: TablePaginationProps) {
+  const isMobile = useIsMobile();
   const startRecord = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endRecord = Math.min(currentPage * pageSize, totalCount);
 
@@ -69,6 +71,48 @@ export function TablePagination({
     return pages;
   };
 
+  // Mobile-optimized pagination
+  if (isMobile) {
+    return (
+      <div className="flex items-center justify-between gap-2 py-4">
+        {/* Prev button */}
+        <Button
+          variant="outline"
+          size="default"
+          className="h-11 min-w-touch px-4"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={!hasPrev || isLoading}
+        >
+          <ChevronLeft className="h-5 w-5 mr-1" />
+          Prev
+        </Button>
+
+        {/* Page indicator */}
+        <div className="flex flex-col items-center text-sm">
+          <span className="font-medium">
+            Page {currentPage} of {totalPages}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {totalCount.toLocaleString()} items
+          </span>
+        </div>
+
+        {/* Next button */}
+        <Button
+          variant="outline"
+          size="default"
+          className="h-11 min-w-touch px-4"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={!hasNext || isLoading}
+        >
+          Next
+          <ChevronRight className="h-5 w-5 ml-1" />
+        </Button>
+      </div>
+    );
+  }
+
+  // Desktop pagination
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
       {/* Page size selector */}

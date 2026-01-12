@@ -8,6 +8,9 @@ import { BillsTable } from "./BillsTable";
 import { FollowupsTable } from "./FollowupsTable";
 import { FeedbackTable } from "./FeedbackTable";
 import { LedgerTable } from "./LedgerTable";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface PaginationProps {
   currentPage: number;
@@ -49,34 +52,61 @@ export const DataTabs = memo(function DataTabs({
   activeTab = 'patients',
   onTabChange
 }: DataTabsProps) {
+  const isMobile = useIsMobile();
+  
   const tabs = [
-    { id: "patients", label: "Patients", icon: Users, count: patientsPagination.totalCount, tourId: "patients-tab" },
-    { id: "reports", label: "Test Reports", icon: TestTube, count: reportsPagination.totalCount, tourId: "reports-tab" },
-    { id: "documents", label: "Documents", icon: FileText, count: documentsPagination.totalCount },
-    { id: "bills", label: "Bills", icon: Receipt, count: billsPagination.totalCount, tourId: "bills-tab" },
-    { id: "followups", label: "Follow-ups", icon: Bell, count: followupsPagination.totalCount },
-    { id: "feedback", label: "Feedback", icon: MessageSquare, count: feedbackPagination.totalCount },
-    { id: "ledger", label: "Ledger", icon: Wallet, count: paymentsPagination.totalCount },
+    { id: "patients", label: "Patients", shortLabel: "Pts", icon: Users, count: patientsPagination.totalCount, tourId: "patients-tab" },
+    { id: "reports", label: "Test Reports", shortLabel: "Tests", icon: TestTube, count: reportsPagination.totalCount, tourId: "reports-tab" },
+    { id: "documents", label: "Documents", shortLabel: "Docs", icon: FileText, count: documentsPagination.totalCount },
+    { id: "bills", label: "Bills", shortLabel: "Bills", icon: Receipt, count: billsPagination.totalCount, tourId: "bills-tab" },
+    { id: "followups", label: "Follow-ups", shortLabel: "F/ups", icon: Bell, count: followupsPagination.totalCount },
+    { id: "feedback", label: "Feedback", shortLabel: "Fdbk", icon: MessageSquare, count: feedbackPagination.totalCount },
+    { id: "ledger", label: "Ledger", shortLabel: "Ldgr", icon: Wallet, count: paymentsPagination.totalCount },
   ];
+
+  const TabsListContent = (
+    <>
+      {tabs.map((tab) => (
+        <TabsTrigger
+          key={tab.id}
+          value={tab.id}
+          className={cn(
+            "flex items-center gap-1.5 data-[state=active]:bg-background shrink-0",
+            isMobile && "min-h-touch px-3"
+          )}
+          data-tour={tab.tourId}
+        >
+          <tab.icon className={cn("h-4 w-4", isMobile && "h-3.5 w-3.5")} />
+          <span className={cn(isMobile ? "text-xs" : "hidden sm:inline")}>
+            {isMobile ? tab.shortLabel : tab.label}
+          </span>
+          <span className={cn(
+            "text-xs bg-muted-foreground/20 px-1.5 py-0.5 rounded-full",
+            isMobile && "text-[10px] px-1"
+          )}>
+            {tab.count}
+          </span>
+        </TabsTrigger>
+      ))}
+    </>
+  );
 
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-      <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-muted/50 p-1">
-        {tabs.map((tab) => (
-          <TabsTrigger
-            key={tab.id}
-            value={tab.id}
-            className="flex items-center gap-1.5 data-[state=active]:bg-background"
-            data-tour={tab.tourId}
-          >
-            <tab.icon className="h-4 w-4" />
-            <span className="hidden sm:inline">{tab.label}</span>
-            <span className="text-xs bg-muted-foreground/20 px-1.5 py-0.5 rounded-full">
-              {tab.count}
-            </span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      {isMobile ? (
+        <div className="-mx-4 px-4">
+          <ScrollArea className="w-full whitespace-nowrap">
+            <TabsList className="inline-flex h-auto gap-1 bg-muted/50 p-1 w-max">
+              {TabsListContent}
+            </TabsList>
+            <ScrollBar orientation="horizontal" className="h-1.5" />
+          </ScrollArea>
+        </div>
+      ) : (
+        <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-muted/50 p-1">
+          {TabsListContent}
+        </TabsList>
+      )}
 
       <TabsContent value="patients" className="mt-4">
         <PatientsTable 

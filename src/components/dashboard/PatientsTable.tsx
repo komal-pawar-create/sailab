@@ -11,6 +11,8 @@ import { AddBillForm } from "@/components/forms/AddBillForm";
 import { AddPatientForm } from "@/components/forms/AddPatientForm";
 import { TablePagination } from "./TablePagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileCardView } from "./MobileCardView";
 
 interface Patient {
   id: string;
@@ -48,6 +50,7 @@ export function PatientsTable({
   isLoading = false 
 }: PatientsTableProps) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showReportForm, setShowReportForm] = useState(false);
@@ -88,13 +91,24 @@ export function PatientsTable({
             placeholder="Search patients..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-9"
+            className="pl-9 h-11"
+            inputMode="search"
           />
         </div>
         <AddPatientForm onPatientAdded={onRefresh} />
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      {/* Mobile Card View */}
+      {isMobile ? (
+        <MobileCardView
+          patients={patients}
+          onAddReport={handleAddReport}
+          onAddBill={handleAddBill}
+          isLoading={isLoading}
+        />
+      ) : (
+        /* Desktop Table View */
+        <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
@@ -178,7 +192,8 @@ export function PatientsTable({
             )}
           </TableBody>
         </Table>
-      </div>
+        </div>
+      )}
 
       {/* Pagination */}
       <TablePagination
