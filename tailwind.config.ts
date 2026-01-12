@@ -105,6 +105,20 @@ export default {
 				'enter': 'fade-in 0.3s ease-out, scale-in 0.2s ease-out',
 				'float': 'float 6s ease-in-out infinite',
 				'pulse-ring': 'pulse-ring 1.5s ease-out infinite'
+			},
+			// Mobile-specific spacing
+			spacing: {
+				'safe-top': 'var(--safe-area-inset-top)',
+				'safe-bottom': 'var(--safe-area-inset-bottom)',
+				'safe-left': 'var(--safe-area-inset-left)',
+				'safe-right': 'var(--safe-area-inset-right)',
+			},
+			// Minimum touch target size
+			minHeight: {
+				'touch': '44px',
+			},
+			minWidth: {
+				'touch': '44px',
 			}
 		}
 	},
