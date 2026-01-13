@@ -25,6 +25,7 @@ interface BillItem {
   quantity: number;
   rate: number;
   amount: number;
+  tax_rate?: number;
 }
 
 interface AddBillFormProps {
@@ -45,11 +46,13 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
     patient_id: '',
     bill_number: '',
     due_date: '',
-    notes: ''
+    notes: '',
+    discount_amount: 0,
+    discount_type: 'fixed' as 'fixed' | 'percentage',
   });
 
   const [items, setItems] = useState<BillItem[]>([
-    { description: '', quantity: 1, rate: 0, amount: 0 }
+    { description: '', quantity: 1, rate: 0, amount: 0, tax_rate: 0 }
   ]);
 
   const [selectedOperator, setSelectedOperator] = useState('');
@@ -116,7 +119,7 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
   };
 
   const addItem = () => {
-    setItems([...items, { description: '', quantity: 1, rate: 0, amount: 0 }]);
+    setItems([...items, { description: '', quantity: 1, rate: 0, amount: 0, tax_rate: 0 }]);
   };
 
   const removeItem = (index: number) => {
@@ -137,8 +140,20 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
     setItems(updatedItems);
   };
 
-  const getTotalAmount = () => {
+  const getSubtotal = () => {
     return items.reduce((total, item) => total + item.amount, 0);
+  };
+
+  const getDiscountAmount = () => {
+    const subtotal = getSubtotal();
+    if (formData.discount_type === 'percentage') {
+      return (subtotal * formData.discount_amount) / 100;
+    }
+    return formData.discount_amount;
+  };
+
+  const getTotalAmount = () => {
+    return getSubtotal() - getDiscountAmount();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -229,7 +244,9 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
           notes: formData.notes,
           lab_id: labId,
           branch_id: branchId,
-          created_by: createdBy
+          created_by: createdBy,
+          discount_amount: getDiscountAmount(),
+          discount_type: formData.discount_type,
         })
         .select('*, patients!bills_patient_id_fkey(full_name, patient_id, phone, age, gender)')
         .single();
@@ -257,9 +274,11 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
         patient_id: '',
         bill_number: '',
         due_date: '',
-        notes: ''
+        notes: '',
+        discount_amount: 0,
+        discount_type: 'fixed',
       });
-      setItems([{ description: '', quantity: 1, rate: 0, amount: 0 }]);
+      setItems([{ description: '', quantity: 1, rate: 0, amount: 0, tax_rate: 0 }]);
       setSelectedOperator('');
       generateBillNumber(); // Generate new bill number for next bill
       onBillAdded();
@@ -409,9 +428,51 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
               ))}
             </div>
 
-            <div className="flex justify-end">
-              <div className="text-lg font-semibold">
-                Total: ₹{getTotalAmount().toFixed(2)}
+            {/* Discount Section */}
+            <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 rounded-lg">
+              <div className="space-y-2">
+                <Label>Discount Type</Label>
+                <select
+                  className="w-full h-10 px-3 border rounded-md bg-background"
+                  value={formData.discount_type}
+                  onChange={(e) => setFormData({ ...formData, discount_type: e.target.value as 'fixed' | 'percentage' })}
+                >
+                  <option value="fixed">Fixed (₹)</option>
+                  <option value="percentage">Percentage (%)</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Discount {formData.discount_type === 'percentage' ? '(%)' : '(₹)'}</Label>
+                <CapitalizedInput
+                  type="number"
+                  min="0"
+                  max={formData.discount_type === 'percentage' ? 100 : getSubtotal()}
+                  value={formData.discount_amount}
+                  onChange={(e) => setFormData({ ...formData, discount_amount: parseFloat(e.target.value) || 0 })}
+                  capitalize={false}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Discount Amount</Label>
+                <div className="h-10 px-3 flex items-center border rounded-md bg-muted text-muted-foreground">
+                  ₹{getDiscountAmount().toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-y-1">
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground">
+                  Subtotal: ₹{getSubtotal().toFixed(2)}
+                </div>
+                {getDiscountAmount() > 0 && (
+                  <div className="text-sm text-green-600">
+                    Discount: -₹{getDiscountAmount().toFixed(2)}
+                  </div>
+                )}
+                <div className="text-lg font-semibold">
+                  Total: ₹{getTotalAmount().toFixed(2)}
+                </div>
               </div>
             </div>
             

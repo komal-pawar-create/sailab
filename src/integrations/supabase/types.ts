@@ -210,11 +210,13 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          is_refund: boolean | null
           notes: string | null
           payment_amount: number
           payment_date: string
           payment_method: string
           reference_number: string | null
+          refund_reason: string | null
         }
         Insert: {
           bill_id: string
@@ -222,11 +224,13 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          is_refund?: boolean | null
           notes?: string | null
           payment_amount: number
           payment_date?: string
           payment_method?: string
           reference_number?: string | null
+          refund_reason?: string | null
         }
         Update: {
           bill_id?: string
@@ -234,11 +238,13 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          is_refund?: boolean | null
           notes?: string | null
           payment_amount?: number
           payment_date?: string
           payment_method?: string
           reference_number?: string | null
+          refund_reason?: string | null
         }
         Relationships: [
           {
@@ -271,6 +277,8 @@ export type Database = {
           branch_id: string | null
           created_at: string
           created_by: string
+          discount_amount: number | null
+          discount_type: string | null
           due_amount: number
           due_date: string
           id: string
@@ -289,6 +297,8 @@ export type Database = {
           branch_id?: string | null
           created_at?: string
           created_by: string
+          discount_amount?: number | null
+          discount_type?: string | null
           due_amount: number
           due_date: string
           id?: string
@@ -307,6 +317,8 @@ export type Database = {
           branch_id?: string | null
           created_at?: string
           created_by?: string
+          discount_amount?: number | null
+          discount_type?: string | null
           due_amount?: number
           due_date?: string
           id?: string
@@ -1290,6 +1302,47 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          lead_id: string
+          new_status: string | null
+          old_status: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          lead_id: string
+          new_status?: string | null
+          old_status?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          lead_id?: string
+          new_status?: string | null
+          old_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           assigned_to: string | null
@@ -1304,8 +1357,10 @@ export type Database = {
           follow_up_date: string | null
           id: string
           lab_name: string
+          last_activity_at: string | null
           location: string | null
           notes: string | null
+          priority: string | null
           source: string | null
           status: string | null
           updated_at: string | null
@@ -1323,8 +1378,10 @@ export type Database = {
           follow_up_date?: string | null
           id?: string
           lab_name: string
+          last_activity_at?: string | null
           location?: string | null
           notes?: string | null
+          priority?: string | null
           source?: string | null
           status?: string | null
           updated_at?: string | null
@@ -1342,8 +1399,10 @@ export type Database = {
           follow_up_date?: string | null
           id?: string
           lab_name?: string
+          last_activity_at?: string | null
           location?: string | null
           notes?: string | null
+          priority?: string | null
           source?: string | null
           status?: string | null
           updated_at?: string | null

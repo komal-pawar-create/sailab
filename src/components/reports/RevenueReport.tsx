@@ -63,15 +63,16 @@ export function RevenueReport() {
       billsQuery = billsQuery.eq('branch_id', branchFilter);
     }
 
-    // Fetch payments
+    // Fetch payments - join with bills to filter by lab_id
     let paymentsQuery = supabase
       .from('bill_payments')
-      .select('payment_date, payment_amount')
+      .select('payment_date, payment_amount, bills!inner(lab_id, branch_id)')
       .gte('payment_date', format(filters.dateFrom, 'yyyy-MM-dd'))
-      .lte('payment_date', format(filters.dateTo, 'yyyy-MM-dd'));
+      .lte('payment_date', format(filters.dateTo, 'yyyy-MM-dd'))
+      .eq('bills.lab_id', profile.lab_id);
 
     if (branchFilter) {
-      paymentsQuery = paymentsQuery.eq('branch_id', branchFilter);
+      paymentsQuery = paymentsQuery.eq('bills.branch_id', branchFilter);
     }
 
     const [billsResult, paymentsResult] = await Promise.all([billsQuery, paymentsQuery]);
