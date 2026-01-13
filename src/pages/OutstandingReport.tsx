@@ -289,33 +289,106 @@ export default function OutstandingReport() {
         </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card className="border-destructive/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <IndianRupee className="h-4 w-4" />
-              Total Outstanding
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-destructive">
-              ₹{totalOutstanding.toLocaleString()}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Patients with Dues
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{uniquePatients}</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Aging Analysis */}
+      {(() => {
+        const today = new Date();
+        const aging = {
+          current: { count: 0, amount: 0 },
+          days30: { count: 0, amount: 0 },
+          days60: { count: 0, amount: 0 },
+          days90: { count: 0, amount: 0 },
+        };
+
+        filteredBills.forEach(bill => {
+          const billDate = new Date(bill.bill_date);
+          const daysDiff = Math.floor((today.getTime() - billDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff <= 30) {
+            aging.current.count++;
+            aging.current.amount += bill.due_amount;
+          } else if (daysDiff <= 60) {
+            aging.days30.count++;
+            aging.days30.amount += bill.due_amount;
+          } else if (daysDiff <= 90) {
+            aging.days60.count++;
+            aging.days60.amount += bill.due_amount;
+          } else {
+            aging.days90.count++;
+            aging.days90.amount += bill.due_amount;
+          }
+        });
+
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <Card className="border-destructive/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <IndianRupee className="h-4 w-4" />
+                  Total Outstanding
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-destructive">
+                  ₹{totalOutstanding.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">{uniquePatients} patients</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-green-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground">
+                  Current (0-30 days)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-bold text-green-600">
+                  ₹{aging.current.amount.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">{aging.current.count} bills</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-yellow-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground">
+                  31-60 days
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-bold text-yellow-600">
+                  ₹{aging.days30.amount.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">{aging.days30.count} bills</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-orange-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground">
+                  61-90 days
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-bold text-orange-600">
+                  ₹{aging.days60.amount.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">{aging.days60.count} bills</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-red-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground">
+                  90+ days
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-bold text-red-600">
+                  ₹{aging.days90.amount.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">{aging.days90.count} bills</p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Filters */}
       <Card>
