@@ -59,6 +59,21 @@ export function CollectionReport() {
     if (!profile?.lab_id) return;
     setLoading(true);
 
+    // First get bill IDs for this lab
+    const { data: labBills } = await supabase
+      .from('bills')
+      .select('id')
+      .eq('lab_id', profile.lab_id);
+
+    if (!labBills || labBills.length === 0) {
+      setData([]);
+      setTotals({});
+      setLoading(false);
+      return;
+    }
+
+    const billIds = labBills.map(b => b.id);
+
     let query = supabase
       .from('bill_payments')
       .select(`
@@ -66,9 +81,11 @@ export function CollectionReport() {
         payment_amount,
         payment_method,
         reference_number,
-        bills!fk_bill_payments_bill(bill_number, patients!bills_patient_id_fkey(full_name)),
+        bill_id,
+        bills!bill_payments_bill_id_fkey(bill_number, lab_id, patients!bills_patient_id_fkey(full_name)),
         branches!fk_bill_payments_branch(name)
       `)
+      .in('bill_id', billIds)
       .order('payment_date', { ascending: true }); // Ascending for chronological order
 
     if (filters.dateFrom) {
