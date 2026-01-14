@@ -62,7 +62,7 @@ const adminItems: NavItem[] = [
 
 const superAdminItems: NavItem[] = [
   { title: 'Super Admin', url: '/super-admin', icon: ShieldCheck, roles: ['super_admin'] },
-  { title: 'Sales & Leads', url: '/super-admin?tab=leads', icon: Users, roles: ['super_admin'] },
+  { title: 'Sales & Leads', url: '/sales-leads', icon: Users, roles: ['super_admin'] },
   { title: 'Subscriptions', url: '/super-admin?tab=subscriptions', icon: CreditCard, roles: ['super_admin'] },
   { title: 'Landing Page', url: '/super-admin?tab=landing', icon: Globe, roles: ['super_admin'] },
   { title: 'Data Management', url: '/super-admin/data-management', icon: Database, roles: ['super_admin'] },
