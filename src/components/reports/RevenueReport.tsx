@@ -66,13 +66,12 @@ export function RevenueReport() {
     // Fetch payments - join with bills to filter by lab_id
     let paymentsQuery = supabase
       .from('bill_payments')
-      .select('payment_date, payment_amount, bills!inner(lab_id, branch_id)')
+      .select('payment_date, payment_amount, bill_id, bills!bill_payments_bill_id_fkey(lab_id, branch_id)')
       .gte('payment_date', format(filters.dateFrom, 'yyyy-MM-dd'))
-      .lte('payment_date', format(filters.dateTo, 'yyyy-MM-dd'))
-      .eq('bills.lab_id', profile.lab_id);
+      .lte('payment_date', format(filters.dateTo, 'yyyy-MM-dd'));
 
     if (branchFilter) {
-      paymentsQuery = paymentsQuery.eq('bills.branch_id', branchFilter);
+      paymentsQuery = paymentsQuery.eq('branch_id', branchFilter);
     }
 
     const [billsResult, paymentsResult] = await Promise.all([billsQuery, paymentsQuery]);
@@ -104,11 +103,14 @@ export function RevenueReport() {
         }
       });
 
-      // Aggregate payments
+      // Aggregate payments - filter by lab_id
       paymentsResult.data.forEach((payment: any) => {
-        const dateKey = payment.payment_date;
-        if (revenueByDate[dateKey]) {
-          revenueByDate[dateKey].collections += payment.payment_amount;
+        // Only include payments from bills belonging to this lab
+        if (payment.bills?.lab_id === profile.lab_id) {
+          const dateKey = payment.payment_date;
+          if (revenueByDate[dateKey]) {
+            revenueByDate[dateKey].collections += payment.payment_amount;
+          }
         }
       });
 
