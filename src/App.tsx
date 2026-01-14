@@ -31,6 +31,7 @@ const OutstandingReport = React.lazy(() => import("./pages/OutstandingReport"));
 const Reports = React.lazy(() => import("./pages/Reports"));
 const ForgotPassword = React.lazy(() => import("./pages/ForgotPassword"));
 const PublicFeedback = React.lazy(() => import("./pages/PublicFeedback"));
+const SalesLeads = React.lazy(() => import("./pages/SalesLeads"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -147,6 +148,7 @@ const AppContent = () => {
                   <Route path="/patient/:patientId" element={<PatientHistory />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/followups" element={<Followups />} />
+                  <Route path="/sales-leads" element={<SalesLeads />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

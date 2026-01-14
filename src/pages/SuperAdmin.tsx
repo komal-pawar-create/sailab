@@ -20,8 +20,6 @@ import { EditLabDialog } from '@/components/forms/EditLabDialog';
 import { EditOrganizationDialog } from '@/components/forms/EditOrganizationDialog';
 import EditUserDialog from '@/components/forms/EditUserDialog';
 import EditBranchDialog from '@/components/forms/EditBranchDialog';
-import { AddLeadForm } from '@/components/forms/AddLeadForm';
-import { LeadsPipeline } from '@/components/super-admin/LeadsPipeline';
 import { SubscriptionsTab } from '@/components/super-admin/SubscriptionsTab';
 import { OnboardingWizard } from '@/components/super-admin/OnboardingWizard';
 import { SystemHealthTab } from '@/components/super-admin/SystemHealthTab';
@@ -169,16 +167,6 @@ export default function SuperAdmin() {
   const [isEditLabDialogOpen, setIsEditLabDialogOpen] = useState(false);
   const [editingOrganization, setEditingOrganization] = useState<Organization | null>(null);
   const [isEditOrgDialogOpen, setIsEditOrgDialogOpen] = useState(false);
-  const [convertingLead, setConvertingLead] = useState<{
-    id: string;
-    lab_name: string;
-    contact_name: string;
-    contact_email: string | null;
-    contact_phone: string | null;
-    location: string | null;
-    expected_value: number | null;
-  } | null>(null);
-
   // Get active tab from URL
   const activeTab = searchParams.get('tab') || 'overview';
 
@@ -510,10 +498,6 @@ export default function SuperAdmin() {
               <Rocket className="h-4 w-4" />
               Onboard Lab
             </TabsTrigger>
-            <TabsTrigger value="leads" className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              Sales & Leads
-            </TabsTrigger>
             <TabsTrigger value="subscriptions" className="flex items-center gap-1">
               <CreditCard className="h-4 w-4" />
               Subscriptions
@@ -573,7 +557,7 @@ export default function SuperAdmin() {
                 </CardContent>
               </Card>
 
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSearchParams({ tab: 'leads' })}>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/sales-leads')}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-purple-500" />
@@ -684,27 +668,6 @@ export default function SuperAdmin() {
             />
           </TabsContent>
 
-          {/* Sales & Leads Tab */}
-          <TabsContent value="leads" className="space-y-6">
-            {convertingLead ? (
-              <OnboardingWizard 
-                leadData={convertingLead}
-                onComplete={() => {
-                  setConvertingLead(null);
-                  fetchData();
-                }}
-                onClose={() => setConvertingLead(null)}
-              />
-            ) : (
-              <>
-                <AddLeadForm onSuccess={fetchData} />
-                <LeadsPipeline 
-                  onRefresh={fetchData} 
-                  onConvertLead={(lead) => setConvertingLead(lead)}
-                />
-              </>
-            )}
-          </TabsContent>
 
           {/* Subscriptions Tab */}
           <TabsContent value="subscriptions" className="space-y-6">
