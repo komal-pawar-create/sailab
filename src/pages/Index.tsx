@@ -28,10 +28,11 @@ const PricingSection = React.lazy(() => import('@/components/landing/PricingSect
 const FAQSection = React.lazy(() => import('@/components/landing/FAQSection'));
 const CTASection = React.lazy(() => import('@/components/landing/CTASection'));
 const FooterSection = React.lazy(() => import('@/components/landing/FooterSection'));
+const BackToTop = React.lazy(() => import('@/components/landing/BackToTop'));
 
 // Section loading skeleton
 const SectionSkeleton = () => (
-  <div className="py-24 px-4">
+  <div className="py-24 px-4" aria-hidden="true">
     <div className="max-w-6xl mx-auto">
       <div className="animate-pulse space-y-8">
         <div className="h-8 w-48 bg-muted rounded mx-auto" />
@@ -177,53 +178,80 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-hidden scroll-smooth">
+      {/* Skip to main content link for accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none"
+      >
+        Skip to main content
+      </a>
+
       {/* Fixed Navigation Header */}
       <NavHeader scrollY={scrollY} />
       
       {/* Floating background shapes */}
-      <FloatingShape className="w-[600px] h-[600px] bg-primary/20 -top-48 -left-48" />
-      <FloatingShape className="w-[500px] h-[500px] bg-accent/20 top-96 -right-48 delay-200" />
-      <FloatingShape className="w-[400px] h-[400px] bg-primary/15 bottom-48 left-1/4 delay-400" />
+      <div aria-hidden="true">
+        <FloatingShape className="w-[600px] h-[600px] bg-primary/20 -top-48 -left-48" />
+        <FloatingShape className="w-[500px] h-[500px] bg-accent/20 top-96 -right-48 delay-200" />
+        <FloatingShape className="w-[400px] h-[400px] bg-primary/15 bottom-48 left-1/4 delay-400" />
+      </div>
 
-      {/* Lazy-loaded sections */}
-      <Suspense fallback={<SectionSkeleton />}>
-        <HeroSection heroContent={heroContent} stats={stats} scrollY={scrollY} />
-      </Suspense>
+      {/* Main content */}
+      <main id="main-content" role="main">
+        {/* Hero Section */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <HeroSection heroContent={heroContent} stats={stats} scrollY={scrollY} />
+        </Suspense>
 
-      <Suspense fallback={<SectionSkeleton />}>
-        <DemoSection />
-      </Suspense>
+        {/* Demo Section */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <DemoSection />
+        </Suspense>
 
-      <Suspense fallback={<SectionSkeleton />}>
-        <FeaturesSection features={features} />
-      </Suspense>
+        {/* Features Section */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <FeaturesSection features={features} />
+        </Suspense>
 
-      <Suspense fallback={<SectionSkeleton />}>
-        <HowItWorksSection steps={steps} />
-      </Suspense>
+        {/* How It Works Section */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <HowItWorksSection steps={steps} />
+        </Suspense>
 
-      <Suspense fallback={<SectionSkeleton />}>
-        <BenefitsSection benefits={benefits} sectionContent={sectionContent} />
-      </Suspense>
+        {/* Benefits Section */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <BenefitsSection benefits={benefits} sectionContent={sectionContent} />
+        </Suspense>
 
-      <Suspense fallback={<SectionSkeleton />}>
-        <TestimonialsSection testimonials={testimonials} />
-      </Suspense>
+        {/* Testimonials Section */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <TestimonialsSection testimonials={testimonials} />
+        </Suspense>
 
-      <Suspense fallback={<SectionSkeleton />}>
-        <PricingSection pricingPlans={formattedPricingPlans} />
-      </Suspense>
+        {/* Pricing Section */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <PricingSection pricingPlans={formattedPricingPlans} />
+        </Suspense>
 
-      <Suspense fallback={<SectionSkeleton />}>
-        <FAQSection faqs={faqs} />
-      </Suspense>
+        {/* FAQ Section */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <FAQSection faqs={faqs} />
+        </Suspense>
 
-      <Suspense fallback={<SectionSkeleton />}>
-        <CTASection ctaContent={ctaContent} />
-      </Suspense>
+        {/* CTA Section */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <CTASection ctaContent={ctaContent} />
+        </Suspense>
+      </main>
 
+      {/* Footer */}
       <Suspense fallback={<div className="h-24" />}>
         <FooterSection footerContent={footerContent} />
+      </Suspense>
+
+      {/* Back to Top Button */}
+      <Suspense fallback={null}>
+        <BackToTop />
       </Suspense>
     </div>
   );

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Users,
   TestTube,
@@ -46,12 +47,12 @@ export const getIconComponent = (name: string): React.ElementType => {
 
 export const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
   const IconComponent = getIconComponent(name);
-  return <IconComponent className={className} />;
+  return <IconComponent className={className} aria-hidden="true" />;
 };
 
-// Animated counter component
+// Animated counter component with skeleton loading
 export const AnimatedCounter = ({ end, duration = 2000, suffix = '' }: { end: number; duration?: number; suffix?: string }) => {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState<number | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
 
@@ -87,7 +88,15 @@ export const AnimatedCounter = ({ end, duration = 2000, suffix = '' }: { end: nu
     requestAnimationFrame(animate);
   }, [isVisible, end, duration]);
 
-  return <span ref={ref} className="animate-count-up">{count}{suffix}</span>;
+  return (
+    <span ref={ref} className="animate-count-up">
+      {count === null ? (
+        <Skeleton className="h-10 w-16 inline-block" />
+      ) : (
+        `${count}${suffix}`
+      )}
+    </span>
+  );
 };
 
 // Feature card component - supports dynamic icon names
@@ -99,10 +108,10 @@ export const FeatureCard = ({ icon, iconName, title, description, delay }: {
   delay: string;
 }) => (
   <Card className={`group relative overflow-hidden p-6 glass hover-lift animate-slide-up opacity-0 ${delay}`} style={{ animationFillMode: 'forwards' }}>
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
     <div className="relative">
       <div className="mb-4 inline-flex p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-        {icon ? <>{React.createElement(icon, { className: "h-6 w-6" })}</> : iconName ? <DynamicIcon name={iconName} className="h-6 w-6" /> : null}
+        {icon ? <>{React.createElement(icon, { className: "h-6 w-6", "aria-hidden": true })}</> : iconName ? <DynamicIcon name={iconName} className="h-6 w-6" /> : null}
       </div>
       <h3 className="text-lg font-semibold mb-2 text-foreground">{title}</h3>
       <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
@@ -120,11 +129,14 @@ export const Step = ({ number, title, description, isLast, delay }: {
 }) => (
   <div className={`relative flex gap-6 animate-slide-up opacity-0 ${delay}`} style={{ animationFillMode: 'forwards' }}>
     <div className="flex flex-col items-center">
-      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground font-bold text-lg animate-pulse-glow">
+      <div 
+        className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground font-bold text-lg animate-pulse-glow"
+        aria-hidden="true"
+      >
         {number}
       </div>
       {!isLast && (
-        <div className="w-0.5 h-full bg-gradient-to-b from-primary to-primary/20 mt-4" />
+        <div className="w-0.5 h-full bg-gradient-to-b from-primary to-primary/20 mt-4" aria-hidden="true" />
       )}
     </div>
     <div className="pb-12">
@@ -145,16 +157,21 @@ export const PricingCard = ({
   const { name, price, amcPrice, discount, minLabs, features, isPopular, isEnterprise } = plan;
   
   return (
-    <Card className={`group relative overflow-hidden p-6 animate-slide-up opacity-0 ${delay} ${
-      isPopular 
-        ? 'glass-strong border-2 border-primary shadow-xl scale-105 z-10' 
-        : 'glass hover-lift'
-    }`} style={{ animationFillMode: 'forwards' }}>
+    <Card 
+      className={`group relative overflow-hidden p-6 animate-slide-up opacity-0 ${delay} ${
+        isPopular 
+          ? 'glass-strong border-2 border-primary shadow-xl scale-105 z-10' 
+          : 'glass hover-lift'
+      }`} 
+      style={{ animationFillMode: 'forwards' }}
+      role="article"
+      aria-label={`${name} pricing plan`}
+    >
       {/* Popular Badge */}
       {isPopular && (
         <div className="absolute -top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-lg">
-            <Star className="h-3.5 w-3.5 fill-current" />
+            <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
             Most Popular
           </div>
         </div>
@@ -164,7 +181,7 @@ export const PricingCard = ({
       {discount && (
         <div className="absolute top-4 right-4">
           <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
-            <BadgePercent className="h-3 w-3" />
+            <BadgePercent className="h-3 w-3" aria-hidden="true" />
             Save {discount}%
           </div>
         </div>
@@ -192,10 +209,10 @@ export const PricingCard = ({
         </div>
         
         {/* Features */}
-        <ul className="space-y-3 mb-8">
+        <ul className="space-y-3 mb-8" aria-label={`${name} plan features`}>
           {features.map((feature, index) => (
             <li key={index} className="flex items-start gap-3">
-              <Check className={`h-5 w-5 flex-shrink-0 mt-0.5 ${isPopular ? 'text-primary' : 'text-green-600 dark:text-green-400'}`} />
+              <Check className={`h-5 w-5 flex-shrink-0 mt-0.5 ${isPopular ? 'text-primary' : 'text-green-600 dark:text-green-400'}`} aria-hidden="true" />
               <span className="text-sm text-foreground">{feature}</span>
             </li>
           ))}
@@ -204,13 +221,13 @@ export const PricingCard = ({
         {/* CTA Button */}
         <Button 
           asChild 
-          className={`w-full ${isPopular ? 'animate-pulse-glow' : ''}`}
+          className={`w-full active:scale-95 transition-transform ${isPopular ? 'animate-pulse-glow' : ''}`}
           variant={isPopular ? 'default' : 'outline'}
           size="lg"
         >
           <Link to="/auth" className="flex items-center justify-center gap-2">
             {isEnterprise ? 'Contact Sales' : 'Get Started'}
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </Button>
       </div>
@@ -220,5 +237,5 @@ export const PricingCard = ({
 
 // Floating shape component
 export const FloatingShape = ({ className }: { className?: string }) => (
-  <div className={`absolute rounded-full animate-blob opacity-30 blur-3xl ${className}`} />
+  <div className={`absolute rounded-full animate-blob opacity-30 blur-3xl ${className}`} aria-hidden="true" />
 );
