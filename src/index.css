@@ -115,6 +115,27 @@ All colors MUST be HSL.
     background-attachment: fixed;
   }
 
+  /* Accessible focus states */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* Remove default focus for mouse users */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   /* Safe area support for notched devices */
   :root {
     --safe-area-inset-top: env(safe-area-inset-top, 0px);
