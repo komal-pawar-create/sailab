@@ -40,8 +40,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
   const navLinks = [
     { href: '#demo', label: 'Demo' },
     { href: '#features', label: 'Features' },
-    { href: '#how-it-works', label: 'How It Works' },
-    { href: '#testimonials', label: 'Testimonials' },
+    { href: '/product-tour', label: 'Product Tour', isRoute: true },
     { href: '#pricing', label: 'Pricing' },
     { href: '#faq', label: 'FAQ' },
   ];
@@ -87,17 +86,30 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
             {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={(e) => handleSmoothScroll(e, link.href)}
-                className={`text-sm font-medium transition-colors duration-300 hover:text-primary relative group ${
-                  isScrolled ? 'text-foreground' : 'text-foreground'
-                }`}
-              >
-                {link.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" aria-hidden="true" />
-              </a>
+              link.isRoute ? (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={`text-sm font-medium transition-colors duration-300 hover:text-primary relative group ${
+                    isScrolled ? 'text-foreground' : 'text-foreground'
+                  }`}
+                >
+                  {link.label}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" aria-hidden="true" />
+                </Link>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => handleSmoothScroll(e, link.href)}
+                  className={`text-sm font-medium transition-colors duration-300 hover:text-primary relative group ${
+                    isScrolled ? 'text-foreground' : 'text-foreground'
+                  }`}
+                >
+                  {link.label}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" aria-hidden="true" />
+                </a>
+              )
             ))}
           </nav>
 
@@ -172,15 +184,27 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
         >
           <div className="flex flex-col p-4 gap-1">
             {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={(e) => handleSmoothScroll(e, link.href)}
-                className="text-foreground hover:text-primary py-3.5 px-4 rounded-lg hover:bg-muted/50 transition-colors min-h-[48px] flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-                tabIndex={mobileMenuOpen ? 0 : -1}
-              >
-                {link.label}
-              </a>
+              link.isRoute ? (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-foreground hover:text-primary py-3.5 px-4 rounded-lg hover:bg-muted/50 transition-colors min-h-[48px] flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                  tabIndex={mobileMenuOpen ? 0 : -1}
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => handleSmoothScroll(e, link.href)}
+                  className="text-foreground hover:text-primary py-3.5 px-4 rounded-lg hover:bg-muted/50 transition-colors min-h-[48px] flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                  tabIndex={mobileMenuOpen ? 0 : -1}
+                >
+                  {link.label}
+                </a>
+              )
             ))}
             <div className="border-t border-border my-2" />
             <Link
