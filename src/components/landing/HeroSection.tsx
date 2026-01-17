@@ -58,10 +58,10 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
             </Link>
           </Button>
           <Button variant="outline" size="lg" className="text-lg px-8 py-6 glass active:scale-95 transition-transform" asChild>
-            <a href="#features" className="flex items-center gap-2">
-              {heroContent?.cta_secondary_text || 'Explore Features'}
+            <Link to="/product-tour" className="flex items-center gap-2">
+              See How It Works
               <ChevronDown className="h-5 w-5" aria-hidden="true" />
-            </a>
+            </Link>
           </Button>
         </div>
 

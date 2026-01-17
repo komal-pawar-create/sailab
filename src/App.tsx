@@ -32,6 +32,7 @@ const Reports = React.lazy(() => import("./pages/Reports"));
 const ForgotPassword = React.lazy(() => import("./pages/ForgotPassword"));
 const PublicFeedback = React.lazy(() => import("./pages/PublicFeedback"));
 const SalesLeads = React.lazy(() => import("./pages/SalesLeads"));
+const ProductTour = React.lazy(() => import("./pages/ProductTour"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -92,7 +93,7 @@ const AppContent = () => {
   const location = useLocation();
   
   // Pages that should not have sidebar
-  const noSidebarPages = ['/auth', '/forgot-password', '/', '/feedback'];
+  const noSidebarPages = ['/auth', '/forgot-password', '/', '/feedback', '/product-tour'];
   const showSidebar = !noSidebarPages.includes(location.pathname) && !location.pathname.startsWith('/feedback');
 
   useEffect(() => {
@@ -116,6 +117,7 @@ const AppContent = () => {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/product-tour" element={<ProductTour />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/feedback" element={<PublicFeedback />} />
