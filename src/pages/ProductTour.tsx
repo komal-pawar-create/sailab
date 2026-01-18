@@ -10,6 +10,7 @@ const ROICalculator = React.lazy(() => import('@/components/product-tour/ROICalc
 const ExpectationsGrid = React.lazy(() => import('@/components/product-tour/ExpectationsGrid'));
 const TourCTA = React.lazy(() => import('@/components/product-tour/TourCTA'));
 const TourFAQ = React.lazy(() => import('@/components/product-tour/TourFAQ'));
+const ComparisonTable = React.lazy(() => import('@/components/product-tour/ComparisonTable'));
 const FooterSection = React.lazy(() => import('@/components/landing/FooterSection'));
 const BackToTop = React.lazy(() => import('@/components/landing/BackToTop'));
 
@@ -61,6 +62,10 @@ const ProductTour = () => {
             <StakeholderTabs />
           </Suspense>
         </div>
+
+        <Suspense fallback={<SectionSkeleton />}>
+          <ComparisonTable />
+        </Suspense>
 
         <Suspense fallback={<SectionSkeleton />}>
           <FeatureDeepDive />
