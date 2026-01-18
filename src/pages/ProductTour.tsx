@@ -91,11 +91,10 @@ const ProductTour = () => {
         <FooterSection footerContent={null} />
       </Suspense>
 
-        <Suspense fallback={null}>
-          <BackToTop />
-        </Suspense>
-      </div>
-    </>
+      <Suspense fallback={null}>
+        <BackToTop />
+      </Suspense>
+    </div>
   );
 };
 
