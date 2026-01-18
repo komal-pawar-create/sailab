@@ -23,9 +23,198 @@ import {
   RotateCcw,
   ChevronRight,
   MousePointer,
-  ArrowRight
+  ArrowRight,
+  Video,
+  ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Video embed helper functions
+const getYouTubeVideoId = (url: string): string | null => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? match[2] : null;
+};
+
+const getVimeoVideoId = (url: string): string | null => {
+  const regExp = /vimeo\.com\/(?:.*\/)?(\d+)/;
+  const match = url.match(regExp);
+  return match ? match[1] : null;
+};
+
+const VideoEmbed = ({ video }: { video: { video_url: string; video_type: string; title: string } }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  if (video.video_type === 'youtube') {
+    const videoId = getYouTubeVideoId(video.video_url);
+    if (!videoId) return null;
+    return (
+      <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+        {!isLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+              <Play className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+        )}
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+          title={video.title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className={cn("w-full h-full transition-opacity duration-300", isLoaded ? "opacity-100" : "opacity-0")}
+          onLoad={() => setIsLoaded(true)}
+        />
+      </div>
+    );
+  }
+
+  if (video.video_type === 'vimeo') {
+    const videoId = getVimeoVideoId(video.video_url);
+    if (!videoId) return null;
+    return (
+      <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+        {!isLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+              <Play className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+        )}
+        <iframe
+          src={`https://player.vimeo.com/video/${videoId}`}
+          title={video.title}
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          className={cn("w-full h-full transition-opacity duration-300", isLoaded ? "opacity-100" : "opacity-0")}
+          onLoad={() => setIsLoaded(true)}
+        />
+      </div>
+    );
+  }
+
+  // Direct video (MP4)
+  return (
+    <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+      <video
+        src={video.video_url}
+        title={video.title}
+        controls
+        className="w-full h-full"
+      >
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  );
+};
+
+interface DemoVideo {
+  id: string;
+  title: string;
+  description: string | null;
+  video_url: string;
+  video_type: string;
+  duration: string | null;
+  thumbnail_url: string | null;
+  display_order: number | null;
+}
+
+// Video tutorials section component
+const VideoTutorialsSection = ({ stakeholderId }: { stakeholderId: string }) => {
+  const { data: videos, isLoading } = useQuery({
+    queryKey: ['demo-videos', stakeholderId],
+    queryFn: async () => {
+      // Map stakeholder IDs to video types/categories
+      const videoTypeMap: Record<string, string[]> = {
+        owner: ['dashboard', 'analytics', 'owner', 'management'],
+        admin: ['admin', 'settings', 'configuration', 'users'],
+        operator: ['operator', 'registration', 'billing', 'reports'],
+        patient: ['patient', 'digital', 'notification']
+      };
+      
+      const types = videoTypeMap[stakeholderId] || [];
+      
+      const { data, error } = await supabase
+        .from('demo_videos')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      
+      // Filter videos based on stakeholder types or return all if no specific match
+      if (data && data.length > 0) {
+        const filtered = data.filter(video => 
+          types.some(type => 
+            video.title.toLowerCase().includes(type) || 
+            video.video_type.toLowerCase().includes(type) ||
+            (video.description?.toLowerCase().includes(type))
+          )
+        );
+        // Return filtered or first 2 videos as fallback
+        return filtered.length > 0 ? filtered.slice(0, 3) : data.slice(0, 2);
+      }
+      return [];
+    },
+    staleTime: 5 * 60 * 1000
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-5 w-5" />
+          <Skeleton className="h-5 w-32" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="aspect-video rounded-lg" />
+          <Skeleton className="aspect-video rounded-lg" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!videos || videos.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-8">
+      <div className="flex items-center gap-2 mb-4">
+        <Video className="h-5 w-5 text-primary" />
+        <h3 className="font-semibold">Video Tutorials</h3>
+        <Badge variant="secondary" className="text-xs">
+          {videos.length} {videos.length === 1 ? 'Video' : 'Videos'}
+        </Badge>
+      </div>
+      <div className={cn(
+        "grid gap-4",
+        videos.length === 1 ? "max-w-lg mx-auto" : "md:grid-cols-2"
+      )}>
+        {videos.map((video: DemoVideo) => (
+          <div key={video.id} className="space-y-2">
+            <VideoEmbed video={video} />
+            <div className="px-1">
+              <h4 className="font-medium text-sm line-clamp-1">{video.title}</h4>
+              {video.description && (
+                <p className="text-xs text-muted-foreground line-clamp-2">{video.description}</p>
+              )}
+              {video.duration && (
+                <span className="text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3 inline mr-1" />
+                  {video.duration}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 interface WorkflowStep {
   title: string;
@@ -693,6 +882,9 @@ const StakeholderTabs = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {/* Video Tutorials from Database */}
+                  <VideoTutorialsSection stakeholderId={stakeholder.id} />
+
                   {/* Interactive Workflow Demo */}
                   <div className="mb-8">
                     <div className="flex items-center gap-2 mb-4">
