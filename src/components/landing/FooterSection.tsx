@@ -143,7 +143,7 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            {footerContent?.copyright_text || `© ${new Date().getFullYear()} Lab Master. All rights reserved.`}
+            © {new Date().getFullYear()} {footerContent?.brand_name || 'Lab Master'}. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground">
             LIMS Software for Pathology & Diagnostic Labs
