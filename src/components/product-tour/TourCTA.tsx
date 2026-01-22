@@ -31,7 +31,7 @@ const ctaOptions: CTAOption[] = [
     id: 'trial',
     icon: <Rocket className="h-8 w-8" />,
     title: 'Start Free Trial',
-    description: 'Try Lab Master free for 14 days with full access',
+    description: 'Try LabFlow free for 14 days with full access',
     features: [
       'No credit card required',
       'Full feature access',
@@ -56,7 +56,7 @@ const ctaOptions: CTAOption[] = [
     ],
     buttonText: 'Book a Demo',
     buttonVariant: 'outline',
-    href: 'mailto:sales@labmaster.in?subject=Demo Request'
+    href: 'mailto:sales@labflow.mywebz.in?subject=Demo Request'
   },
   {
     id: 'enterprise',
@@ -71,7 +71,7 @@ const ctaOptions: CTAOption[] = [
     ],
     buttonText: 'Contact Sales',
     buttonVariant: 'secondary',
-    href: 'mailto:enterprise@labmaster.in?subject=Enterprise Inquiry'
+    href: 'mailto:enterprise@labflow.mywebz.in?subject=Enterprise Inquiry'
   }
 ];
 
@@ -156,11 +156,11 @@ const TourCTA = () => {
               +91 98765 43210
             </a>
             <a
-              href="mailto:support@labmaster.in"
+              href="mailto:support@labflow.mywebz.in"
               className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
             >
               <Mail className="h-4 w-4" />
-              support@labmaster.in
+              support@labflow.mywebz.in
             </a>
             <a
               href="#"

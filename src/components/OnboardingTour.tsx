@@ -13,7 +13,7 @@ const FinalStepContent = ({ dontShowAgain, setDontShowAgain }: FinalStepContentP
   <div className="text-center">
     <h3 className="text-lg font-semibold mb-2">You're All Set! 🚀</h3>
     <p className="text-sm text-muted-foreground mb-3">
-      You now know the basics of Lab Master. Start by adding your first patient!
+      You now know the basics of LabFlow. Start by adding your first patient!
     </p>
     <p className="text-xs text-muted-foreground mb-4">
       Tip: Press <kbd className="px-1.5 py-0.5 bg-muted rounded">?</kbd> anytime to see all keyboard shortcuts.
@@ -39,7 +39,7 @@ const createTourSteps = (finalStepContent: React.ReactNode): Step[] => [
     target: 'body',
     content: (
       <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">Welcome to Lab Master! 🎉</h3>
+        <h3 className="text-lg font-semibold mb-2">Welcome to LabFlow! 🎉</h3>
         <p className="text-sm text-muted-foreground">
           Let us show you around the key features to help you get started managing your lab efficiently.
         </p>

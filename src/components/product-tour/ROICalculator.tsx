@@ -61,7 +61,7 @@ const ROICalculator = () => {
             Calculate Your <span className="gradient-text">Savings</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            See how much time and money Lab Master can save your laboratory every month
+            See how much time and money LabFlow can save your laboratory every month
           </p>
         </div>
 

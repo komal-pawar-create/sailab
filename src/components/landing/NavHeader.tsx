@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
-import { TestTube, Menu, X, Sun, Moon } from 'lucide-react';
+import { Menu, X, Sun, Moon } from 'lucide-react';
 
 interface NavHeaderProps {
   scrollY: number;
@@ -70,17 +70,12 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
       >
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group" aria-label="Lab Master - Home">
-            <div className={`p-2 rounded-xl transition-all duration-300 ${
-              isScrolled ? 'bg-primary/10' : 'bg-background/50 backdrop-blur-sm'
-            }`}>
-              <TestTube className="h-6 w-6 text-primary group-hover:rotate-12 transition-transform duration-300" aria-hidden="true" />
-            </div>
-            <span className={`text-xl font-bold transition-colors duration-300 ${
-              isScrolled ? 'text-foreground' : 'text-foreground'
-            }`}>
-              Lab Master
-            </span>
+          <Link to="/" className="flex items-center gap-2 group" aria-label="LabFlow - Home">
+            <img 
+              src="/images/labflow-logo.png" 
+              alt="LabFlow" 
+              className="h-10 w-auto group-hover:scale-105 transition-transform duration-300"
+            />
           </Link>
 
           {/* Desktop Navigation */}

@@ -15,7 +15,7 @@ interface FAQItem {
 
 const faqItems: FAQItem[] = [
   {
-    question: 'How long does it take to set up Lab Master?',
+    question: 'How long does it take to set up LabFlow?',
     answer: 'Most labs are fully operational within 3 days. Day 1 covers account setup and basic configuration (about 30 minutes). Day 2 is for adding staff and customizing settings. Day 3, you\'re ready to go live with patient registrations and reporting.'
   },
   {
@@ -39,8 +39,8 @@ const faqItems: FAQItem[] = [
     answer: 'Security is our top priority. We use bank-grade encryption (AES-256), regular automated backups, role-based access control, complete audit logs, and HIPAA-ready infrastructure. Your data is stored in SOC 2 certified data centers.'
   },
   {
-    question: 'Can I use Lab Master on mobile devices?',
-    answer: 'Yes! Lab Master is fully responsive and works on smartphones and tablets. We also offer a Progressive Web App (PWA) that you can install on your device for an app-like experience without downloading from app stores.'
+    question: 'Can I use LabFlow on mobile devices?',
+    answer: 'Yes! LabFlow is fully responsive and works on smartphones and tablets. We also offer a Progressive Web App (PWA) that you can install on your device for an app-like experience without downloading from app stores.'
   },
   {
     question: 'What happens if I exceed my plan limits?',

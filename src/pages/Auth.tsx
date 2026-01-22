@@ -76,7 +76,7 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-primary">Lab Master</CardTitle>
+          <img src="/images/labflow-logo.png" alt="LabFlow" className="h-12 w-auto mx-auto mb-2" />
           <CardDescription>Access your laboratory management system</CardDescription>
         </CardHeader>
         <CardContent>

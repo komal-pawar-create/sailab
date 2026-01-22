@@ -3,8 +3,8 @@ import Joyride, { CallBackProps, STATUS, Step, EVENTS, ACTIONS } from 'react-joy
 import { useTheme } from 'next-themes';
 import { Checkbox } from '@/components/ui/checkbox';
 
-const TOUR_STORAGE_KEY = 'labmaster_patient_history_tour_completed';
-const TOUR_PERMANENT_DISMISS_KEY = 'labmaster_patient_history_tour_dismissed';
+const TOUR_STORAGE_KEY = 'labflow_patient_history_tour_completed';
+const TOUR_PERMANENT_DISMISS_KEY = 'labflow_patient_history_tour_dismissed';
 
 interface FinalStepContentProps {
   dontShowAgain: boolean;

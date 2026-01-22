@@ -19,7 +19,7 @@ const TourHero = () => {
 
         {/* Main heading */}
         <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up opacity-0 delay-100" style={{ animationFillMode: 'forwards' }}>
-          See How Lab Master
+          See How LabFlow
           <br />
           <span className="gradient-text">Transforms Your Lab</span>
         </h1>
