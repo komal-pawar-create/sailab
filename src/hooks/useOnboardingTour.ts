@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const TOUR_STORAGE_KEY = 'labmaster_onboarding_completed';
-const TOUR_PERMANENT_DISMISS_KEY = 'labmaster_onboarding_dismissed';
+const TOUR_STORAGE_KEY = 'labflow_onboarding_completed';
+const TOUR_PERMANENT_DISMISS_KEY = 'labflow_onboarding_dismissed';
 
 export const useOnboardingTour = () => {
   const [runTour, setRunTour] = useState(false);

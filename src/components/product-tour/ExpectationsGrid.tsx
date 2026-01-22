@@ -76,7 +76,7 @@ const ExpectationsGrid = () => {
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4">What to Expect</Badge>
           <h2 id="expectations-heading" className="text-3xl md:text-4xl font-bold mb-4">
-            Your Journey with <span className="gradient-text">Lab Master</span>
+            Your Journey with <span className="gradient-text">LabFlow</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Clear milestones to track your progress from signup to success

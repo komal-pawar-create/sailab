@@ -250,7 +250,7 @@ const DashboardMockup = ({ highlight }: { highlight?: string }) => (
         <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
         <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
       </div>
-      <div className="text-xs text-muted-foreground ml-2">Lab Master Dashboard</div>
+      <div className="text-xs text-muted-foreground ml-2">LabFlow Dashboard</div>
     </div>
     <div className="p-3 space-y-3">
       <div className="flex gap-2">
@@ -849,7 +849,7 @@ const StakeholderTabs = () => {
             Designed for <span className="gradient-text">Your Team</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            See how Lab Master transforms daily operations for every stakeholder in your laboratory
+            See how LabFlow transforms daily operations for every stakeholder in your laboratory
           </p>
         </div>
 

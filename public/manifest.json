@@ -1,6 +1,6 @@
 {
-  "name": "Lab Master",
-  "short_name": "LabMaster",
+  "name": "LabFlow",
+  "short_name": "LabFlow",
   "description": "Modern LIMS Dashboard for lab management",
   "start_url": "/index.html",
   "display": "standalone",

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { TestTube, Mail, Phone, MapPin, Linkedin, Twitter, Youtube } from 'lucide-react';
+import { Mail, Phone, MapPin, Linkedin, Twitter, Youtube } from 'lucide-react';
 import type { FooterContent } from './types';
 
 interface FooterSectionProps {
@@ -34,13 +34,12 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand Column */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center gap-3 mb-4 group">
-              <div className="p-2 rounded-xl bg-primary/10">
-                <TestTube className="h-6 w-6 text-primary" aria-hidden="true" />
-              </div>
-              <span className="text-xl font-bold text-foreground">
-                {footerContent?.brand_name || 'Lab Master'}
-              </span>
+            <Link to="/" className="flex items-center gap-2 mb-4 group">
+              <img 
+                src="/images/labflow-logo.png" 
+                alt="LabFlow" 
+                className="h-10 w-auto"
+              />
             </Link>
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
               Complete laboratory management system trusted by 500+ labs across India.
@@ -105,11 +104,11 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
             <h3 className="font-semibold text-foreground mb-4">Contact Us</h3>
             <address className="not-italic space-y-3">
               <a 
-                href="mailto:support@labmaster.in" 
+                href="mailto:support@labflow.mywebz.in" 
                 className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Mail className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-                <span>support@labmaster.in</span>
+                <span>support@labflow.mywebz.in</span>
               </a>
               <a 
                 href="tel:+919876543210" 
@@ -143,7 +142,7 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} {footerContent?.brand_name || 'Lab Master'}. All rights reserved.
+            © {new Date().getFullYear()} {footerContent?.brand_name || 'LabFlow'}. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground">
             LIMS Software for Pathology & Diagnostic Labs

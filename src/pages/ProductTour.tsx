@@ -35,7 +35,7 @@ const ProductTour = () => {
   }, []);
 
   useEffect(() => {
-    document.title = 'Product Tour - See How Lab Master LIMS Works | Lab Master';
+    document.title = 'Product Tour - See How LabFlow LIMS Works | LabFlow';
   }, []);
 
   return (

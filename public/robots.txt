@@ -14,7 +14,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://sailab.lovable.app/sitemap.xml
+Sitemap: https://labflow.mywebz.in/sitemap.xml
 
 # Crawl delay
 Crawl-delay: 1

@@ -221,10 +221,10 @@ const DemoSection = () => {
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
             Experience
-            <span className="gradient-text"> Lab Master</span>
+            <span className="gradient-text"> LabFlow</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Watch our quick demo or take an interactive tour to see how Lab Master transforms lab operations.
+            Watch our quick demo or take an interactive tour to see how LabFlow transforms lab operations.
           </p>
         </AnimatedSection>
 
@@ -270,7 +270,7 @@ const DemoSection = () => {
                       <div className="w-3 h-3 rounded-full bg-green-500/80" />
                     </div>
                     <div className="flex-1 mx-4 h-6 rounded bg-background/50 flex items-center px-3">
-                      <span className="text-xs text-muted-foreground">labmaster.app/dashboard</span>
+                      <span className="text-xs text-muted-foreground">labflow.mywebz.in/dashboard</span>
                     </div>
                   </div>
 

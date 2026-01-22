@@ -1,7 +1,7 @@
-const CACHE_VERSION = 'v2';
-const STATIC_CACHE = `lab-master-static-${CACHE_VERSION}`;
-const API_CACHE = `lab-master-api-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `lab-master-dynamic-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v3';
+const STATIC_CACHE = `labflow-static-${CACHE_VERSION}`;
+const API_CACHE = `labflow-api-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `labflow-dynamic-${CACHE_VERSION}`;
 
 // Critical assets to pre-cache
 const STATIC_ASSETS = [
@@ -44,7 +44,7 @@ self.addEventListener('activate', (event) => {
         cacheNames.map((cacheName) => {
           // Delete old version caches
           if (
-            cacheName.startsWith('lab-master-') &&
+            (cacheName.startsWith('labflow-') || cacheName.startsWith('lab-master-')) &&
             !cacheName.includes(CACHE_VERSION)
           ) {
             console.log('[SW] Deleting old cache:', cacheName);
@@ -183,7 +183,7 @@ function getOfflinePage() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline - Lab Master</title>
+  <title>Offline - LabFlow</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {

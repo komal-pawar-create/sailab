@@ -224,7 +224,7 @@ const comparisonData: FeatureComparison[] = [
     manual: { value: 'N/A' },
     competitor: { value: '1-2 weeks' },
     tooltip: {
-      description: 'Get your lab up and running on Lab Master within hours, not weeks.',
+      description: 'Get your lab up and running on LabFlow within hours, not weeks.',
       useCase: 'Sign up in the morning, upload letterhead, add staff - start billing patients by afternoon.'
     }
   },
@@ -315,13 +315,13 @@ const ComparisonTable = () => {
         >
           <Badge variant="outline" className="mb-4">
             <TrendingUp className="h-3 w-3 mr-1" />
-            Why Choose Lab Master
+            Why Choose LabFlow
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            See How Lab Master Compares
+            See How LabFlow Compares
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Compare Lab Master with manual processes and competitor software to see the real difference in efficiency, features, and value.
+            Compare LabFlow with manual processes and competitor software to see the real difference in efficiency, features, and value.
           </p>
         </motion.div>
 
@@ -365,7 +365,7 @@ const ComparisonTable = () => {
               <div className="p-4 text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Star className="h-4 w-4 text-primary fill-primary" />
-                  <span className="font-semibold text-primary">Lab Master</span>
+                  <span className="font-semibold text-primary">LabFlow</span>
                 </div>
               </div>
               <div className="p-4 text-center">
