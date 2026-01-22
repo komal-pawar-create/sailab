@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import NavHeader from '@/components/landing/NavHeader';
 import { FloatingShape } from '@/components/landing/shared';
+import LiveActivityFeed from '@/components/landing/LiveActivityFeed';
+import SocialProofBar from '@/components/landing/SocialProofBar';
 import type {
   HeroContent,
   StatItem,
@@ -19,6 +21,7 @@ import type {
 
 // Lazy load all sections for better initial load performance
 const HeroSection = React.lazy(() => import('@/components/landing/HeroSection'));
+const TrustBadges = React.lazy(() => import('@/components/landing/TrustBadges'));
 const DemoSection = React.lazy(() => import('@/components/landing/DemoSection'));
 const FeaturesSection = React.lazy(() => import('@/components/landing/FeaturesSection'));
 const HowItWorksSection = React.lazy(() => import('@/components/landing/HowItWorksSection'));
@@ -189,6 +192,12 @@ const Index = () => {
       {/* Fixed Navigation Header */}
       <NavHeader scrollY={scrollY} />
       
+      {/* Social Proof Bar (appears on scroll) */}
+      <SocialProofBar />
+      
+      {/* Live Activity Feed (bottom left) */}
+      <LiveActivityFeed />
+      
       {/* Floating background shapes */}
       <div aria-hidden="true">
         <FloatingShape className="w-[600px] h-[600px] bg-primary/20 -top-48 -left-48" />
@@ -201,6 +210,11 @@ const Index = () => {
         {/* Hero Section */}
         <Suspense fallback={<SectionSkeleton />}>
           <HeroSection heroContent={heroContent} stats={stats} scrollY={scrollY} />
+        </Suspense>
+
+        {/* Trust Badges */}
+        <Suspense fallback={<div className="h-32" />}>
+          <TrustBadges />
         </Suspense>
 
         {/* Demo Section */}
