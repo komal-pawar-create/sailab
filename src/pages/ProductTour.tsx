@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 // Lazy load components for performance
 const NavHeader = React.lazy(() => import('@/components/landing/NavHeader'));
 const TourHero = React.lazy(() => import('@/components/product-tour/TourHero'));
+const VideoGallery = React.lazy(() => import('@/components/product-tour/VideoGallery'));
 const PlatformPreview = React.lazy(() => import('@/components/product-tour/PlatformPreview'));
 const StakeholderTabs = React.lazy(() => import('@/components/product-tour/StakeholderTabs'));
 const PatientJourneyFlow = React.lazy(() => import('@/components/product-tour/PatientJourneyFlow'));
@@ -87,6 +88,11 @@ const ProductTour = () => {
         {/* Hero Section with 3D Elements */}
         <Suspense fallback={<HeroSkeleton />}>
           <TourHero />
+        </Suspense>
+
+        {/* Video Gallery Section */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <VideoGallery />
         </Suspense>
 
         {/* Interactive Platform Preview */}
