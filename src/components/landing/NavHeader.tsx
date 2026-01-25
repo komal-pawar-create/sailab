@@ -70,11 +70,11 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
       >
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group" aria-label="LabFlow - Home">
+          <Link to="/" className="flex items-center gap-3 group" aria-label="LabFlow - Home">
             <img 
               src="/images/labflow-logo.png" 
               alt="LabFlow" 
-              className="h-10 w-auto group-hover:scale-105 transition-transform duration-300"
+              className="h-12 md:h-14 w-auto group-hover:scale-105 transition-transform duration-300 drop-shadow-md"
             />
           </Link>
 
