@@ -1,11 +1,12 @@
-import React, { Suspense, useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Play, Users, Clock, Shield, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Play, Users, Clock, Shield, Sparkles, X, Loader2 } from 'lucide-react';
 import AnimatedStats from './AnimatedStats';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 // Animated 3D-like background using CSS
 const AnimatedBackground = () => (
@@ -67,9 +68,144 @@ const taglines = [
   'Delights Patients'
 ];
 
+// Helper to extract YouTube video ID
+const getYouTubeEmbedUrl = (url: string): string | null => {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
+    }
+  }
+  return null;
+};
+
+// Helper to extract Vimeo video ID
+const getVimeoEmbedUrl = (url: string): string | null => {
+  const match = url.match(/vimeo\.com\/(\d+)/);
+  if (match) {
+    return `https://player.vimeo.com/video/${match[1]}?autoplay=1`;
+  }
+  return null;
+};
+
+interface DemoVideo {
+  id: string;
+  title: string;
+  video_url: string;
+  video_type: string;
+  description?: string;
+}
+
+const VideoPlayer = ({ video, onClose }: { video: DemoVideo; onClose: () => void }) => {
+  const renderPlayer = () => {
+    const { video_type, video_url } = video;
+    
+    if (video_type === 'youtube') {
+      const embedUrl = getYouTubeEmbedUrl(video_url);
+      if (embedUrl) {
+        return (
+          <iframe
+            src={embedUrl}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title={video.title}
+          />
+        );
+      }
+    }
+    
+    if (video_type === 'vimeo') {
+      const embedUrl = getVimeoEmbedUrl(video_url);
+      if (embedUrl) {
+        return (
+          <iframe
+            src={embedUrl}
+            className="w-full h-full"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            title={video.title}
+          />
+        );
+      }
+    }
+    
+    // Direct MP4/video file
+    if (video_type === 'mp4' || video_url.match(/\.(mp4|webm|ogg)$/i)) {
+      return (
+        <video
+          src={video_url}
+          className="w-full h-full object-contain"
+          controls
+          autoPlay
+          playsInline
+        >
+          Your browser does not support the video tag.
+        </video>
+      );
+    }
+    
+    // Fallback for unknown types - try iframe
+    return (
+      <iframe
+        src={video_url}
+        className="w-full h-full"
+        allowFullScreen
+        title={video.title}
+      />
+    );
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-4 right-4 z-20 bg-black/50 hover:bg-black/70 text-white"
+          onClick={onClose}
+        >
+          <X className="h-5 w-5" />
+        </Button>
+        
+        {/* Video title */}
+        <div className="absolute top-4 left-4 z-20">
+          <h3 className="text-white font-semibold text-lg drop-shadow-lg">{video.title}</h3>
+          {video.description && (
+            <p className="text-white/70 text-sm mt-1 max-w-md drop-shadow">{video.description}</p>
+          )}
+        </div>
+        
+        {/* Video player */}
+        <div className="w-full h-full bg-black">
+          {renderPlayer()}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const TourHero = () => {
   const [currentTagline, setCurrentTagline] = useState(0);
   const [showVideo, setShowVideo] = useState(false);
+  const [demoVideo, setDemoVideo] = useState<DemoVideo | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -77,6 +213,56 @@ const TourHero = () => {
     }, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch the primary demo video
+  const fetchDemoVideo = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('demo_videos')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .limit(1)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching demo video:', error);
+      }
+      
+      if (data) {
+        setDemoVideo(data);
+        setShowVideo(true);
+      } else {
+        // Fallback to a default YouTube demo video if no video in database
+        setDemoVideo({
+          id: 'default',
+          title: 'LabFlow Product Demo',
+          video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', // Replace with actual demo video
+          video_type: 'youtube',
+          description: 'See how LabFlow transforms laboratory management'
+        });
+        setShowVideo(true);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      // Show fallback video
+      setDemoVideo({
+        id: 'default',
+        title: 'LabFlow Product Demo',
+        video_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        video_type: 'youtube',
+        description: 'See how LabFlow transforms laboratory management'
+      });
+      setShowVideo(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleWatchDemo = () => {
+    fetchDemoVideo();
+  };
 
   const heroStats = [
     { value: 500, suffix: '+', label: 'Labs Trust Us', icon: <Users className="h-5 w-5" /> },
@@ -165,9 +351,14 @@ const TourHero = () => {
             variant="outline" 
             size="lg" 
             className="text-lg px-8 py-6 glass active:scale-95 transition-transform group"
-            onClick={() => setShowVideo(true)}
+            onClick={handleWatchDemo}
+            disabled={isLoading}
           >
-            <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            ) : (
+              <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+            )}
             Watch Demo Video
           </Button>
         </motion.div>
@@ -199,37 +390,17 @@ const TourHero = () => {
       </div>
 
       {/* Video Modal */}
-      {showVideo && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setShowVideo(false)}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="relative w-full max-w-4xl aspect-video bg-card rounded-2xl border shadow-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 z-10"
-              onClick={() => setShowVideo(false)}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-            <div className="w-full h-full flex items-center justify-center bg-muted">
-              <div className="text-center">
-                <Play className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Demo video coming soon</p>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {showVideo && demoVideo && (
+          <VideoPlayer 
+            video={demoVideo} 
+            onClose={() => {
+              setShowVideo(false);
+              setDemoVideo(null);
+            }} 
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 };
