@@ -135,5 +135,211 @@
     "billGenerated": "Bill generated",
     "testReportCreated": "Test report created",
     "labOnboarded": "Lab onboarded"
+  },
+  "productTour": {
+    "hero": {
+      "badge": "Interactive Product Tour",
+      "headlinePart1": "See How LabFlow",
+      "taglines": {
+        "transforms": "Transforms Your Lab",
+        "saves": "Saves 3+ Hours Daily",
+        "grows": "Grows Your Revenue",
+        "delights": "Delights Patients"
+      },
+      "subheadline": "A complete walkthrough for lab owners, administrators, and operators.",
+      "subheadlineHighlight": "Discover how our platform streamlines every aspect of laboratory management.",
+      "startTrial": "Start Free Trial",
+      "watchDemo": "Watch Demo Video"
+    },
+    "stats": {
+      "labsTrust": "Labs Trust Us",
+      "reportsGenerated": "Reports Generated",
+      "hoursSaved": "Hours Saved Daily",
+      "uptime": "Uptime"
+    },
+    "videoGallery": {
+      "badge": "Video Demos",
+      "title": "See LabFlow in Action",
+      "subtitle": "Watch quick walkthroughs of our key features and discover how LabFlow can transform your lab operations.",
+      "featureDemos": "Feature Demos",
+      "testimonials": "Testimonials"
+    },
+    "platformPreview": {
+      "badge": "Interactive Preview",
+      "title": "Explore the Platform",
+      "subtitle": "Click on the hotspots to discover key features of each module. These are real screenshots from LabFlow.",
+      "modules": {
+        "dashboard": "Dashboard",
+        "patients": "Patients",
+        "billing": "Billing",
+        "reports": "Reports",
+        "analytics": "Analytics"
+      }
+    },
+    "stakeholders": {
+      "badge": "Role-Based Features",
+      "title": "Built for Everyone",
+      "subtitle": "Explore features designed specifically for each role in your laboratory",
+      "owner": "Lab Owner",
+      "admin": "Administrator",
+      "operator": "Operator",
+      "patient": "Patient",
+      "videoTutorials": "Video Tutorials",
+      "videos": "Videos"
+    },
+    "patientJourney": {
+      "badge": "Complete Workflow",
+      "title": "The Complete Patient Journey",
+      "subtitle": "See how LabFlow streamlines every step from registration to report delivery",
+      "totalTime": "Total Time:",
+      "under5Min": "Under 5 minutes",
+      "fromRegistration": "from registration to report delivery",
+      "steps": {
+        "register": {
+          "title": "Patient Registration",
+          "duration": "< 30 sec",
+          "description": "Quick onboarding with smart autofill"
+        },
+        "billing": {
+          "title": "Bill Generation",
+          "duration": "< 1 min",
+          "description": "Professional GST-compliant invoices"
+        },
+        "testing": {
+          "title": "Sample Collection & Testing",
+          "duration": "As per test",
+          "description": "Track sample status in real-time"
+        },
+        "report": {
+          "title": "Report Generation",
+          "duration": "< 2 min",
+          "description": "Professional reports with your branding"
+        },
+        "delivery": {
+          "title": "Report Delivery",
+          "duration": "Instant",
+          "description": "Multi-channel report sharing"
+        }
+      }
+    },
+    "beforeAfter": {
+      "badge": "Visual Comparison",
+      "title": "Paper Registers vs LabFlow",
+      "subtitle": "Drag the slider to compare the old way with the LabFlow way",
+      "paperRegisters": "Paper Registers",
+      "manualProcesses": "Manual Processes",
+      "labflow": "LabFlow",
+      "digitalPlatform": "Digital Platform",
+      "hoursLost": "3+ hours lost daily",
+      "hoursSaved": "Save 3+ hours every day",
+      "dragSlider": "← Drag the slider to compare →"
+    },
+    "comparison": {
+      "badge": "Why Choose LabFlow",
+      "title": "See How LabFlow Compares",
+      "subtitle": "Compare LabFlow with manual processes and competitor software to see the real difference in efficiency, features, and value.",
+      "labflow": "LabFlow",
+      "manualProcess": "Manual Process",
+      "competitor": "Competitor Software",
+      "dailyTimeSaved": "Daily Time Saved",
+      "errorReduction": "Error Reduction",
+      "productivityBoost": "Productivity Boost",
+      "fasterReports": "Faster Reports"
+    },
+    "features": {
+      "badge": "Deep Dive",
+      "title": "Explore Every",
+      "titleHighlight": "Feature",
+      "subtitle": "Discover the powerful capabilities that make LabFlow the choice of 500+ laboratories"
+    },
+    "customerLogos": {
+      "badge": "Trusted by 500+ Labs",
+      "title": "Labs Across India Trust LabFlow",
+      "subtitle": "Join hundreds of diagnostic labs that have transformed their operations with our platform",
+      "watchStories": "Watch Success Stories",
+      "hearFromOwners": "Hear from lab owners who transformed their business"
+    },
+    "setupTimeline": {
+      "badge": "Getting Started",
+      "title": "Up and Running in",
+      "titleHighlight": "3 Days",
+      "subtitle": "Our step-by-step setup process ensures you're fully operational within 3 days",
+      "day1": {
+        "title": "Quick Setup",
+        "description": "Get your lab profile ready in under 30 minutes"
+      },
+      "day2": {
+        "title": "Team Configuration",
+        "description": "Invite your team and configure roles"
+      },
+      "day3": {
+        "title": "Go Live!",
+        "description": "Start managing patients and generating reports"
+      }
+    },
+    "expectations": {
+      "badge": "What to Expect",
+      "title": "Your Journey with",
+      "titleHighlight": "LabFlow",
+      "subtitle": "Clear milestones to track your progress from signup to success",
+      "firstHour": "First Hour",
+      "firstDay": "First Day",
+      "firstWeek": "First Week",
+      "firstMonth": "First Month"
+    },
+    "roi": {
+      "badge": "ROI Calculator",
+      "title": "Calculate Your",
+      "titleHighlight": "Savings",
+      "subtitle": "See how much time and money LabFlow can save your laboratory every month",
+      "yourLabDetails": "Your Lab Details",
+      "adjustSliders": "Adjust the sliders to match your laboratory",
+      "patientsPerDay": "Patients per day",
+      "staffMembers": "Staff members",
+      "minutesPerPatient": "Minutes per patient (current)",
+      "estimatedSavings": "Your Estimated Savings",
+      "basedOnInputs": "Based on your inputs, here's what you can expect",
+      "timeSavedPerMonth": "Time Saved Per Month",
+      "hours": "hours",
+      "perDay": "per day",
+      "laborCostSaved": "Labor Cost Saved",
+      "perMonth": "per month",
+      "billingErrorSavings": "Billing Error Savings",
+      "totalMonthlySavings": "Total Monthly Savings",
+      "morePatients": "Can handle {count} more patients daily"
+    },
+    "tourFaq": {
+      "badge": "FAQ",
+      "title": "Common",
+      "titleHighlight": "Questions",
+      "subtitle": "Everything you need to know before getting started"
+    },
+    "tourCta": {
+      "badge": "Get Started",
+      "title": "Ready to Transform Your",
+      "titleHighlight": "Laboratory?",
+      "subtitle": "Choose the path that works best for you and your team",
+      "startTrial": {
+        "title": "Start Free Trial",
+        "description": "Try LabFlow free for 14 days with full access",
+        "features": ["No credit card required", "Full feature access", "Free data migration help", "Email & chat support"],
+        "button": "Start Free Trial"
+      },
+      "scheduleDemo": {
+        "title": "Schedule a Demo",
+        "description": "Get a personalized walkthrough from our team",
+        "features": ["30-minute live demo", "Q&A with product expert", "Custom setup guidance", "No obligations"],
+        "button": "Book a Demo"
+      },
+      "enterprise": {
+        "title": "Enterprise Solution",
+        "description": "Custom solutions for laboratory chains",
+        "features": ["Multi-location support", "Custom integrations", "Dedicated account manager", "Volume discounts"],
+        "button": "Contact Sales"
+      },
+      "mostPopular": "Most Popular",
+      "haveQuestions": "Have questions? We're here to help.",
+      "bookCall": "Book a Call"
+    }
   }
 }
