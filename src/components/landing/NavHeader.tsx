@@ -69,16 +69,16 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
         role="banner"
       >
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-          {/* Logo - Enhanced for prominence */}
+          {/* Logo - Maximum prominence with animated glow */}
           <Link to="/" className="flex items-center gap-3 group relative" aria-label="LabFlow - Home">
             <div className="relative">
+              {/* Animated glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-primary/20 to-primary/30 blur-2xl -z-10 rounded-full scale-150 animate-pulse group-hover:from-primary/40 group-hover:via-primary/30 group-hover:to-primary/40 transition-all duration-500" aria-hidden="true" />
               <img 
                 src="/images/labflow-logo.png" 
                 alt="LabFlow" 
-                className="h-14 md:h-16 lg:h-20 w-auto group-hover:scale-105 transition-all duration-300 drop-shadow-lg"
+                className="h-16 md:h-20 lg:h-24 w-auto group-hover:scale-105 transition-all duration-300 drop-shadow-xl"
               />
-              {/* Subtle glow effect behind logo */}
-              <div className="absolute inset-0 bg-primary/10 blur-xl -z-10 group-hover:bg-primary/20 transition-colors duration-300 rounded-full scale-150" aria-hidden="true" />
             </div>
           </Link>
 
