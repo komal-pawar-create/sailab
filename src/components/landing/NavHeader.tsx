@@ -69,13 +69,17 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
         role="banner"
       >
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group" aria-label="LabFlow - Home">
-            <img 
-              src="/images/labflow-logo.png" 
-              alt="LabFlow" 
-              className="h-12 md:h-14 w-auto group-hover:scale-105 transition-transform duration-300 drop-shadow-md"
-            />
+          {/* Logo - Enhanced for prominence */}
+          <Link to="/" className="flex items-center gap-3 group relative" aria-label="LabFlow - Home">
+            <div className="relative">
+              <img 
+                src="/images/labflow-logo.png" 
+                alt="LabFlow" 
+                className="h-14 md:h-16 lg:h-20 w-auto group-hover:scale-105 transition-all duration-300 drop-shadow-lg"
+              />
+              {/* Subtle glow effect behind logo */}
+              <div className="absolute inset-0 bg-primary/10 blur-xl -z-10 group-hover:bg-primary/20 transition-colors duration-300 rounded-full scale-150" aria-hidden="true" />
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
