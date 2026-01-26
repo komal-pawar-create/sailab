@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Play, Users, Clock, Shield, Sparkles, X, Loader2 } from 'lucide-react';
@@ -60,12 +61,12 @@ const AnimatedBackground = () => (
   </div>
 );
 
-// Animated text variations
-const taglines = [
-  'Transforms Your Lab',
-  'Saves 3+ Hours Daily',
-  'Grows Your Revenue',
-  'Delights Patients'
+// Animated text variations - these will be mapped to translation keys
+const taglineKeys = [
+  'productTour.hero.taglines.transforms',
+  'productTour.hero.taglines.saves',
+  'productTour.hero.taglines.grows',
+  'productTour.hero.taglines.delights'
 ];
 
 // Helper to extract YouTube video ID
@@ -202,6 +203,7 @@ const VideoPlayer = ({ video, onClose }: { video: DemoVideo; onClose: () => void
 };
 
 const TourHero = () => {
+  const { t } = useTranslation();
   const [currentTagline, setCurrentTagline] = useState(0);
   const [showVideo, setShowVideo] = useState(false);
   const [demoVideo, setDemoVideo] = useState<DemoVideo | null>(null);
@@ -209,7 +211,7 @@ const TourHero = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTagline((prev) => (prev + 1) % taglines.length);
+      setCurrentTagline((prev) => (prev + 1) % taglineKeys.length);
     }, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -265,10 +267,10 @@ const TourHero = () => {
   };
 
   const heroStats = [
-    { value: 500, suffix: '+', label: 'Labs Trust Us', icon: <Users className="h-5 w-5" /> },
-    { value: 1, suffix: 'M+', label: 'Reports Generated', icon: <Sparkles className="h-5 w-5" /> },
-    { value: 3, suffix: '+', label: 'Hours Saved Daily', icon: <Clock className="h-5 w-5" /> },
-    { value: 99.9, suffix: '%', label: 'Uptime', icon: <Shield className="h-5 w-5" /> }
+    { value: 500, suffix: '+', label: t('productTour.stats.labsTrust'), icon: <Users className="h-5 w-5" /> },
+    { value: 1, suffix: 'M+', label: t('productTour.stats.reportsGenerated'), icon: <Sparkles className="h-5 w-5" /> },
+    { value: 3, suffix: '+', label: t('productTour.stats.hoursSaved'), icon: <Clock className="h-5 w-5" /> },
+    { value: 99.9, suffix: '%', label: t('productTour.stats.uptime'), icon: <Shield className="h-5 w-5" /> }
   ];
 
   return (
@@ -288,7 +290,7 @@ const TourHero = () => {
         >
           <Badge variant="secondary" className="mb-6 px-4 py-2 text-sm">
             <Play className="h-3 w-3 mr-2" />
-            Interactive Product Tour
+            {t('productTour.hero.badge')}
           </Badge>
         </motion.div>
 
@@ -299,12 +301,12 @@ const TourHero = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6"
         >
-          See How LabFlow
+          {t('productTour.hero.headlinePart1')}
           <br />
           <span className="relative inline-block h-[1.2em] overflow-hidden">
-            {taglines.map((tagline, index) => (
+            {taglineKeys.map((key, index) => (
               <motion.span
-                key={tagline}
+                key={key}
                 className={cn(
                   "absolute inset-0 gradient-text",
                   index === currentTagline ? "opacity-100" : "opacity-0"
@@ -316,10 +318,10 @@ const TourHero = () => {
                 }}
                 transition={{ duration: 0.5 }}
               >
-                {tagline}
+                {t(key)}
               </motion.span>
             ))}
-            <span className="invisible">{taglines[0]}</span>
+            <span className="invisible">{t(taglineKeys[0])}</span>
           </span>
         </motion.h1>
 
@@ -330,8 +332,8 @@ const TourHero = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto"
         >
-          A complete walkthrough for lab owners, administrators, and operators. 
-          <span className="text-foreground font-medium"> Discover how our platform streamlines every aspect of laboratory management.</span>
+          {t('productTour.hero.subheadline')}
+          <span className="text-foreground font-medium"> {t('productTour.hero.subheadlineHighlight')}</span>
         </motion.p>
 
         {/* CTA Buttons */}
@@ -343,7 +345,7 @@ const TourHero = () => {
         >
           <Button asChild size="lg" className="text-lg px-8 py-6 animate-pulse-glow active:scale-95 transition-transform group">
             <Link to="/auth" className="flex items-center gap-2">
-              Start Free Trial
+              {t('productTour.hero.startTrial')}
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
@@ -359,7 +361,7 @@ const TourHero = () => {
             ) : (
               <Play className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
             )}
-            Watch Demo Video
+            {t('productTour.hero.watchDemo')}
           </Button>
         </motion.div>
 

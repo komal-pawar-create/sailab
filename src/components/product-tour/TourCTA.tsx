@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,10 +18,10 @@ import {
 interface CTAOption {
   id: string;
   icon: React.ReactNode;
-  title: string;
-  description: string;
-  features: string[];
-  buttonText: string;
+  titleKey: string;
+  descriptionKey: string;
+  featuresKey: string;
+  buttonTextKey: string;
   buttonVariant: 'default' | 'outline' | 'secondary';
   href: string;
   highlighted?: boolean;
