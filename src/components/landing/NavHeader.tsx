@@ -69,15 +69,24 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
         role="banner"
       >
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-          {/* Logo - Maximum prominence with animated glow */}
+          {/* Logo - Maximum prominence with animated glow and scroll shrink */}
           <Link to="/" className="flex items-center gap-3 group relative" aria-label="LabFlow - Home">
-            <div className="relative">
-              {/* Animated glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-primary/20 to-primary/30 blur-2xl -z-10 rounded-full scale-150 animate-pulse group-hover:from-primary/40 group-hover:via-primary/30 group-hover:to-primary/40 transition-all duration-500" aria-hidden="true" />
+            <div className="relative transition-all duration-500 ease-out">
+              {/* Animated glow effect - fades when scrolled */}
+              <div 
+                className={`absolute inset-0 bg-gradient-to-r from-primary/30 via-primary/20 to-primary/30 blur-2xl -z-10 rounded-full scale-150 animate-pulse group-hover:from-primary/40 group-hover:via-primary/30 group-hover:to-primary/40 transition-all duration-500 ${
+                  isScrolled ? 'opacity-50 scale-100' : 'opacity-100 scale-150'
+                }`} 
+                aria-hidden="true" 
+              />
               <img 
                 src="/images/labflow-logo.png" 
                 alt="LabFlow" 
-                className="h-16 md:h-20 lg:h-24 w-auto group-hover:scale-105 transition-all duration-300 drop-shadow-xl"
+                className={`w-auto group-hover:scale-105 transition-all duration-500 ease-out ${
+                  isScrolled 
+                    ? 'h-10 md:h-12 lg:h-14 drop-shadow-lg' 
+                    : 'h-16 md:h-20 lg:h-24 drop-shadow-xl'
+                }`}
               />
             </div>
           </Link>
