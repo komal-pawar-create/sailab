@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
+import { HelpCircle } from 'lucide-react';
 
 interface FAQItem {
   question: string;
