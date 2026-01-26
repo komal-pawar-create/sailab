@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, FileText, TestTube, Building2 } from 'lucide-react';
 
@@ -16,11 +17,11 @@ const icons = {
   lab: Building2,
 };
 
-const messages = {
-  signup: 'New lab signed up',
-  bill: 'Bill generated',
-  test: 'Test report created',
-  lab: 'Lab onboarded',
+const messageKeys = {
+  signup: 'activity.newLabSignedUp',
+  bill: 'activity.billGenerated',
+  test: 'activity.testReportCreated',
+  lab: 'activity.labOnboarded',
 };
 
 const locations = [
@@ -48,6 +49,7 @@ const LiveActivityFeed = () => {
     generateActivity(1),
   ]);
   const [counter, setCounter] = useState(2);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -80,7 +82,7 @@ const LiveActivityFeed = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {messages[activity.type]}
+                  {t(messageKeys[activity.type])}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {activity.location} • {activity.timeAgo}

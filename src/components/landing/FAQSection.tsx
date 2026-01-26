@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { HelpCircle, MessageCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -11,20 +12,22 @@ interface FAQSectionProps {
 }
 
 const FAQSection = ({ faqs }: FAQSectionProps) => {
+  const { t } = useTranslation();
+  
   return (
     <section id="faq" className="relative py-24 px-4">
       <div className="max-w-4xl mx-auto">
         <AnimatedSection className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
             <HelpCircle className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">FAQ</span>
+            <span className="text-sm font-medium text-foreground">{t('faq.badge')}</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-            Frequently Asked
-            <span className="gradient-text"> Questions</span>
+            {t('faq.title')}
+            <span className="gradient-text"> {t('faq.titleHighlight')}</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Got questions? We've got answers. Find everything you need to know about Lab Master.
+            {t('faq.subtitle')}
           </p>
         </AnimatedSection>
 
@@ -66,13 +69,13 @@ const FAQSection = ({ faqs }: FAQSectionProps) => {
                 <MessageCircle className="h-6 w-6 text-primary" />
               </div>
               <div className="text-left">
-                <p className="font-semibold text-foreground">Still have questions?</p>
-                <p className="text-sm text-muted-foreground">Our team is here to help you</p>
+                <p className="font-semibold text-foreground">{t('faq.stillHaveQuestions')}</p>
+                <p className="text-sm text-muted-foreground">{t('faq.ourTeamHelp')}</p>
               </div>
             </div>
             <Button asChild variant="outline" className="shrink-0">
               <Link to="/auth" className="flex items-center gap-2">
-                Contact Support
+                {t('faq.contactSupport')}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

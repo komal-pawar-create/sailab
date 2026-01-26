@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
 import { AnimatedCounter } from './shared';
@@ -12,6 +13,8 @@ interface HeroSectionProps {
 }
 
 const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
+  const { t } = useTranslation();
+  
   return (
     <section 
       className="relative min-h-screen flex items-center justify-center px-4 pt-20 pb-32"
@@ -29,37 +32,37 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-slide-up opacity-0" style={{ animationFillMode: 'forwards' }}>
           <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
           <span className="text-sm font-medium text-foreground">
-            {heroContent?.badge_text || 'Complete Laboratory Management Solution'}
+            {heroContent?.badge_text || t('hero.badge')}
           </span>
         </div>
 
         {/* Main heading - H1 for SEO */}
         <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up opacity-0 delay-100" style={{ animationFillMode: 'forwards' }}>
           <span className="text-foreground">
-            {heroContent?.main_headline?.split(' ').slice(0, 2).join(' ') || 'Streamline Your'}
+            {heroContent?.main_headline?.split(' ').slice(0, 2).join(' ') || t('hero.headline').split(' ').slice(0, 2).join(' ')}
           </span>
           <br />
           <span className="gradient-text">
-            {heroContent?.main_headline?.split(' ').slice(2).join(' ') || 'Lab Operations'}
+            {heroContent?.main_headline?.split(' ').slice(2).join(' ') || t('hero.headline').split(' ').slice(2).join(' ')}
           </span>
         </h1>
 
         {/* Subheading */}
         <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto animate-slide-up opacity-0 delay-200" style={{ animationFillMode: 'forwards' }}>
-          {heroContent?.sub_headline || 'From patient registration to test reporting, billing to analytics — manage everything with our powerful, role-based laboratory management system.'}
+          {heroContent?.sub_headline || t('hero.subheadline')}
         </p>
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up opacity-0 delay-300" style={{ animationFillMode: 'forwards' }}>
           <Button asChild size="lg" className="text-lg px-8 py-6 animate-pulse-glow active:scale-95 transition-transform">
             <Link to="/auth" className="flex items-center gap-2">
-              {heroContent?.cta_primary_text || 'Get Started Free'}
+              {heroContent?.cta_primary_text || t('hero.cta')}
               <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </Link>
           </Button>
           <Button variant="outline" size="lg" className="text-lg px-8 py-6 glass active:scale-95 transition-transform" asChild>
             <Link to="/product-tour" className="flex items-center gap-2">
-              See How It Works
+              {t('hero.seeHow')}
               <ChevronDown className="h-5 w-5" aria-hidden="true" />
             </Link>
           </Button>

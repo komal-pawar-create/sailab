@@ -1,0 +1,139 @@
+{
+  "nav": {
+    "demo": "Demo",
+    "features": "Features",
+    "productTour": "Product Tour",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "login": "Login",
+    "getStarted": "Get Started"
+  },
+  "hero": {
+    "badge": "Complete Laboratory Management Solution",
+    "headline": "Streamline Your Lab Operations",
+    "subheadline": "From patient registration to test reporting, billing to analytics — manage everything with our powerful, role-based laboratory management system.",
+    "cta": "Get Started Free",
+    "seeHow": "See How It Works"
+  },
+  "stats": {
+    "activeLabs": "Active Labs",
+    "testsProcessed": "Tests Processed",
+    "userRating": "User Rating",
+    "uptime": "Uptime"
+  },
+  "socialProof": {
+    "activeLabs": "Active Labs",
+    "testsProcessed": "Tests Processed",
+    "userRating": "User Rating",
+    "uptime": "Uptime"
+  },
+  "features": {
+    "badge": "Powerful Features",
+    "title": "Everything You Need to",
+    "titleHighlight": "Run Your Lab",
+    "subtitle": "Comprehensive tools designed specifically for diagnostic laboratories and pathology centers."
+  },
+  "howItWorks": {
+    "badge": "Simple Setup",
+    "title": "Get Started in",
+    "titleHighlight": "3 Easy Steps",
+    "subtitle": "From signup to your first bill — it takes less than 10 minutes."
+  },
+  "benefits": {
+    "badge": "Why Choose Us",
+    "title": "Built for Modern",
+    "titleHighlight": "Laboratories",
+    "subtitle": "We understand the unique challenges of running a diagnostic lab. Our solution is crafted to address every pain point."
+  },
+  "demo": {
+    "badge": "See It In Action",
+    "title": "Experience",
+    "titleHighlight": "LabFlow",
+    "subtitle": "Watch our quick demo or take an interactive tour to see how LabFlow transforms lab operations.",
+    "watchDemo": "Watch Demo",
+    "interactiveTour": "Interactive Tour",
+    "desktop": "Desktop",
+    "mobileReady": "Mobile Ready",
+    "comingSoon": "Demo video coming soon",
+    "checkBack": "Check back later",
+    "patientRegistration": "Patient Registration",
+    "patientRegistrationDesc": "Quick patient onboarding with auto-generated IDs, complete medical history, and instant record creation.",
+    "testManagement": "Test Management",
+    "testManagementDesc": "Create custom test types, track sample status, and generate professional reports in minutes.",
+    "smartBilling": "Smart Billing",
+    "smartBillingDesc": "Automated invoicing with GST support, partial payments, and comprehensive ledger tracking.",
+    "analyticsDashboard": "Analytics Dashboard",
+    "analyticsDashboardDesc": "Real-time insights with revenue trends, patient statistics, and AI-powered predictions."
+  },
+  "testimonials": {
+    "badge": "Customer Stories",
+    "title": "Trusted by",
+    "titleHighlight": "500+ Labs",
+    "subtitle": "Hear what lab owners across India have to say about Lab Master."
+  },
+  "pricing": {
+    "badge": "Transparent Pricing",
+    "title": "Simple Pricing for",
+    "titleHighlight": "Labs of All Sizes",
+    "subtitle": "Choose the plan that fits your needs. Multi-lab owners get special discounts with centralized access and reports.",
+    "perMonth": "/month",
+    "mostPopular": "Most Popular",
+    "amc": "AMC",
+    "getStarted": "Get Started",
+    "contactSales": "Contact Sales",
+    "multiLabTitle": "Own multiple labs?",
+    "multiLabSubtitle": "Get centralized access, unified reports & volume discounts",
+    "customQuote": "Contact for Custom Quote"
+  },
+  "faq": {
+    "badge": "FAQ",
+    "title": "Frequently Asked",
+    "titleHighlight": "Questions",
+    "subtitle": "Got questions? We've got answers. Find everything you need to know about Lab Master.",
+    "stillHaveQuestions": "Still have questions?",
+    "ourTeamHelp": "Our team is here to help you",
+    "contactSupport": "Contact Support"
+  },
+  "cta": {
+    "title": "Ready to Transform Your Lab?",
+    "subtitle": "Join hundreds of laboratories already using Lab Master to streamline their operations.",
+    "button": "Start Free Trial",
+    "footer": "No credit card required • Free 14-day trial • Cancel anytime"
+  },
+  "trust": {
+    "headline": "Trusted by 500+ Labs Across India",
+    "hipaaCompliant": "HIPAA Compliant",
+    "hipaaDesc": "Healthcare data protection",
+    "sslEncrypted": "SSL Encrypted",
+    "sslDesc": "256-bit encryption",
+    "uptime": "99.9% Uptime",
+    "uptimeDesc": "Enterprise reliability",
+    "backup": "24/7 Backup",
+    "backupDesc": "Automated daily backups",
+    "isoCertified": "ISO Certified",
+    "isoDesc": "Quality management",
+    "prioritySupport": "Priority Support",
+    "supportDesc": "Dedicated assistance"
+  },
+  "footer": {
+    "tagline": "Complete laboratory management solution trusted by 500+ labs across India.",
+    "quickLinks": "Quick Links",
+    "features": "Features",
+    "pricing": "Pricing",
+    "demo": "Demo",
+    "productTour": "Product Tour",
+    "legal": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "refundPolicy": "Refund Policy",
+    "contactUs": "Contact Us",
+    "madeInIndia": "Made with ❤️ in India",
+    "allRightsReserved": "All rights reserved."
+  },
+  "activity": {
+    "newLabSignedUp": "New lab signed up",
+    "billGenerated": "Bill generated",
+    "testReportCreated": "Test report created",
+    "labOnboarded": "Lab onboarded"
+  }
+}

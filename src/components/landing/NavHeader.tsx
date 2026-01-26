@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Menu, X, Sun, Moon } from 'lucide-react';
+import LanguageSelector from './LanguageSelector';
 
 interface NavHeaderProps {
   scrollY: number;
@@ -12,6 +14,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { t } = useTranslation();
   const isScrolled = scrollY > 50;
 
   // Prevent hydration mismatch
@@ -38,11 +41,11 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
   }, [mobileMenuOpen]);
 
   const navLinks = [
-    { href: '#demo', label: 'Demo' },
-    { href: '#features', label: 'Features' },
-    { href: '/product-tour', label: 'Product Tour', isRoute: true },
-    { href: '#pricing', label: 'Pricing' },
-    { href: '#faq', label: 'FAQ' },
+    { href: '#demo', labelKey: 'nav.demo' },
+    { href: '#features', labelKey: 'nav.features' },
+    { href: '/product-tour', labelKey: 'nav.productTour', isRoute: true },
+    { href: '#pricing', labelKey: 'nav.pricing' },
+    { href: '#faq', labelKey: 'nav.faq' },
   ];
 
   const toggleTheme = useCallback(() => {
@@ -102,7 +105,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
                     isScrolled ? 'text-foreground' : 'text-foreground'
                   }`}
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" aria-hidden="true" />
                 </Link>
               ) : (
@@ -114,7 +117,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
                     isScrolled ? 'text-foreground' : 'text-foreground'
                   }`}
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" aria-hidden="true" />
                 </a>
               )
@@ -123,6 +126,9 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Language Selector */}
+            <LanguageSelector isScrolled={isScrolled} />
+            
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleTheme}
@@ -140,17 +146,20 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
               )}
             </button>
             <Button variant="ghost" asChild className="text-sm">
-              <Link to="/auth">Login</Link>
+              <Link to="/auth">{t('nav.login')}</Link>
             </Button>
             <Button asChild size="sm" className={`transition-all duration-300 active:scale-95 ${
               isScrolled ? '' : 'shadow-lg'
             }`}>
-              <Link to="/auth">Get Started</Link>
+              <Link to="/auth">{t('nav.getStarted')}</Link>
             </Button>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
+            {/* Language Selector - Mobile */}
+            <LanguageSelector isScrolled={isScrolled} />
+            
             {/* Dark Mode Toggle - Mobile */}
             <button
               onClick={toggleTheme}
@@ -200,7 +209,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
                   className="text-foreground hover:text-primary py-3.5 px-4 rounded-lg hover:bg-muted/50 transition-colors min-h-[48px] flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                   tabIndex={mobileMenuOpen ? 0 : -1}
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                 </Link>
               ) : (
                 <a
@@ -210,7 +219,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
                   className="text-foreground hover:text-primary py-3.5 px-4 rounded-lg hover:bg-muted/50 transition-colors min-h-[48px] flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                   tabIndex={mobileMenuOpen ? 0 : -1}
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                 </a>
               )
             ))}
@@ -221,10 +230,10 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
               tabIndex={mobileMenuOpen ? 0 : -1}
               onClick={() => setMobileMenuOpen(false)}
             >
-              Login
+              {t('nav.login')}
             </Link>
             <Button asChild className="mt-2 min-h-[48px]" tabIndex={mobileMenuOpen ? 0 : -1}>
-              <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+              <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>{t('nav.getStarted')}</Link>
             </Button>
           </div>
         </nav>

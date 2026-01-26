@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { HeartHandshake, CheckCircle2, TestTube, CreditCard, Users } from 'lucide-react';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import type { BenefitItem, SectionContent } from './types';
@@ -9,6 +10,8 @@ interface BenefitsSectionProps {
 }
 
 const BenefitsSection = ({ benefits, sectionContent }: BenefitsSectionProps) => {
+  const { t } = useTranslation();
+  
   const defaultBenefits = [
     { id: '1', benefit_text: 'HIPAA-compliant security with role-based access' },
     { id: '2', benefit_text: 'Multi-branch support with centralized management' },
@@ -27,15 +30,15 @@ const BenefitsSection = ({ benefits, sectionContent }: BenefitsSectionProps) => 
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
                 <HeartHandshake className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium text-foreground">
-                  {sectionContent?.benefits_badge || 'Why Choose Us'}
+                  {sectionContent?.benefits_badge || t('benefits.badge')}
                 </span>
               </div>
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
-                {sectionContent?.benefits_title || 'Built for Modern'}
-                <span className="gradient-text"> {sectionContent?.benefits_title_highlight || 'Laboratories'}</span>
+                {sectionContent?.benefits_title || t('benefits.title')}
+                <span className="gradient-text"> {sectionContent?.benefits_title_highlight || t('benefits.titleHighlight')}</span>
               </h2>
               <p className="text-xl text-muted-foreground mb-8">
-                {sectionContent?.benefits_subtitle || 'We understand the unique challenges of running a diagnostic lab. Our solution is crafted to address every pain point.'}
+                {sectionContent?.benefits_subtitle || t('benefits.subtitle')}
               </p>
               
               <div className="space-y-4">
