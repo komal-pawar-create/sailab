@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Quote, Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -10,20 +11,22 @@ interface TestimonialsSectionProps {
 }
 
 const TestimonialsSection = ({ testimonials }: TestimonialsSectionProps) => {
+  const { t } = useTranslation();
+  
   return (
     <section id="testimonials" className="relative py-24 px-4">
       <div className="max-w-6xl mx-auto">
         <AnimatedSection className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
             <Quote className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Customer Stories</span>
+            <span className="text-sm font-medium text-foreground">{t('testimonials.badge')}</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-            Trusted by
-            <span className="gradient-text"> 500+ Labs</span>
+            {t('testimonials.title')}
+            <span className="gradient-text"> {t('testimonials.titleHighlight')}</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Hear what lab owners across India have to say about Lab Master.
+            {t('testimonials.subtitle')}
           </p>
         </AnimatedSection>
 

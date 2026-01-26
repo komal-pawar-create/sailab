@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { Step } from './shared';
@@ -9,6 +10,8 @@ interface HowItWorksSectionProps {
 }
 
 const HowItWorksSection = ({ steps }: HowItWorksSectionProps) => {
+  const { t } = useTranslation();
+  
   return (
     <>
       <section id="how-it-works" />
@@ -17,14 +20,14 @@ const HowItWorksSection = ({ steps }: HowItWorksSectionProps) => {
           <AnimatedSection className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
               <Globe className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">Simple Process</span>
+              <span className="text-sm font-medium text-foreground">{t('howItWorks.badge')}</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-              Get Started in
-              <span className="gradient-text"> 4 Easy Steps</span>
+              {t('howItWorks.title')}
+              <span className="gradient-text"> {t('howItWorks.titleHighlight')}</span>
             </h2>
             <p className="text-xl text-muted-foreground">
-              From signup to fully operational — we make onboarding seamless.
+              {t('howItWorks.subtitle')}
             </p>
           </AnimatedSection>
 

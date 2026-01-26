@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Zap } from 'lucide-react';
 import { AnimatedSection, AnimatedItems } from '@/components/AnimatedSection';
 import { FeatureCard } from './shared';
@@ -9,20 +10,22 @@ interface FeaturesSectionProps {
 }
 
 const FeaturesSection = ({ features }: FeaturesSectionProps) => {
+  const { t } = useTranslation();
+  
   return (
     <section id="features" className="relative py-24 px-4">
       <div className="max-w-7xl mx-auto">
         <AnimatedSection className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
             <Zap className="h-4 w-4 text-accent" />
-            <span className="text-sm font-medium text-foreground">Powerful Features</span>
+            <span className="text-sm font-medium text-foreground">{t('features.badge')}</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-            Everything You Need to
-            <span className="gradient-text"> Run Your Lab</span>
+            {t('features.title')}
+            <span className="gradient-text"> {t('features.titleHighlight')}</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Comprehensive tools designed specifically for diagnostic laboratories and pathology centers.
+            {t('features.subtitle')}
           </p>
         </AnimatedSection>
 

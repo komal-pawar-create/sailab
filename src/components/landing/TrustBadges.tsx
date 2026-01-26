@@ -1,54 +1,57 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Shield, Lock, Clock, Award, Server, Headphones } from 'lucide-react';
 import { AnimatedSection } from '@/components/AnimatedSection';
 
-const badges = [
-  {
-    icon: Shield,
-    title: 'HIPAA Compliant',
-    description: 'Healthcare data protection',
-  },
-  {
-    icon: Lock,
-    title: 'SSL Encrypted',
-    description: '256-bit encryption',
-  },
-  {
-    icon: Server,
-    title: '99.9% Uptime',
-    description: 'Enterprise reliability',
-  },
-  {
-    icon: Clock,
-    title: '24/7 Backup',
-    description: 'Automated daily backups',
-  },
-  {
-    icon: Award,
-    title: 'ISO Certified',
-    description: 'Quality management',
-  },
-  {
-    icon: Headphones,
-    title: 'Priority Support',
-    description: 'Dedicated assistance',
-  },
-];
-
 const TrustBadges = () => {
+  const { t } = useTranslation();
+  
+  const badges = [
+    {
+      icon: Shield,
+      titleKey: 'trust.hipaaCompliant',
+      descKey: 'trust.hipaaDesc',
+    },
+    {
+      icon: Lock,
+      titleKey: 'trust.sslEncrypted',
+      descKey: 'trust.sslDesc',
+    },
+    {
+      icon: Server,
+      titleKey: 'trust.uptime',
+      descKey: 'trust.uptimeDesc',
+    },
+    {
+      icon: Clock,
+      titleKey: 'trust.backup',
+      descKey: 'trust.backupDesc',
+    },
+    {
+      icon: Award,
+      titleKey: 'trust.isoCertified',
+      descKey: 'trust.isoDesc',
+    },
+    {
+      icon: Headphones,
+      titleKey: 'trust.prioritySupport',
+      descKey: 'trust.supportDesc',
+    },
+  ];
+
   return (
     <section className="py-12 px-4 border-y border-border/50 bg-muted/20">
       <div className="max-w-6xl mx-auto">
         <AnimatedSection className="text-center mb-8">
           <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-            Trusted by 500+ Labs Across India
+            {t('trust.headline')}
           </p>
         </AnimatedSection>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {badges.map((badge, index) => (
             <AnimatedSection
-              key={badge.title}
+              key={badge.titleKey}
               delay={index * 100}
               className="flex flex-col items-center text-center group"
             >
@@ -56,10 +59,10 @@ const TrustBadges = () => {
                 <badge.icon className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-sm font-semibold text-foreground mb-1">
-                {badge.title}
+                {t(badge.titleKey)}
               </h3>
               <p className="text-xs text-muted-foreground">
-                {badge.description}
+                {t(badge.descKey)}
               </p>
             </AnimatedSection>
           ))}

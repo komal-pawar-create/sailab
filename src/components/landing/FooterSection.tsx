@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Mail, Phone, MapPin, Linkedin, Twitter, Youtube } from 'lucide-react';
 import type { FooterContent } from './types';
 
@@ -8,17 +9,19 @@ interface FooterSectionProps {
 }
 
 const FooterSection = ({ footerContent }: FooterSectionProps) => {
+  const { t } = useTranslation();
+  
   const defaultNavLinks = [
-    { label: 'Features', href: '#features' },
-    { label: 'Pricing', href: '#pricing' },
-    { label: 'FAQ', href: '#faq' },
-    { label: 'Login', href: '/auth' },
+    { labelKey: 'footer.features', href: '#features' },
+    { labelKey: 'footer.pricing', href: '#pricing' },
+    { labelKey: 'footer.demo', href: '#demo' },
+    { labelKey: 'footer.productTour', href: '/product-tour' },
   ];
 
   const legalLinks = [
-    { label: 'Privacy Policy', href: '#' },
-    { label: 'Terms of Service', href: '#' },
-    { label: 'Cookie Policy', href: '#' },
+    { labelKey: 'footer.privacyPolicy', href: '#' },
+    { labelKey: 'footer.termsOfService', href: '#' },
+    { labelKey: 'footer.refundPolicy', href: '#' },
   ];
 
   const socialLinks = [
@@ -42,49 +45,67 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
               />
             </Link>
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-              Complete laboratory management system trusted by 500+ labs across India.
+              {t('footer.tagline')}
             </p>
             {/* Made in India Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-medium">
               <span aria-hidden="true">🇮🇳</span>
-              <span>Made in India</span>
+              <span>{t('footer.madeInIndia')}</span>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Quick Links</h3>
+            <h3 className="font-semibold text-foreground mb-4">{t('footer.quickLinks')}</h3>
             <nav aria-label="Footer navigation">
               <ul className="space-y-3">
-                {(footerContent?.nav_links && footerContent.nav_links.length > 0 
-                  ? footerContent.nav_links 
-                  : defaultNavLinks
-                ).map((link, index) => (
-                  <li key={index}>
-                    {link.href.startsWith('/') || link.href.startsWith('http') ? (
-                      <Link 
-                        to={link.href} 
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {link.label}
-                      </Link>
-                    ) : (
-                      <a 
-                        href={link.href} 
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {link.label}
-                      </a>
-                    )}
-                  </li>
-                ))}
+                {footerContent?.nav_links && footerContent.nav_links.length > 0 
+                  ? footerContent.nav_links.map((link, index) => (
+                      <li key={index}>
+                        {link.href.startsWith('/') || link.href.startsWith('http') ? (
+                          <Link 
+                            to={link.href} 
+                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {link.label}
+                          </Link>
+                        ) : (
+                          <a 
+                            href={link.href} 
+                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {link.label}
+                          </a>
+                        )}
+                      </li>
+                    ))
+                  : defaultNavLinks.map((link, index) => (
+                      <li key={index}>
+                        {link.href.startsWith('/') ? (
+                          <Link 
+                            to={link.href} 
+                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {t(link.labelKey)}
+                          </Link>
+                        ) : (
+                          <a 
+                            href={link.href} 
+                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {t(link.labelKey)}
+                          </a>
+                        )}
+                      </li>
+                    ))
+                }
               </ul>
             </nav>
           </div>
 
           {/* Legal */}
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Legal</h3>
+            <h3 className="font-semibold text-foreground mb-4">{t('footer.legal')}</h3>
             <ul className="space-y-3">
               {legalLinks.map((link, index) => (
                 <li key={index}>
@@ -92,7 +113,7 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
                     href={link.href} 
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {link.label}
+                    {t(link.labelKey)}
                   </a>
                 </li>
               ))}
@@ -101,7 +122,7 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
 
           {/* Contact */}
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Contact Us</h3>
+            <h3 className="font-semibold text-foreground mb-4">{t('footer.contactUs')}</h3>
             <address className="not-italic space-y-3">
               <a 
                 href="mailto:support@labflow.mywebz.in" 
@@ -142,7 +163,7 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} {footerContent?.brand_name || 'LabFlow'}. All rights reserved.
+            © {new Date().getFullYear()} {footerContent?.brand_name || 'LabFlow'}. {t('footer.allRightsReserved')}
           </p>
           <p className="text-xs text-muted-foreground">
             LIMS Software for Pathology & Diagnostic Labs

@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Users, TrendingUp, Star, Activity } from 'lucide-react';
 
 interface StatItem {
   icon: React.ElementType;
   value: string;
-  label: string;
+  labelKey: string;
   suffix?: string;
 }
 
 const stats: StatItem[] = [
-  { icon: Users, value: '500', suffix: '+', label: 'Active Labs' },
-  { icon: Activity, value: '2.5', suffix: 'M+', label: 'Tests Processed' },
-  { icon: Star, value: '4.9', label: 'User Rating' },
-  { icon: TrendingUp, value: '99.9', suffix: '%', label: 'Uptime' },
+  { icon: Users, value: '500', suffix: '+', labelKey: 'socialProof.activeLabs' },
+  { icon: Activity, value: '2.5', suffix: 'M+', labelKey: 'socialProof.testsProcessed' },
+  { icon: Star, value: '4.9', labelKey: 'socialProof.userRating' },
+  { icon: TrendingUp, value: '99.9', suffix: '%', labelKey: 'socialProof.uptime' },
 ];
 
 const SocialProofBar = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,13 +40,13 @@ const SocialProofBar = () => {
     >
       <div className="max-w-6xl mx-auto flex items-center justify-center gap-8">
         {stats.map((stat, index) => (
-          <div key={stat.label} className="flex items-center gap-2">
+          <div key={stat.labelKey} className="flex items-center gap-2">
             <stat.icon className="w-4 h-4 text-primary" />
             <span className="font-bold text-foreground">
               {stat.value}{stat.suffix}
             </span>
             <span className="text-sm text-muted-foreground">
-              {stat.label}
+              {t(stat.labelKey)}
             </span>
             {index < stats.length - 1 && (
               <span className="ml-6 h-4 w-px bg-border" />
