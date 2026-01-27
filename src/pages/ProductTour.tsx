@@ -61,13 +61,127 @@ const ProductTour = () => {
   }, []);
 
   useEffect(() => {
-    document.title = 'Product Tour - See How LabFlow LIMS Works | LabFlow';
+    const pageTitle = 'Product Tour - See How LabFlow LIMS Works | LabFlow';
+    const pageDescription = 'Interactive product tour of LabFlow LIMS. See how our platform transforms lab operations with patient management, billing, reports, and analytics. Trusted by 500+ labs across India.';
+    const pageUrl = 'https://labflow.mywebz.in/product-tour';
+    const pageImage = 'https://labflow.mywebz.in/images/labflow-logo.png';
     
-    // Add meta description for SEO
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', 'Interactive product tour of LabFlow LIMS. See how our platform transforms lab operations with patient management, billing, reports, and analytics.');
+    document.title = pageTitle;
+    
+    // Helper to set or create meta tags
+    const setMetaTag = (selector: string, attribute: string, content: string) => {
+      let meta = document.querySelector(selector);
+      if (!meta) {
+        meta = document.createElement('meta');
+        if (selector.includes('property=')) {
+          meta.setAttribute('property', selector.match(/property="([^"]+)"/)?.[1] || '');
+        } else if (selector.includes('name=')) {
+          meta.setAttribute('name', selector.match(/name="([^"]+)"/)?.[1] || '');
+        }
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute(attribute, content);
+    };
+
+    // Basic meta description
+    setMetaTag('meta[name="description"]', 'content', pageDescription);
+    
+    // Open Graph meta tags
+    setMetaTag('meta[property="og:type"]', 'content', 'website');
+    setMetaTag('meta[property="og:url"]', 'content', pageUrl);
+    setMetaTag('meta[property="og:title"]', 'content', pageTitle);
+    setMetaTag('meta[property="og:description"]', 'content', pageDescription);
+    setMetaTag('meta[property="og:image"]', 'content', pageImage);
+    setMetaTag('meta[property="og:site_name"]', 'content', 'LabFlow');
+    setMetaTag('meta[property="og:locale"]', 'content', 'en_IN');
+    
+    // Twitter Card meta tags
+    setMetaTag('meta[name="twitter:card"]', 'content', 'summary_large_image');
+    setMetaTag('meta[name="twitter:url"]', 'content', pageUrl);
+    setMetaTag('meta[name="twitter:title"]', 'content', pageTitle);
+    setMetaTag('meta[name="twitter:description"]', 'content', pageDescription);
+    setMetaTag('meta[name="twitter:image"]', 'content', pageImage);
+    
+    // Canonical URL
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
     }
+    canonical.setAttribute('href', pageUrl);
+
+    // JSON-LD Structured Data for Product Tour page
+    const jsonLdScript = document.createElement('script');
+    jsonLdScript.type = 'application/ld+json';
+    jsonLdScript.id = 'product-tour-jsonld';
+    jsonLdScript.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "LabFlow Product Tour",
+      "description": pageDescription,
+      "url": pageUrl,
+      "mainEntity": {
+        "@type": "SoftwareApplication",
+        "name": "LabFlow LIMS",
+        "applicationCategory": "HealthApplication",
+        "operatingSystem": "Web",
+        "description": "Complete laboratory management system with patient management, test reporting, billing, and analytics",
+        "offers": {
+          "@type": "Offer",
+          "price": "5000",
+          "priceCurrency": "INR"
+        },
+        "featureList": [
+          "Patient Management",
+          "Test Report Generation",
+          "Billing & Invoicing",
+          "Multi-Branch Support",
+          "Role-Based Access Control",
+          "Analytics Dashboard",
+          "WhatsApp Integration",
+          "Multi-Language Support"
+        ]
+      },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://labflow.mywebz.in/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Product Tour",
+            "item": pageUrl
+          }
+        ]
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "LabFlow",
+        "url": "https://labflow.mywebz.in",
+        "logo": pageImage
+      }
+    });
+    
+    // Remove existing JSON-LD if any, then add new one
+    const existingJsonLd = document.getElementById('product-tour-jsonld');
+    if (existingJsonLd) {
+      existingJsonLd.remove();
+    }
+    document.head.appendChild(jsonLdScript);
+
+    // Cleanup on unmount
+    return () => {
+      const scriptToRemove = document.getElementById('product-tour-jsonld');
+      if (scriptToRemove) {
+        scriptToRemove.remove();
+      }
+    };
   }, []);
 
   return (
