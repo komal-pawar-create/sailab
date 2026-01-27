@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 
 const ROICalculator = () => {
+  const { t } = useTranslation();
   const [patientsPerDay, setPatientsPerDay] = useState([50]);
   const [staffCount, setStaffCount] = useState([3]);
   const [hoursPerPatient, setHoursPerPatient] = useState([15]); // minutes
@@ -56,12 +58,12 @@ const ROICalculator = () => {
     <section className="py-20 px-4 bg-muted/30" aria-labelledby="roi-heading">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <Badge variant="secondary" className="mb-4">ROI Calculator</Badge>
+          <Badge variant="secondary" className="mb-4">{t('productTour.roi.badge')}</Badge>
           <h2 id="roi-heading" className="text-3xl md:text-4xl font-bold mb-4">
-            Calculate Your <span className="gradient-text">Savings</span>
+            {t('productTour.roi.title')} <span className="gradient-text">{t('productTour.roi.titleHighlight')}</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            See how much time and money LabFlow can save your laboratory every month
+            {t('productTour.roi.subtitle')}
           </p>
         </div>
 
@@ -71,10 +73,10 @@ const ROICalculator = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calculator className="h-5 w-5 text-primary" />
-                Your Lab Details
+                {t('productTour.roi.yourLabDetails')}
               </CardTitle>
               <CardDescription>
-                Adjust the sliders to match your laboratory
+                {t('productTour.roi.adjustSliders')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
@@ -82,7 +84,7 @@ const ROICalculator = () => {
                 <div className="flex justify-between mb-3">
                   <label className="text-sm font-medium flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    Patients per day
+                    {t('productTour.roi.patientsPerDay')}
                   </label>
                   <span className="text-lg font-bold text-primary">{patientsPerDay[0]}</span>
                 </div>
@@ -104,7 +106,7 @@ const ROICalculator = () => {
                 <div className="flex justify-between mb-3">
                   <label className="text-sm font-medium flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    Staff members
+                    {t('productTour.roi.staffMembers')}
                   </label>
                   <span className="text-lg font-bold text-primary">{staffCount[0]}</span>
                 </div>
@@ -126,7 +128,7 @@ const ROICalculator = () => {
                 <div className="flex justify-between mb-3">
                   <label className="text-sm font-medium flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    Minutes per patient (current)
+                    {t('productTour.roi.minutesPerPatient')}
                   </label>
                   <span className="text-lg font-bold text-primary">{hoursPerPatient[0]} min</span>
                 </div>
@@ -151,10 +153,10 @@ const ROICalculator = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                Your Estimated Savings
+                {t('productTour.roi.estimatedSavings')}
               </CardTitle>
               <CardDescription>
-                Based on your inputs, here's what you can expect
+                {t('productTour.roi.basedOnInputs')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -162,13 +164,13 @@ const ROICalculator = () => {
               <div className="p-4 rounded-xl bg-background/50">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                   <Clock className="h-4 w-4" />
-                  Time Saved Per Month
+                  {t('productTour.roi.timeSavedPerMonth')}
                 </div>
                 <div className="text-3xl font-bold text-primary">
-                  {calculations.monthlyTimeSaved} hours
+                  {calculations.monthlyTimeSaved} {t('productTour.roi.hours')}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  ({calculations.dailyTimeSaved} hours per day)
+                  ({calculations.dailyTimeSaved} {t('productTour.roi.hours')} {t('productTour.roi.perDay')})
                 </p>
               </div>
 
@@ -176,35 +178,35 @@ const ROICalculator = () => {
               <div className="p-4 rounded-xl bg-background/50">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                   <IndianRupee className="h-4 w-4" />
-                  Labor Cost Saved
+                  {t('productTour.roi.laborCostSaved')}
                 </div>
                 <div className="text-3xl font-bold text-primary">
                   ₹{calculations.monthlyCostSaved.toLocaleString()}
                 </div>
-                <p className="text-sm text-muted-foreground">per month</p>
+                <p className="text-sm text-muted-foreground">{t('productTour.roi.perMonth')}</p>
               </div>
 
               {/* Error reduction savings */}
               <div className="p-4 rounded-xl bg-background/50">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                   <FileText className="h-4 w-4" />
-                  Billing Error Savings
+                  {t('productTour.roi.billingErrorSavings')}
                 </div>
                 <div className="text-3xl font-bold text-primary">
                   ₹{calculations.errorCostSaved.toLocaleString()}
                 </div>
-                <p className="text-sm text-muted-foreground">per month</p>
+                <p className="text-sm text-muted-foreground">{t('productTour.roi.perMonth')}</p>
               </div>
 
               {/* Total */}
               <div className="p-4 rounded-xl bg-primary text-primary-foreground">
-                <div className="text-sm opacity-90 mb-1">Total Monthly Savings</div>
+                <div className="text-sm opacity-90 mb-1">{t('productTour.roi.totalMonthlySavings')}</div>
                 <div className="text-4xl font-bold">
                   ₹{calculations.totalMonthlySavings.toLocaleString()}
                 </div>
                 <div className="flex items-center gap-2 mt-2 text-sm opacity-90">
                   <CheckCircle2 className="h-4 w-4" />
-                  Can handle {calculations.patientsCapacityIncrease} more patients daily
+                  {t('productTour.roi.morePatients', { count: calculations.patientsCapacityIncrease })}
                 </div>
               </div>
             </CardContent>
