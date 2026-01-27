@@ -1,147 +1,90 @@
 
-# Fix RLS Policy for Subscriptions Table - Onboarding Wizard
+# Fix Login Issues for Newly Created Lab Users
 
 ## Problem Summary
 
-When completing the Lab Onboarding Wizard at the final "Subscription" step, clicking "Activate & Complete" fails with the error: **"new row violates row-level security policy for table 'subscriptions'"**.
-
-This happens because the subscriptions table only allows `super_admin` users to insert records, but `lab_admin` users can also access the Super Admin page and run the onboarding wizard.
+After completing the Lab Onboarding Wizard, users cannot log in with the password set during onboarding, and even after super admin changes the password, login may still fail due to **case-sensitive username matching**.
 
 ---
 
-## Root Cause
+## Root Cause Analysis
 
-The `subscriptions` table has an RLS INSERT policy:
+### Issue 1: Case-Sensitive Username Lookup
+The `get_email_by_username` database function performs an **exact case-sensitive match**:
 ```sql
-WITH CHECK (is_super_admin(auth.uid()))
+WHERE username = input_username
 ```
 
-The `is_super_admin()` function only returns true for users with role `'super_admin'` in the profiles table. However, the Super Admin page allows `lab_admin` users to access the onboarding wizard, creating a mismatch.
+**Example:**
+- Stored username: `metropolis_labs` (lowercase)
+- User types: `Metropolis_Labs` → Returns NULL → "Invalid username or password"
+
+### Issue 2: Password Set During Onboarding
+During onboarding (Step 4), the password is set via `supabase.auth.signUp()`. This works correctly, but since the **user was created from the super admin's session**, the admin might need to log in as the new user separately to verify.
+
+### Verification Results
+- User `admin@1.com` (username: `metropolis_labs`) exists with confirmed email
+- Password change from super admin at 10:10:55Z was **successful** (auth logs confirm)
+- Username lookup with exact match works: `get_email_by_username('metropolis_labs')` → `admin@1.com`
+- Username lookup with different case fails: `get_email_by_username('Metropolis_Labs')` → NULL
 
 ---
 
-## Solution Options
+## Solution
 
-### Option A: Update RLS Policy (Recommended)
+### Database Migration: Make Username Lookup Case-Insensitive
 
-Create a new database migration to allow both `super_admin` and `lab_admin` roles to manage subscriptions:
-
-```sql
--- Drop existing restrictive policy
-DROP POLICY IF EXISTS "Super admins can insert subscriptions" ON subscriptions;
-
--- Create new policy allowing super_admin and lab_admin
-CREATE POLICY "Admins can insert subscriptions" ON subscriptions
-  FOR INSERT TO public
-  WITH CHECK (
-    is_super_admin(auth.uid()) 
-    OR 
-    EXISTS (
-      SELECT 1 FROM profiles 
-      WHERE profiles.user_id = auth.uid() 
-      AND profiles.role = 'lab_admin'
-    )
-  );
-
--- Also update SELECT, UPDATE, DELETE policies similarly
-DROP POLICY IF EXISTS "Super admins can view all subscriptions" ON subscriptions;
-CREATE POLICY "Admins can view subscriptions" ON subscriptions
-  FOR SELECT TO public
-  USING (
-    is_super_admin(auth.uid()) 
-    OR 
-    EXISTS (
-      SELECT 1 FROM profiles 
-      WHERE profiles.user_id = auth.uid() 
-      AND profiles.role = 'lab_admin'
-    )
-  );
-
-DROP POLICY IF EXISTS "Super admins can update subscriptions" ON subscriptions;
-CREATE POLICY "Admins can update subscriptions" ON subscriptions
-  FOR UPDATE TO public
-  USING (
-    is_super_admin(auth.uid()) 
-    OR 
-    EXISTS (
-      SELECT 1 FROM profiles 
-      WHERE profiles.user_id = auth.uid() 
-      AND profiles.role = 'lab_admin'
-    )
-  );
-
-DROP POLICY IF EXISTS "Super admins can delete subscriptions" ON subscriptions;
-CREATE POLICY "Admins can delete subscriptions" ON subscriptions
-  FOR DELETE TO public
-  USING (
-    is_super_admin(auth.uid()) 
-    OR 
-    EXISTS (
-      SELECT 1 FROM profiles 
-      WHERE profiles.user_id = auth.uid() 
-      AND profiles.role = 'lab_admin'
-    )
-  );
-```
-
-### Option B: Create Helper Function
-
-Alternatively, create an `is_admin()` helper function for cleaner policies:
+Update the `get_email_by_username` function to use case-insensitive matching:
 
 ```sql
-CREATE OR REPLACE FUNCTION is_admin(user_id uuid)
-RETURNS boolean AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.profiles 
-    WHERE profiles.user_id = is_admin.user_id 
-    AND role IN ('super_admin', 'lab_admin')
-  );
-$$ LANGUAGE sql SECURITY DEFINER;
+CREATE OR REPLACE FUNCTION public.get_email_by_username(input_username text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  user_email text;
+BEGIN
+  SELECT email INTO user_email
+  FROM profiles
+  WHERE LOWER(username) = LOWER(input_username);
+  
+  RETURN user_email;
+END;
+$$;
 ```
-
-Then update policies to use `is_admin(auth.uid())`.
-
-### Option C: Restrict Onboarding to Super Admin Only
-
-If subscriptions should truly only be created by super admins, update the frontend to hide the onboarding wizard from lab_admin users:
-
-In `src/pages/SuperAdmin.tsx`, modify the tab visibility or restrict the "Onboard Lab" tab.
-
----
-
-## Recommended Approach
-
-**Option A** is recommended because:
-1. Lab admins managing their organization's subscriptions is a valid use case
-2. It maintains the existing UI/UX flow
-3. The security model still restricts access to admin-level roles only
 
 ---
 
 ## Implementation Steps
 
-1. **Create a new Supabase migration file**:
-   - Path: `supabase/migrations/[timestamp]_update_subscriptions_rls_policies.sql`
+1. **Create new database migration** to update the `get_email_by_username` function with case-insensitive matching using `LOWER()` on both sides of the comparison
 
-2. **Add the updated RLS policies** as shown in Option A
-
-3. **Test the fix**:
-   - Log in as a lab_admin user
-   - Complete the onboarding wizard through all 5 steps
-   - Verify subscription is created successfully
+2. **Test login** with the following credentials:
+   - Username: `metropolis_labs` (or any case variation like `Metropolis_Labs`)
+   - Password: `11223344` (the password set by super admin)
 
 ---
 
-## Files to Create/Modify
+## Files to Modify
 
 | File | Action |
 |------|--------|
-| `supabase/migrations/[timestamp]_update_subscriptions_rls_policies.sql` | Create new migration with updated RLS policies |
+| `supabase/migrations/[timestamp]_fix_username_case_sensitivity.sql` | Create migration with case-insensitive username lookup |
 
 ---
 
-## Security Considerations
+## Why This Works
 
-- Lab admins will be able to create/view/update/delete subscriptions
-- Consider adding additional constraints (e.g., lab admins can only manage subscriptions for their own lab) if stricter isolation is needed
-- For stricter control, the policy could include a lab_id check to ensure lab_admins only manage their own lab's subscriptions
+- Users can enter their username in any case (e.g., `SuperAdmin`, `superadmin`, `SUPERADMIN`)
+- The system will match it against the stored lowercase username
+- This is a common UX best practice for login forms
+
+---
+
+## Additional Notes
+
+- The password change from super admin **did work** - the auth logs confirm the modification was successful
+- The user should be able to log in now with username `metropolis_labs` (exact lowercase) and password `11223344`
+- After the fix, any case variation of the username will work
