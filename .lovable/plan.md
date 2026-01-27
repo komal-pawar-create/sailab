@@ -1,272 +1,147 @@
 
-# Complete Multi-Language Support for Product Tour Components
+# Fix RLS Policy for Subscriptions Table - Onboarding Wizard
 
-## Overview
-The translation infrastructure and translation keys are already in place in the locale files (en.json, hi.json, mr.json). The remaining work is to integrate the `useTranslation` hook into each Product Tour component and replace hardcoded English strings with `t()` function calls.
+## Problem Summary
 
-## Components to Update (9 Total)
+When completing the Lab Onboarding Wizard at the final "Subscription" step, clicking "Activate & Complete" fails with the error: **"new row violates row-level security policy for table 'subscriptions'"**.
 
-### 1. VideoGallery.tsx
-**Current State:** Hardcoded strings for section title, subtitle, tab labels
-**Translation Keys to Use:**
-- `productTour.videoGallery.badge` → "Video Demos"
-- `productTour.videoGallery.title` → "See LabFlow in Action"
-- `productTour.videoGallery.subtitle` → description text
-- `productTour.videoGallery.featureDemos` → "Feature Demos"
-- `productTour.videoGallery.testimonials` → "Testimonials"
+This happens because the subscriptions table only allows `super_admin` users to insert records, but `lab_admin` users can also access the Super Admin page and run the onboarding wizard.
 
-### 2. PlatformPreview.tsx
-**Current State:** Hardcoded module names, descriptions, hotspot labels
-**Translation Keys to Use:**
-- `productTour.platformPreview.badge` → "Interactive Preview"
-- `productTour.platformPreview.title` → "Explore the Platform"
-- `productTour.platformPreview.subtitle` → description text
-- `productTour.platformPreview.modules.*` → Dashboard, Patients, Billing, Reports, Analytics
+---
 
-**Additional keys needed for hotspots (add to locale files):**
-- Dashboard hotspots: Quick Stats, Revenue Analytics, Activity Feed, Test Distribution
-- Patients hotspots: Smart Search, Patient List, Filter Options, Quick Add
-- Billing hotspots: Create Bill, Line Items, Bill Preview, Payment Options
-- Reports hotspots: Report Filters, Status Tracking, Patient Reports, Quick Navigation
-- Analytics hotspots: Test Volumes, Test Distribution, KPI Cards, Revenue Trends
+## Root Cause
 
-### 3. StakeholderTabs.tsx (largest component)
-**Current State:** Hardcoded stakeholder names, taglines, features, workflow steps
-**Translation Keys to Use:**
-- `productTour.stakeholders.badge` → "Role-Based Features"
-- `productTour.stakeholders.title` → "Built for Everyone"
-- `productTour.stakeholders.subtitle` → description
-- `productTour.stakeholders.owner/admin/operator/patient` → role names
-- `productTour.stakeholders.videoTutorials` → "Video Tutorials"
-- `productTour.stakeholders.videos` → "Videos"
+The `subscriptions` table has an RLS INSERT policy:
+```sql
+WITH CHECK (is_super_admin(auth.uid()))
+```
 
-**Additional keys needed (add to locale files):**
-- Stakeholder taglines, features, workflow steps, time saved, key benefits
+The `is_super_admin()` function only returns true for users with role `'super_admin'` in the profiles table. However, the Super Admin page allows `lab_admin` users to access the onboarding wizard, creating a mismatch.
 
-### 4. ROICalculator.tsx
-**Current State:** Hardcoded labels for sliders, results sections
-**Translation Keys to Use:**
-- `productTour.roi.badge` → "ROI Calculator"
-- `productTour.roi.title` → "Calculate Your"
-- `productTour.roi.titleHighlight` → "Savings"
-- `productTour.roi.subtitle` → description
-- `productTour.roi.yourLabDetails` → "Your Lab Details"
-- `productTour.roi.adjustSliders` → slider instructions
-- `productTour.roi.patientsPerDay/staffMembers/minutesPerPatient` → slider labels
-- `productTour.roi.estimatedSavings` → "Your Estimated Savings"
-- `productTour.roi.timeSavedPerMonth/laborCostSaved/billingErrorSavings/totalMonthlySavings` → result labels
-- `productTour.roi.morePatients` → capacity increase message
+---
 
-### 5. BeforeAfterSlider.tsx
-**Current State:** Hardcoded comparison labels, section headers
-**Translation Keys to Use:**
-- `productTour.beforeAfter.badge` → "Visual Comparison"
-- `productTour.beforeAfter.title` → "Paper Registers vs LabFlow"
-- `productTour.beforeAfter.subtitle` → instruction text
-- `productTour.beforeAfter.paperRegisters` → "Paper Registers"
-- `productTour.beforeAfter.manualProcesses` → "Manual Processes"
-- `productTour.beforeAfter.labflow` → "LabFlow"
-- `productTour.beforeAfter.digitalPlatform` → "Digital Platform"
-- `productTour.beforeAfter.hoursLost` → "3+ hours lost daily"
-- `productTour.beforeAfter.hoursSaved` → "Save 3+ hours every day"
-- `productTour.beforeAfter.dragSlider` → drag instruction
+## Solution Options
 
-**Additional keys needed (add to locale files):**
-- Comparison items: Patient Registration, Bill Generation, Report Creation, Finding Patient Records, Daily Revenue Calculation, Error Rate
+### Option A: Update RLS Policy (Recommended)
 
-### 6. PatientJourneyFlow.tsx
-**Current State:** Hardcoded step titles, descriptions, details
-**Translation Keys to Use:**
-- `productTour.patientJourney.badge` → "Complete Workflow"
-- `productTour.patientJourney.title` → "The Complete Patient Journey"
-- `productTour.patientJourney.subtitle` → description
-- `productTour.patientJourney.totalTime` → "Total Time:"
-- `productTour.patientJourney.under5Min` → "Under 5 minutes"
-- `productTour.patientJourney.fromRegistration` → "from registration to report delivery"
-- `productTour.patientJourney.steps.*` → step titles, durations, descriptions
+Create a new database migration to allow both `super_admin` and `lab_admin` roles to manage subscriptions:
 
-**Additional keys needed (add to locale files):**
-- Step details arrays for each journey step
+```sql
+-- Drop existing restrictive policy
+DROP POLICY IF EXISTS "Super admins can insert subscriptions" ON subscriptions;
 
-### 7. ComparisonTable.tsx
-**Current State:** Hardcoded feature names, categories, stat labels
-**Translation Keys to Use:**
-- `productTour.comparison.badge` → "Why Choose LabFlow"
-- `productTour.comparison.title` → "See How LabFlow Compares"
-- `productTour.comparison.subtitle` → description
-- `productTour.comparison.labflow/manualProcess/competitor` → column headers
-- `productTour.comparison.dailyTimeSaved/errorReduction/productivityBoost/fasterReports` → stat labels
+-- Create new policy allowing super_admin and lab_admin
+CREATE POLICY "Admins can insert subscriptions" ON subscriptions
+  FOR INSERT TO public
+  WITH CHECK (
+    is_super_admin(auth.uid()) 
+    OR 
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.user_id = auth.uid() 
+      AND profiles.role = 'lab_admin'
+    )
+  );
 
-**Additional keys needed (add to locale files):**
-- All comparison categories and feature names
-- Tooltip descriptions and use cases
+-- Also update SELECT, UPDATE, DELETE policies similarly
+DROP POLICY IF EXISTS "Super admins can view all subscriptions" ON subscriptions;
+CREATE POLICY "Admins can view subscriptions" ON subscriptions
+  FOR SELECT TO public
+  USING (
+    is_super_admin(auth.uid()) 
+    OR 
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.user_id = auth.uid() 
+      AND profiles.role = 'lab_admin'
+    )
+  );
 
-### 8. SetupTimeline.tsx
-**Current State:** Hardcoded day titles, descriptions, step tasks
-**Translation Keys to Use:**
-- `productTour.setupTimeline.badge` → "Getting Started"
-- `productTour.setupTimeline.title` → "Up and Running in"
-- `productTour.setupTimeline.titleHighlight` → "3 Days"
-- `productTour.setupTimeline.subtitle` → description
-- `productTour.setupTimeline.day1/day2/day3.title` → day titles
-- `productTour.setupTimeline.day1/day2/day3.description` → day descriptions
+DROP POLICY IF EXISTS "Super admins can update subscriptions" ON subscriptions;
+CREATE POLICY "Admins can update subscriptions" ON subscriptions
+  FOR UPDATE TO public
+  USING (
+    is_super_admin(auth.uid()) 
+    OR 
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.user_id = auth.uid() 
+      AND profiles.role = 'lab_admin'
+    )
+  );
 
-**Additional keys needed (add to locale files):**
-- Step titles, durations, and task lists for each day
+DROP POLICY IF EXISTS "Super admins can delete subscriptions" ON subscriptions;
+CREATE POLICY "Admins can delete subscriptions" ON subscriptions
+  FOR DELETE TO public
+  USING (
+    is_super_admin(auth.uid()) 
+    OR 
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.user_id = auth.uid() 
+      AND profiles.role = 'lab_admin'
+    )
+  );
+```
 
-### 9. ExpectationsGrid.tsx
-**Current State:** Hardcoded timeframe titles, achievements
-**Translation Keys to Use:**
-- `productTour.expectations.badge` → "What to Expect"
-- `productTour.expectations.title` → "Your Journey with"
-- `productTour.expectations.titleHighlight` → "LabFlow"
-- `productTour.expectations.subtitle` → description
-- `productTour.expectations.firstHour/firstDay/firstWeek/firstMonth` → timeframe labels
+### Option B: Create Helper Function
 
-**Additional keys needed (add to locale files):**
-- Achievement titles and lists for each timeframe
+Alternatively, create an `is_admin()` helper function for cleaner policies:
+
+```sql
+CREATE OR REPLACE FUNCTION is_admin(user_id uuid)
+RETURNS boolean AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles 
+    WHERE profiles.user_id = is_admin.user_id 
+    AND role IN ('super_admin', 'lab_admin')
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+```
+
+Then update policies to use `is_admin(auth.uid())`.
+
+### Option C: Restrict Onboarding to Super Admin Only
+
+If subscriptions should truly only be created by super admins, update the frontend to hide the onboarding wizard from lab_admin users:
+
+In `src/pages/SuperAdmin.tsx`, modify the tab visibility or restrict the "Onboard Lab" tab.
+
+---
+
+## Recommended Approach
+
+**Option A** is recommended because:
+1. Lab admins managing their organization's subscriptions is a valid use case
+2. It maintains the existing UI/UX flow
+3. The security model still restricts access to admin-level roles only
 
 ---
 
 ## Implementation Steps
 
-### Phase 1: Extend Translation Files
-Add missing translation keys to all three locale files:
+1. **Create a new Supabase migration file**:
+   - Path: `supabase/migrations/[timestamp]_update_subscriptions_rls_policies.sql`
 
-**en.json additions:**
-```json
-"productTour": {
-  ...existing keys...,
-  "beforeAfter": {
-    ...existing...,
-    "items": {
-      "patientRegistration": "Patient Registration",
-      "billGeneration": "Bill Generation",
-      "reportCreation": "Report Creation",
-      "findingRecords": "Finding Patient Records",
-      "revenueCalculation": "Daily Revenue Calculation",
-      "errorRate": "Error Rate"
-    },
-    "values": {
-      "patientRegBefore": "10-15 min",
-      "patientRegAfter": "< 30 sec",
-      "patientRegImprovement": "95% faster",
-      ...etc
-    }
-  },
-  "patientJourney": {
-    ...existing...,
-    "steps": {
-      "register": {
-        ...existing...,
-        "details": [
-          "Enter phone number for instant lookup",
-          "Auto-generate unique patient ID",
-          "Capture doctor referral details",
-          "Add medical history notes"
-        ]
-      },
-      ...etc
-    }
-  },
-  "stakeholders": {
-    ...existing...,
-    "roles": {
-      "owner": {
-        "name": "Lab Owners",
-        "tagline": "Complete visibility and control over your laboratory business",
-        "timeSaved": "3+ hours daily",
-        "keyBenefit": "60% reduction in billing errors",
-        "features": [...],
-        "workflowSteps": [...]
-      },
-      ...etc
-    }
-  },
-  "setupTimeline": {
-    ...existing...,
-    "days": {
-      "day1": {
-        "steps": [
-          { "title": "Create Account", "duration": "2 min", "tasks": [...] },
-          ...
-        ]
-      },
-      ...
-    }
-  },
-  "expectations": {
-    ...existing...,
-    "milestones": {
-      "firstHour": {
-        "title": "Account Ready",
-        "achievements": [
-          "Account created and verified",
-          "Lab profile configured",
-          "Basic settings completed",
-          "Dashboard accessible"
-        ]
-      },
-      ...
-    }
-  },
-  "platformPreview": {
-    ...existing...,
-    "moduleDescriptions": {...},
-    "hotspots": {
-      "dashboard": {...},
-      "patients": {...},
-      ...
-    }
-  },
-  "comparison": {
-    ...existing...,
-    "categories": {
-      "patientManagement": "Patient Management",
-      "billingPayments": "Billing & Payments",
-      ...
-    },
-    "features": {...}
-  }
-}
-```
+2. **Add the updated RLS policies** as shown in Option A
 
-### Phase 2: Update Components
-For each component:
-1. Import `useTranslation` from `react-i18next`
-2. Get `t` function via `const { t } = useTranslation()`
-3. Replace hardcoded strings with `t('productTour.section.key')` calls
-4. For arrays, use `t('key', { returnObjects: true }) as string[]`
-
-### Phase 3: Testing
-- Test language switching on Product Tour page
-- Verify all 3 languages render correctly
-- Check for any missing translations (fallback to English)
+3. **Test the fix**:
+   - Log in as a lab_admin user
+   - Complete the onboarding wizard through all 5 steps
+   - Verify subscription is created successfully
 
 ---
 
-## Files to Modify
+## Files to Create/Modify
 
 | File | Action |
 |------|--------|
-| `src/i18n/locales/en.json` | Add extended translation keys |
-| `src/i18n/locales/hi.json` | Add extended Hindi translations |
-| `src/i18n/locales/mr.json` | Add extended Marathi translations |
-| `src/components/product-tour/VideoGallery.tsx` | Integrate useTranslation |
-| `src/components/product-tour/PlatformPreview.tsx` | Integrate useTranslation |
-| `src/components/product-tour/StakeholderTabs.tsx` | Integrate useTranslation |
-| `src/components/product-tour/ROICalculator.tsx` | Integrate useTranslation |
-| `src/components/product-tour/BeforeAfterSlider.tsx` | Integrate useTranslation |
-| `src/components/product-tour/PatientJourneyFlow.tsx` | Integrate useTranslation |
-| `src/components/product-tour/ComparisonTable.tsx` | Integrate useTranslation |
-| `src/components/product-tour/SetupTimeline.tsx` | Integrate useTranslation |
-| `src/components/product-tour/ExpectationsGrid.tsx` | Integrate useTranslation |
+| `supabase/migrations/[timestamp]_update_subscriptions_rls_policies.sql` | Create new migration with updated RLS policies |
 
 ---
 
-## Technical Notes
+## Security Considerations
 
-- Components with complex data structures (StakeholderTabs, ComparisonTable) will require careful handling of nested translation objects
-- Some components use static arrays that will need to be converted to translation-based dynamic arrays
-- The `returnObjects: true` option in i18next allows retrieving arrays/objects from translations
-- Existing pattern from TourHero.tsx and TourCTA.tsx should be followed for consistency
+- Lab admins will be able to create/view/update/delete subscriptions
+- Consider adding additional constraints (e.g., lab admins can only manage subscriptions for their own lab) if stricter isolation is needed
+- For stricter control, the policy could include a lab_id check to ensure lab_admins only manage their own lab's subscriptions
