@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, X, Clock, Grid, LayoutList } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -190,6 +191,7 @@ const VideoPlayerModal = ({
 
 // Main Video Gallery Component
 const VideoGallery = () => {
+  const { t } = useTranslation();
   const [videos, setVideos] = useState<DemoVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState<DemoVideo | null>(null);
@@ -260,7 +262,7 @@ const VideoGallery = () => {
             viewport={{ once: true }}
             className="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4"
           >
-            Video Demos
+            {t('productTour.videoGallery.badge')}
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -269,7 +271,7 @@ const VideoGallery = () => {
             transition={{ delay: 0.1 }}
             className="text-3xl md:text-4xl font-bold text-foreground mb-4"
           >
-            See LabFlow in Action
+            {t('productTour.videoGallery.title')}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -278,7 +280,7 @@ const VideoGallery = () => {
             transition={{ delay: 0.2 }}
             className="text-lg text-muted-foreground max-w-2xl mx-auto"
           >
-            Watch quick walkthroughs of our key features and discover how LabFlow can transform your lab operations.
+            {t('productTour.videoGallery.subtitle')}
           </motion.p>
         </div>
 
@@ -308,8 +310,8 @@ const VideoGallery = () => {
         {testimonialVideos.length > 0 ? (
           <Tabs defaultValue="features" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-              <TabsTrigger value="features">Feature Demos</TabsTrigger>
-              <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
+              <TabsTrigger value="features">{t('productTour.videoGallery.featureDemos')}</TabsTrigger>
+              <TabsTrigger value="testimonials">{t('productTour.videoGallery.testimonials')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="features">

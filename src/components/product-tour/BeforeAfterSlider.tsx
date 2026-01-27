@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { 
   FileText, 
@@ -12,27 +13,21 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface ComparisonItem {
-  label: string;
-  before: string;
-  after: string;
-  improvement: string;
-}
-
-const comparisonItems: ComparisonItem[] = [
-  { label: 'Patient Registration', before: '10-15 min', after: '< 30 sec', improvement: '95% faster' },
-  { label: 'Bill Generation', before: '15-20 min', after: '< 1 min', improvement: '90% faster' },
-  { label: 'Report Creation', before: '20-30 min', after: '2-3 min', improvement: '85% faster' },
-  { label: 'Finding Patient Records', before: '5-10 min', after: '< 5 sec', improvement: '99% faster' },
-  { label: 'Daily Revenue Calculation', before: '1-2 hours', after: 'Real-time', improvement: 'Automatic' },
-  { label: 'Error Rate', before: '15-20%', after: '< 1%', improvement: '95% reduction' }
-];
-
 const BeforeAfterSlider = () => {
+  const { t } = useTranslation();
   const [sliderPosition, setSliderPosition] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
-  
+
+  const comparisonItemKeys = [
+    'patientRegistration',
+    'billGeneration',
+    'reportCreation',
+    'findingRecords',
+    'revenueCalculation',
+    'errorRate'
+  ];
+
   const handleMouseDown = useCallback(() => {
     isDragging.current = true;
   }, []);
@@ -63,13 +58,13 @@ const BeforeAfterSlider = () => {
         >
           <Badge variant="outline" className="mb-4">
             <Zap className="h-3 w-3 mr-1" />
-            Visual Comparison
+            {t('productTour.beforeAfter.badge')}
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Paper Registers vs LabFlow
+            {t('productTour.beforeAfter.title')}
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Drag the slider to compare the old way with the LabFlow way
+            {t('productTour.beforeAfter.subtitle')}
           </p>
         </motion.div>
 
@@ -97,34 +92,37 @@ const BeforeAfterSlider = () => {
                   <FileText className="h-6 w-6 text-orange-600" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">Paper Registers</h3>
-                  <p className="text-sm text-muted-foreground">Manual Processes</p>
+                  <h3 className="font-bold text-lg">{t('productTour.beforeAfter.paperRegisters')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('productTour.beforeAfter.manualProcesses')}</p>
                 </div>
               </div>
               
               <div className="space-y-4">
-                {comparisonItems.map((item, index) => (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-center justify-between p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-orange-200/50 dark:border-orange-800/30"
-                  >
-                    <span className="text-sm font-medium">{item.label}</span>
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-orange-500" />
-                      <span className="text-sm font-bold text-orange-600">{item.before}</span>
-                    </div>
-                  </motion.div>
-                ))}
+                {comparisonItemKeys.map((itemKey, index) => {
+                  const item = t(`productTour.beforeAfter.items.${itemKey}`, { returnObjects: true }) as { label: string; before: string; after: string; improvement: string };
+                  return (
+                    <motion.div
+                      key={itemKey}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex items-center justify-between p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-orange-200/50 dark:border-orange-800/30"
+                    >
+                      <span className="text-sm font-medium">{item.label}</span>
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-orange-500" />
+                        <span className="text-sm font-bold text-orange-600">{item.before}</span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
               
               <div className="mt-6 p-4 bg-orange-100/50 dark:bg-orange-900/20 rounded-xl">
                 <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
                   <Clock className="h-5 w-5" />
-                  <span className="font-semibold">3+ hours lost daily</span>
+                  <span className="font-semibold">{t('productTour.beforeAfter.hoursLost')}</span>
                 </div>
               </div>
             </div>
@@ -141,37 +139,40 @@ const BeforeAfterSlider = () => {
                   <Zap className="h-6 w-6 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">LabFlow</h3>
-                  <p className="text-sm text-muted-foreground">Digital Platform</p>
+                  <h3 className="font-bold text-lg">{t('productTour.beforeAfter.labflow')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('productTour.beforeAfter.digitalPlatform')}</p>
                 </div>
               </div>
               
               <div className="space-y-4">
-                {comparisonItems.map((item, index) => (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, x: 20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-center justify-between p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-emerald-200/50 dark:border-emerald-800/30"
-                  >
-                    <span className="text-sm font-medium">{item.label}</span>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                      <span className="text-sm font-bold text-emerald-600">{item.after}</span>
-                      <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                        {item.improvement}
-                      </Badge>
-                    </div>
-                  </motion.div>
-                ))}
+                {comparisonItemKeys.map((itemKey, index) => {
+                  const item = t(`productTour.beforeAfter.items.${itemKey}`, { returnObjects: true }) as { label: string; before: string; after: string; improvement: string };
+                  return (
+                    <motion.div
+                      key={itemKey}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex items-center justify-between p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-emerald-200/50 dark:border-emerald-800/30"
+                    >
+                      <span className="text-sm font-medium">{item.label}</span>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        <span className="text-sm font-bold text-emerald-600">{item.after}</span>
+                        <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                          {item.improvement}
+                        </Badge>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
               
               <div className="mt-6 p-4 bg-emerald-100/50 dark:bg-emerald-900/20 rounded-xl">
                 <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
                   <TrendingUp className="h-5 w-5" />
-                  <span className="font-semibold">Save 3+ hours every day</span>
+                  <span className="font-semibold">{t('productTour.beforeAfter.hoursSaved')}</span>
                 </div>
               </div>
             </div>
@@ -197,7 +198,7 @@ const BeforeAfterSlider = () => {
           viewport={{ once: true }}
           className="text-center text-sm text-muted-foreground mt-4"
         >
-          ← Drag the slider to compare →
+          {t('productTour.beforeAfter.dragSlider')}
         </motion.p>
       </div>
     </section>

@@ -285,7 +285,46 @@
       "firstHour": "First Hour",
       "firstDay": "First Day",
       "firstWeek": "First Week",
-      "firstMonth": "First Month"
+      "firstMonth": "First Month",
+      "stepOf": "Step {current} of {total}",
+      "milestones": {
+        "firstHour": {
+          "title": "Account Ready",
+          "achievements": [
+            "Account created and verified",
+            "Lab profile configured",
+            "Basic settings completed",
+            "Dashboard accessible"
+          ]
+        },
+        "firstDay": {
+          "title": "Fully Configured",
+          "achievements": [
+            "Test types added and priced",
+            "Billing settings configured",
+            "Staff accounts created",
+            "Ready for operations"
+          ]
+        },
+        "firstWeek": {
+          "title": "Operational Excellence",
+          "achievements": [
+            "50+ patients registered",
+            "Reports generated smoothly",
+            "Team fully trained",
+            "Workflow mastered"
+          ]
+        },
+        "firstMonth": {
+          "title": "ROI Visible",
+          "achievements": [
+            "Measurable time savings",
+            "Reduced billing errors",
+            "Analytics insights available",
+            "Business growth enabled"
+          ]
+        }
+      }
     },
     "roi": {
       "badge": "ROI Calculator",
@@ -307,6 +346,130 @@
       "billingErrorSavings": "Billing Error Savings",
       "totalMonthlySavings": "Total Monthly Savings",
       "morePatients": "Can handle {count} more patients daily"
+    },
+    "beforeAfter": {
+      "badge": "Visual Comparison",
+      "title": "Paper Registers vs LabFlow",
+      "subtitle": "Drag the slider to compare the old way with the LabFlow way",
+      "paperRegisters": "Paper Registers",
+      "manualProcesses": "Manual Processes",
+      "labflow": "LabFlow",
+      "digitalPlatform": "Digital Platform",
+      "hoursLost": "3+ hours lost daily",
+      "hoursSaved": "Save 3+ hours every day",
+      "dragSlider": "← Drag the slider to compare →",
+      "items": {
+        "patientRegistration": { "label": "Patient Registration", "before": "10-15 min", "after": "< 30 sec", "improvement": "95% faster" },
+        "billGeneration": { "label": "Bill Generation", "before": "15-20 min", "after": "< 1 min", "improvement": "90% faster" },
+        "reportCreation": { "label": "Report Creation", "before": "20-30 min", "after": "2-3 min", "improvement": "85% faster" },
+        "findingRecords": { "label": "Finding Patient Records", "before": "5-10 min", "after": "< 5 sec", "improvement": "99% faster" },
+        "revenueCalculation": { "label": "Daily Revenue Calculation", "before": "1-2 hours", "after": "Real-time", "improvement": "Automatic" },
+        "errorRate": { "label": "Error Rate", "before": "15-20%", "after": "< 1%", "improvement": "95% reduction" }
+      }
+    },
+    "patientJourney": {
+      "badge": "Complete Workflow",
+      "title": "The Complete Patient Journey",
+      "subtitle": "See how LabFlow streamlines every step from registration to report delivery",
+      "totalTime": "Total Time:",
+      "under5Min": "Under 5 minutes",
+      "fromRegistration": "from registration to report delivery",
+      "steps": {
+        "register": {
+          "title": "Patient Registration",
+          "duration": "< 30 sec",
+          "description": "Quick onboarding with smart autofill",
+          "details": [
+            "Enter phone number for instant lookup",
+            "Auto-generate unique patient ID",
+            "Capture doctor referral details",
+            "Add medical history notes"
+          ]
+        },
+        "billing": {
+          "title": "Bill Generation",
+          "duration": "< 1 min",
+          "description": "Professional GST-compliant invoices",
+          "details": [
+            "Select tests from catalog",
+            "Apply discounts & offers",
+            "Multiple payment methods",
+            "Print or share via WhatsApp"
+          ]
+        },
+        "testing": {
+          "title": "Sample Collection & Testing",
+          "duration": "As per test",
+          "description": "Track sample status in real-time",
+          "details": [
+            "Assign to technician",
+            "Track sample collection",
+            "Monitor processing status",
+            "Quality control checks"
+          ]
+        },
+        "report": {
+          "title": "Report Generation",
+          "duration": "< 2 min",
+          "description": "Professional reports with your branding",
+          "details": [
+            "Enter test results",
+            "Auto-flag abnormal values",
+            "Add digital signature",
+            "Generate branded PDF"
+          ]
+        },
+        "delivery": {
+          "title": "Report Delivery",
+          "duration": "Instant",
+          "description": "Multi-channel report sharing",
+          "details": [
+            "Send via WhatsApp",
+            "Email notification",
+            "SMS with download link",
+            "Patient portal access"
+          ]
+        }
+      }
+    },
+    "setupTimeline": {
+      "badge": "Getting Started",
+      "title": "Up and Running in",
+      "titleHighlight": "3 Days",
+      "subtitle": "Our step-by-step setup process ensures you're fully operational within 3 days",
+      "day1": {
+        "day": "Day 1",
+        "title": "Quick Setup",
+        "description": "Get your lab profile ready in under 30 minutes",
+        "steps": [
+          { "title": "Create Account", "duration": "2 min", "tasks": ["Sign up with email", "Verify your account", "Set secure password"] },
+          { "title": "Configure Lab Profile", "duration": "5 min", "tasks": ["Add lab name and address", "Upload logo", "Set contact details"] },
+          { "title": "Add Test Types", "duration": "10 min", "tasks": ["Import from global catalog", "Set custom pricing", "Configure report templates"] },
+          { "title": "Set Up Billing", "duration": "5 min", "tasks": ["Configure GST settings", "Add payment methods", "Set terms and conditions"] }
+        ]
+      },
+      "day2": {
+        "day": "Day 2",
+        "title": "Team Configuration",
+        "description": "Invite your team and configure roles",
+        "steps": [
+          { "title": "Add Staff Members", "duration": "5 min", "tasks": ["Invite operators via email", "Set usernames and passwords", "Assign to branches"] },
+          { "title": "Configure Permissions", "duration": "5 min", "tasks": ["Select role for each user", "Set access levels", "Enable/disable features"] },
+          { "title": "Branch Setup", "duration": "10 min", "tasks": ["Add branch locations", "Configure branch-specific settings", "Set up branch operators"] },
+          { "title": "Customize Templates", "duration": "10 min", "tasks": ["Upload letterhead", "Configure report format", "Set footer text"] }
+        ]
+      },
+      "day3": {
+        "day": "Day 3",
+        "title": "Go Live!",
+        "description": "Start managing patients and generating reports",
+        "steps": [
+          { "title": "Register First Patient", "duration": "2 min", "tasks": ["Enter patient details", "Auto-generate patient ID", "Add to system"] },
+          { "title": "Create First Bill", "duration": "2 min", "tasks": ["Select tests", "Apply discounts if any", "Generate invoice"] },
+          { "title": "Generate First Report", "duration": "3 min", "tasks": ["Enter test results", "Preview report", "Send to patient"] },
+          { "title": "Full Operation Mode", "duration": "∞", "tasks": ["Manage daily operations", "Track analytics", "Scale your lab"] }
+        ]
+      }
     },
     "tourFaq": {
       "badge": "FAQ",
@@ -340,6 +503,113 @@
       "mostPopular": "Most Popular",
       "haveQuestions": "Have questions? We're here to help.",
       "bookCall": "Book a Call"
+    },
+    "stakeholders": {
+      "badge": "Role-Based Features",
+      "title": "Built for Everyone",
+      "subtitle": "Explore features designed specifically for each role in your laboratory",
+      "owner": "Lab Owner",
+      "admin": "Administrator",
+      "operator": "Operator",
+      "patient": "Patient",
+      "videoTutorials": "Video Tutorials",
+      "videos": "Videos",
+      "forEveryRole": "For Every Role",
+      "designedForTeam": "Designed for",
+      "designedForTeamHighlight": "Your Team",
+      "designedForTeamSubtitle": "See how LabFlow transforms daily operations for every stakeholder in your laboratory",
+      "interactiveWorkflow": "Interactive Workflow Demo",
+      "timeSaved": "Time Saved",
+      "keyBenefit": "Key Benefit",
+      "roles": {
+        "owner": {
+          "name": "Lab Owners",
+          "tagline": "Complete visibility and control over your laboratory business",
+          "timeSaved": "3+ hours daily",
+          "keyBenefit": "60% reduction in billing errors"
+        },
+        "admin": {
+          "name": "Administrators",
+          "tagline": "Powerful tools to configure and manage your lab efficiently",
+          "timeSaved": "2+ hours daily",
+          "keyBenefit": "Zero configuration errors"
+        },
+        "operator": {
+          "name": "Lab Operators",
+          "tagline": "Streamlined workflows for faster, error-free operations",
+          "timeSaved": "5 min per patient",
+          "keyBenefit": "95% faster registration"
+        },
+        "patient": {
+          "name": "Patients",
+          "tagline": "Modern experience for your patients",
+          "timeSaved": "Instant access",
+          "keyBenefit": "100% digital experience"
+        }
+      }
+    },
+    "platformPreview": {
+      "badge": "Interactive Preview",
+      "title": "Explore the Platform",
+      "subtitle": "Click on the hotspots to discover key features of each module. These are real screenshots from LabFlow.",
+      "modules": {
+        "dashboard": "Dashboard",
+        "patients": "Patients",
+        "billing": "Billing",
+        "reports": "Reports",
+        "analytics": "Analytics"
+      },
+      "moduleDescriptions": {
+        "dashboard": "Real-time overview of your lab operations",
+        "patients": "Complete patient management system",
+        "billing": "Professional invoicing and payment tracking",
+        "reports": "Generate professional test reports",
+        "analytics": "Business intelligence and insights"
+      },
+      "hotspots": {
+        "dashboard": {
+          "stats": { "title": "Quick Stats", "description": "View today's patients, revenue, and tests at a glance" },
+          "chart": { "title": "Revenue Analytics", "description": "Interactive charts showing daily, weekly, and monthly trends" },
+          "activity": { "title": "Activity Feed", "description": "Real-time updates on patient registrations and reports" },
+          "distribution": { "title": "Test Distribution", "description": "Visual breakdown of tests performed by category" }
+        },
+        "patients": {
+          "search": { "title": "Smart Search", "description": "Find patients by name, phone, ID, or doctor referral" },
+          "list": { "title": "Patient List", "description": "Sortable and filterable patient records with quick actions" },
+          "filter": { "title": "Filter Options", "description": "Filter by status, date, or referring doctor" },
+          "add": { "title": "Quick Add", "description": "Register new patients in under 30 seconds" }
+        },
+        "billing": {
+          "create": { "title": "Create Bill", "description": "Generate GST-compliant invoices with test catalog" },
+          "items": { "title": "Line Items", "description": "Add tests with automatic pricing calculation" },
+          "preview": { "title": "Bill Preview", "description": "Real-time preview of the generated invoice" },
+          "payment": { "title": "Payment Options", "description": "Track cash, card, UPI, and partial payments" }
+        },
+        "reports": {
+          "filters": { "title": "Report Filters", "description": "Filter by status, date range, and report type" },
+          "status": { "title": "Status Tracking", "description": "Easily see completed, pending, and in-progress reports" },
+          "patients": { "title": "Patient Reports", "description": "Complete list of patient test entries" },
+          "sidebar": { "title": "Quick Navigation", "description": "Filter by categories and report types" }
+        },
+        "analytics": {
+          "volumes": { "title": "Test Volumes", "description": "Monthly test volumes with trend visualization" },
+          "distribution": { "title": "Test Distribution", "description": "Pie chart showing test type breakdown" },
+          "kpi": { "title": "KPI Cards", "description": "Key metrics showing growth percentages" },
+          "revenue": { "title": "Revenue Trends", "description": "Track revenue over time with predictions" }
+        }
+      }
+    },
+    "comparison": {
+      "badge": "Why Choose LabFlow",
+      "title": "See How LabFlow Compares",
+      "subtitle": "Compare LabFlow with manual processes and competitor software to see the real difference in efficiency, features, and value.",
+      "labflow": "LabFlow",
+      "manualProcess": "Manual Process",
+      "competitor": "Competitor Software",
+      "dailyTimeSaved": "Daily Time Saved",
+      "errorReduction": "Error Reduction",
+      "productivityBoost": "Productivity Boost",
+      "fasterReports": "Faster Reports"
     }
   }
 }
