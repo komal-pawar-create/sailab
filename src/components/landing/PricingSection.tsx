@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CreditCard, Building2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatedSection, AnimatedItems } from '@/components/AnimatedSection';
 import { PricingCard } from './shared';
+import InquiryDialog from '@/components/InquiryDialog';
 import type { PricingPlan } from './types';
 
 interface PricingSectionProps {
@@ -13,6 +14,7 @@ interface PricingSectionProps {
 
 const PricingSection = ({ pricingPlans }: PricingSectionProps) => {
   const { t } = useTranslation();
+  const [inquiryDialogOpen, setInquiryDialogOpen] = useState(false);
   
   return (
     <section id="pricing" className="relative py-24 px-4 bg-muted/30">
@@ -57,15 +59,23 @@ const PricingSection = ({ pricingPlans }: PricingSectionProps) => {
                 <p className="text-sm text-muted-foreground">{t('pricing.multiLabSubtitle')}</p>
               </div>
             </div>
-            <Button asChild variant="outline" className="shrink-0">
-              <Link to="/auth" className="flex items-center gap-2">
+            <Button variant="outline" className="shrink-0" onClick={() => setInquiryDialogOpen(true)}>
+              <span className="flex items-center gap-2">
                 {t('pricing.customQuote')}
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </span>
             </Button>
           </div>
         </AnimatedSection>
       </div>
+
+      {/* Inquiry Dialog */}
+      <InquiryDialog
+        open={inquiryDialogOpen}
+        onOpenChange={setInquiryDialogOpen}
+        title={t('pricing.customQuote')}
+        context="Custom Quote - Multi-Lab Inquiry"
+      />
     </section>
   );
 };

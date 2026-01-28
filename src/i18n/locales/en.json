@@ -6,7 +6,8 @@
     "pricing": "Pricing",
     "faq": "FAQ",
     "login": "Login",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "bookDemo": "Book Demo"
   },
   "hero": {
     "badge": "Complete Laboratory Management Solution",
@@ -611,5 +612,20 @@
       "productivityBoost": "Productivity Boost",
       "fasterReports": "Faster Reports"
     }
+  },
+  "inquiry": {
+    "title": "Get in Touch",
+    "bookDemoTitle": "Book a Demo",
+    "contactPerson": "Your Name",
+    "phone": "Phone Number",
+    "email": "Email (Optional)",
+    "companyName": "Company/Lab Name (Optional)",
+    "message": "Message (Optional)",
+    "submit": "Send Inquiry",
+    "submitting": "Sending...",
+    "success": "Inquiry Received! We'll contact you shortly.",
+    "errorGeneric": "Failed to submit. Please try again.",
+    "validationPhone": "Please enter a valid 10-15 digit phone number",
+    "validationName": "Name must be 2-100 characters"
   }
 }
