@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import {
   Mail,
   Calendar
 } from 'lucide-react';
+import InquiryDialog from '@/components/InquiryDialog';
 
 interface CTAOption {
   id: string;
@@ -25,6 +26,8 @@ interface CTAOption {
   buttonVariant: 'default' | 'outline' | 'secondary';
   href: string;
   highlighted?: boolean;
+  isInquiry?: boolean;
+  inquiryContext?: string;
 }
 
 const ctaOptions: CTAOption[] = [
@@ -37,7 +40,8 @@ const ctaOptions: CTAOption[] = [
     buttonTextKey: 'productTour.tourCta.startTrial.button',
     buttonVariant: 'default',
     href: '/auth',
-    highlighted: true
+    highlighted: true,
+    isInquiry: false
   },
   {
     id: 'demo',
@@ -47,7 +51,9 @@ const ctaOptions: CTAOption[] = [
     featuresKey: 'productTour.tourCta.scheduleDemo.features',
     buttonTextKey: 'productTour.tourCta.scheduleDemo.button',
     buttonVariant: 'outline',
-    href: 'mailto:sales@labflow.mywebz.in?subject=Demo Request'
+    href: '',
+    isInquiry: true,
+    inquiryContext: 'Demo Request'
   },
   {
     id: 'enterprise',
@@ -57,12 +63,21 @@ const ctaOptions: CTAOption[] = [
     featuresKey: 'productTour.tourCta.enterprise.features',
     buttonTextKey: 'productTour.tourCta.enterprise.button',
     buttonVariant: 'secondary',
-    href: 'mailto:enterprise@labflow.mywebz.in?subject=Enterprise Inquiry'
+    href: '',
+    isInquiry: true,
+    inquiryContext: 'Enterprise Inquiry'
   }
 ];
 
 const TourCTA = () => {
   const { t } = useTranslation();
+  const [inquiryDialogOpen, setInquiryDialogOpen] = useState(false);
+  const [inquiryContext, setInquiryContext] = useState<string>('');
+
+  const handleInquiryClick = (context: string) => {
+    setInquiryContext(context);
+    setInquiryDialogOpen(true);
+  };
   
   return (
     <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/30" aria-labelledby="cta-heading">
@@ -115,13 +130,14 @@ const TourCTA = () => {
                   <Button
                     variant={option.buttonVariant}
                     className="w-full"
-                    asChild
+                    asChild={!option.isInquiry}
+                    onClick={option.isInquiry ? () => handleInquiryClick(option.inquiryContext || '') : undefined}
                   >
-                    {option.href.startsWith('mailto:') ? (
-                      <a href={option.href} className="flex items-center justify-center gap-2">
+                    {option.isInquiry ? (
+                      <span className="flex items-center justify-center gap-2">
                         {t(option.buttonTextKey)}
                         <ArrowRight className="h-4 w-4" />
-                      </a>
+                      </span>
                     ) : (
                       <Link to={option.href} className="flex items-center justify-center gap-2">
                         {t(option.buttonTextKey)}
@@ -153,16 +169,24 @@ const TourCTA = () => {
               <Mail className="h-4 w-4" />
               support@labflow.mywebz.in
             </a>
-            <a
-              href="#"
+            <button
+              onClick={() => handleInquiryClick('Book a Call')}
               className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
             >
               <Calendar className="h-4 w-4" />
               {t('productTour.tourCta.bookCall')}
-            </a>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Inquiry Dialog */}
+      <InquiryDialog
+        open={inquiryDialogOpen}
+        onOpenChange={setInquiryDialogOpen}
+        title={inquiryContext}
+        context={inquiryContext}
+      />
     </section>
   );
 };

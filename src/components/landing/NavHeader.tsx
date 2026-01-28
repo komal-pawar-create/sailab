@@ -3,15 +3,16 @@ import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { Menu, X, Sun, Moon, Calendar } from 'lucide-react';
 import LanguageSelector from './LanguageSelector';
-
+import InquiryDialog from '@/components/InquiryDialog';
 interface NavHeaderProps {
   scrollY: number;
 }
 
 const NavHeader = ({ scrollY }: NavHeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [inquiryDialogOpen, setInquiryDialogOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { t } = useTranslation();
@@ -145,6 +146,15 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
                 )
               )}
             </button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setInquiryDialogOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              {t('nav.bookDemo')}
+            </Button>
             <Button variant="ghost" asChild className="text-sm">
               <Link to="/auth">{t('nav.login')}</Link>
             </Button>
@@ -232,7 +242,17 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
             >
               {t('nav.login')}
             </Link>
-            <Button asChild className="mt-2 min-h-[48px]" tabIndex={mobileMenuOpen ? 0 : -1}>
+            <Button 
+              className="mt-2 min-h-[48px]" 
+              tabIndex={mobileMenuOpen ? 0 : -1}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setInquiryDialogOpen(true);
+              }}
+            >
+              {t('nav.bookDemo')}
+            </Button>
+            <Button asChild className="mt-2 min-h-[48px]" variant="outline" tabIndex={mobileMenuOpen ? 0 : -1}>
               <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>{t('nav.getStarted')}</Link>
             </Button>
           </div>
@@ -247,6 +267,13 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
           aria-hidden="true"
         />
       )}
+
+      {/* Inquiry Dialog */}
+      <InquiryDialog
+        open={inquiryDialogOpen}
+        onOpenChange={setInquiryDialogOpen}
+        title={t('inquiry.bookDemoTitle')}
+      />
     </>
   );
 };

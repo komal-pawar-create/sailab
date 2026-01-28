@@ -1,4 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
+import FloatingContactButton from '@/components/FloatingContactButton';
+import InquiryDialog from '@/components/InquiryDialog';
 
 // Lazy load components for performance
 const NavHeader = React.lazy(() => import('@/components/landing/NavHeader'));
@@ -53,6 +55,7 @@ const HeroSkeleton = () => (
 
 const ProductTour = () => {
   const [scrollY, setScrollY] = useState(0);
+  const [inquiryDialogOpen, setInquiryDialogOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -279,6 +282,15 @@ const ProductTour = () => {
       <Suspense fallback={null}>
         <BackToTop />
       </Suspense>
+
+      {/* Floating Contact Button */}
+      <FloatingContactButton onClick={() => setInquiryDialogOpen(true)} />
+
+      {/* Inquiry Dialog */}
+      <InquiryDialog
+        open={inquiryDialogOpen}
+        onOpenChange={setInquiryDialogOpen}
+      />
     </div>
   );
 };

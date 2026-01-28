@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import NavHeader from '@/components/landing/NavHeader';
 import { FloatingShape } from '@/components/landing/shared';
+import FloatingContactButton from '@/components/FloatingContactButton';
+import InquiryDialog from '@/components/InquiryDialog';
 import LiveActivityFeed from '@/components/landing/LiveActivityFeed';
 import SocialProofBar from '@/components/landing/SocialProofBar';
 import type {
@@ -53,6 +55,7 @@ const SectionSkeleton = () => (
 
 const Index = () => {
   const [scrollY, setScrollY] = useState(0);
+  const [inquiryDialogOpen, setInquiryDialogOpen] = useState(false);
   
   // State for dynamic content
   const [heroContent, setHeroContent] = useState<HeroContent | null>(null);
@@ -267,6 +270,15 @@ const Index = () => {
       <Suspense fallback={null}>
         <BackToTop />
       </Suspense>
+
+      {/* Floating Contact Button */}
+      <FloatingContactButton onClick={() => setInquiryDialogOpen(true)} />
+
+      {/* Inquiry Dialog */}
+      <InquiryDialog
+        open={inquiryDialogOpen}
+        onOpenChange={setInquiryDialogOpen}
+      />
     </div>
   );
 };
