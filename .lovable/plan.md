@@ -1,78 +1,55 @@
 
-# Add YouTube Demo Video to Homepage
+
+# Update All 4 Product Tour Videos with New YouTube URL
 
 ## Overview
-Update the demo videos on the homepage to use the YouTube video URL provided: `https://www.youtube.com/watch?v=wTLFV_XW2xo`
+Replace the placeholder YouTube URLs (rickroll) on all 4 demo videos in the Product Tour page with the actual LabFlow demo video: `https://www.youtube.com/watch?v=wTLFV_XW2xo`
 
 ---
 
 ## Current State
-The `demo_videos` table currently contains 4 placeholder videos with fake YouTube URLs. The DemoSection component on the homepage fetches these videos and displays them in a tabbed player.
+The `demo_videos` table has:
+- 4 original videos with placeholder rickroll URLs (`is_active = false`)
+- 1 new "LabFlow Complete Demo" video (`is_active = true`)
 
----
-
-## Implementation Approach
-
-### Option A: Update All Existing Videos (Simple)
-Update all demo video records to use the new YouTube URL, making it the unified demo video across all tabs.
-
-### Option B: Replace with Single Main Demo (Recommended)
-Deactivate the placeholder videos and insert a single primary demo video with the correct URL. This is cleaner and more appropriate if there's only one demo video available.
+The user wants the 4 original feature-specific videos (Patient Registration, Billing Workflow, Report Generation, Analytics Dashboard) to remain visible but with the correct YouTube URL.
 
 ---
 
 ## Implementation Steps
 
-1. **Create a database migration** that:
-   - Sets `is_active = false` for existing placeholder demo videos
-   - Inserts a new primary demo video with:
-     - Title: "LabFlow Demo" (or similar)
-     - URL: `https://www.youtube.com/watch?v=wTLFV_XW2xo`
-     - Type: `youtube`
-     - Display order: 1
-
-2. **No frontend changes required** - the DemoSection component already handles YouTube video embedding correctly using the `extractYouTubeId` function.
+1. **Run a database data update** to:
+   - Update all 4 placeholder videos to use the new YouTube URL
+   - Reactivate them by setting `is_active = true`
+   - Optionally deactivate the single "LabFlow Complete Demo" video to avoid duplication
 
 ---
 
 ## Technical Details
 
-### Database Migration SQL
+### Database Update SQL
 ```sql
--- Deactivate placeholder demo videos
+-- Update all placeholder videos to use the new YouTube URL
 UPDATE demo_videos 
-SET is_active = false 
+SET 
+  video_url = 'https://www.youtube.com/watch?v=wTLFV_XW2xo',
+  is_active = true
 WHERE video_url LIKE '%dQw4w9WgXcQ%';
 
--- Insert the actual demo video
-INSERT INTO demo_videos (
-  title, 
-  description, 
-  video_url, 
-  video_type, 
-  display_order, 
-  is_active, 
-  duration
-) VALUES (
-  'LabFlow Complete Demo',
-  'See how LabFlow streamlines your lab operations - from patient registration to billing and analytics.',
-  'https://www.youtube.com/watch?v=wTLFV_XW2xo',
-  'youtube',
-  1,
-  true,
-  NULL
-);
+-- Optionally deactivate the new single demo to avoid 5 videos showing
+UPDATE demo_videos 
+SET is_active = false 
+WHERE title = 'LabFlow Complete Demo';
 ```
 
 ---
 
-## Files to Modify
-
-| File | Action |
-|------|--------|
-| `supabase/migrations/[timestamp]_add_youtube_demo_video.sql` | Create new migration to update demo videos |
-
----
-
 ## Result
-After implementation, the homepage "Watch Demo" tab will play the YouTube video `https://www.youtube.com/watch?v=wTLFV_XW2xo` with proper embedding, thumbnail preview, and playback controls.
+After the update:
+- **Patient Registration** → New LabFlow demo video
+- **Billing Workflow** → New LabFlow demo video  
+- **Report Generation** → New LabFlow demo video
+- **Analytics Dashboard** → New LabFlow demo video
+
+All 4 cards will display the correct LabFlow demo video thumbnail and play the actual demo when clicked.
+
