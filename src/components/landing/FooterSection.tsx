@@ -41,6 +41,7 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
               <img 
                 src="/images/labflow-logo.png" 
                 alt="LabFlow" 
+                loading="lazy"
                 className="h-10 w-auto"
               />
             </Link>

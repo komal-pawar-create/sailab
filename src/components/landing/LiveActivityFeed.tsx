@@ -64,7 +64,7 @@ const LiveActivityFeed = () => {
   }, [counter]);
 
   return (
-    <div className="fixed bottom-4 left-4 z-40 hidden md:block">
+    <div className="fixed bottom-4 left-4 z-40 hidden md:block" aria-live="polite" aria-atomic="false">
       <AnimatePresence mode="wait">
         {activities.map((activity) => {
           const Icon = icons[activity.type];

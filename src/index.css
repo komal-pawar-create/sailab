@@ -385,8 +385,9 @@ All colors MUST be HSL.
     border: 1px solid hsl(var(--border) / 0.5);
   }
   
-  /* Gradient text */
+  /* Gradient text with fallback for accessibility */
   .gradient-text {
+    color: hsl(var(--primary)); /* Fallback for high contrast modes */
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

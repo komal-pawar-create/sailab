@@ -74,7 +74,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
       >
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           {/* Logo - Maximum prominence with animated glow and scroll shrink */}
-          <Link to="/" className="flex items-center gap-3 group relative" aria-label="LabFlow - Home">
+          <Link to="/" className="flex items-center gap-3 group relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg" aria-label="LabFlow - Home">
             <div className="relative transition-all duration-500 ease-out">
               {/* Animated glow effect - fades when scrolled */}
               <div 
