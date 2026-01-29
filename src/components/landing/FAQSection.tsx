@@ -40,22 +40,20 @@ const FAQSection = ({ faqs }: FAQSectionProps) => {
                 value={`item-${index}`}
                 className="glass rounded-xl px-6 border-none"
               >
-                <h3>
-                  <AccordionTrigger className="text-left hover:no-underline py-5 gap-4">
-                    <div className="flex items-start gap-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 mt-0.5 ${
-                        faq.category === 'pricing' 
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                          : faq.category === 'features'
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                          : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
-                      }`}>
-                        {faq.category === 'pricing' ? '💰' : faq.category === 'features' ? '🔧' : '🛠️'}
-                      </span>
-                      <span className="font-medium text-foreground">{faq.question}</span>
-                    </div>
-                  </AccordionTrigger>
-                </h3>
+                <AccordionTrigger className="text-left hover:no-underline py-5 gap-4">
+                  <div className="flex items-start gap-3">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 mt-0.5 ${
+                      faq.category === 'pricing' 
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                        : faq.category === 'features'
+                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                    }`}>
+                      {faq.category === 'pricing' ? '💰' : faq.category === 'features' ? '🔧' : '🛠️'}
+                    </span>
+                    <span className="font-medium text-foreground">{faq.question}</span>
+                  </div>
+                </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5 pl-9">
                   {faq.answer}
                 </AccordionContent>
