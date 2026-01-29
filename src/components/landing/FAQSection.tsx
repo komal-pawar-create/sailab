@@ -1,10 +1,10 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HelpCircle, MessageCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AnimatedSection } from '@/components/AnimatedSection';
+import InquiryDialog from '@/components/InquiryDialog';
 import type { FaqItem } from './types';
 
 interface FAQSectionProps {
@@ -13,6 +13,7 @@ interface FAQSectionProps {
 
 const FAQSection = ({ faqs }: FAQSectionProps) => {
   const { t } = useTranslation();
+  const [inquiryDialogOpen, setInquiryDialogOpen] = useState(false);
   
   return (
     <section id="faq" className="relative py-24 px-4">
@@ -39,20 +40,22 @@ const FAQSection = ({ faqs }: FAQSectionProps) => {
                 value={`item-${index}`}
                 className="glass rounded-xl px-6 border-none"
               >
-                <AccordionTrigger className="text-left hover:no-underline py-5 gap-4">
-                  <div className="flex items-start gap-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 mt-0.5 ${
-                      faq.category === 'pricing' 
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                        : faq.category === 'features'
-                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
-                    }`}>
-                      {faq.category === 'pricing' ? '💰' : faq.category === 'features' ? '🔧' : '🛠️'}
-                    </span>
-                    <span className="font-medium text-foreground">{faq.question}</span>
-                  </div>
-                </AccordionTrigger>
+                <h3>
+                  <AccordionTrigger className="text-left hover:no-underline py-5 gap-4">
+                    <div className="flex items-start gap-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 mt-0.5 ${
+                        faq.category === 'pricing' 
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                          : faq.category === 'features'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                          : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                      }`}>
+                        {faq.category === 'pricing' ? '💰' : faq.category === 'features' ? '🔧' : '🛠️'}
+                      </span>
+                      <span className="font-medium text-foreground">{faq.question}</span>
+                    </div>
+                  </AccordionTrigger>
+                </h3>
                 <AccordionContent className="text-muted-foreground pb-5 pl-9">
                   {faq.answer}
                 </AccordionContent>
@@ -73,15 +76,22 @@ const FAQSection = ({ faqs }: FAQSectionProps) => {
                 <p className="text-sm text-muted-foreground">{t('faq.ourTeamHelp')}</p>
               </div>
             </div>
-            <Button asChild variant="outline" className="shrink-0">
-              <Link to="/auth" className="flex items-center gap-2">
+            <Button variant="outline" className="shrink-0" onClick={() => setInquiryDialogOpen(true)}>
+              <span className="flex items-center gap-2">
                 {t('faq.contactSupport')}
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </span>
             </Button>
           </div>
         </AnimatedSection>
       </div>
+
+      {/* Inquiry Dialog */}
+      <InquiryDialog
+        open={inquiryDialogOpen}
+        onOpenChange={setInquiryDialogOpen}
+        title={t('inquiry.title')}
+      />
     </section>
   );
 };

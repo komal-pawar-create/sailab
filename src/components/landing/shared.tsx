@@ -149,10 +149,12 @@ export const Step = ({ number, title, description, isLast, delay }: {
 // Pricing card component
 export const PricingCard = ({ 
   plan, 
-  delay 
+  delay,
+  onEnterpriseClick,
 }: { 
   plan: PricingPlan;
   delay: string;
+  onEnterpriseClick?: () => void;
 }) => {
   const { name, price, amcPrice, discount, minLabs, features, isPopular, isEnterprise } = plan;
   
@@ -219,17 +221,31 @@ export const PricingCard = ({
         </ul>
         
         {/* CTA Button */}
-        <Button 
-          asChild 
-          className={`w-full active:scale-95 transition-transform ${isPopular ? 'animate-pulse-glow' : ''}`}
-          variant={isPopular ? 'default' : 'outline'}
-          size="lg"
-        >
-          <Link to="/auth" className="flex items-center justify-center gap-2">
-            {isEnterprise ? 'Contact Sales' : 'Get Started'}
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
-        </Button>
+        {isEnterprise && onEnterpriseClick ? (
+          <Button 
+            onClick={onEnterpriseClick}
+            className={`w-full active:scale-95 transition-transform`}
+            variant="outline"
+            size="lg"
+          >
+            <span className="flex items-center justify-center gap-2">
+              Contact Sales
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </span>
+          </Button>
+        ) : (
+          <Button 
+            asChild 
+            className={`w-full active:scale-95 transition-transform ${isPopular ? 'animate-pulse-glow' : ''}`}
+            variant={isPopular ? 'default' : 'outline'}
+            size="lg"
+          >
+            <Link to="/auth" className="flex items-center justify-center gap-2">
+              Get Started
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </Button>
+        )}
       </div>
     </Card>
   );

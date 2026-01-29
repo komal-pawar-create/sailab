@@ -43,6 +43,7 @@ const PricingSection = ({ pricingPlans }: PricingSectionProps) => {
               key={plan.name}
               plan={plan}
               delay=""
+              onEnterpriseClick={plan.isEnterprise ? () => setInquiryDialogOpen(true) : undefined}
             />
           ))}
         </AnimatedItems>

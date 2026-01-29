@@ -37,11 +37,12 @@ const TestimonialsSection = ({ testimonials }: TestimonialsSectionProps) => {
               loop: true,
             }}
             className="w-full"
+            aria-label="Customer testimonials carousel"
           >
             <CarouselContent className="-ml-4">
               {testimonials.map((testimonial, index) => (
                 <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                  <Card className="glass hover-lift h-full p-6 flex flex-col">
+                  <Card className="glass hover-lift h-full p-6 flex flex-col focus-visible:ring-2 focus-visible:ring-primary" tabIndex={0}>
                     {/* Quote Icon */}
                     <Quote className="h-8 w-8 text-primary/30 mb-4" />
                     
