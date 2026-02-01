@@ -1,210 +1,502 @@
 
-# Visual Design Enhancement Plan
+
+# Secure Authentication Enhancement Plan
 
 ## Overview
-Upgrade the LabFlow landing page visual design following modern web design best practices. This plan implements a refined color palette, professional typography with Poppins + Inter font pairing, consistent spacing system, polished animations, and standardized icon sizing.
+Enhance the existing Supabase Auth-based authentication with enterprise-grade security features including rate limiting, session management, login attempt auditing, and secure token handling. This builds on top of the current username/password authentication without replacing Supabase Auth.
 
 ---
 
 ## Current State Analysis
 
-| Element | Current State | Target State |
-|---------|---------------|--------------|
-| **Primary Color** | HSL 258 90% 60% (Purple) | HSL 217 91% 60% (#0d6efd Blue) |
-| **Accent Color** | HSL 198 89% 48% (Cyan) | HSL 152 69% 31% (#198754 Green) |
-| **Fonts** | Space Grotesk only | Poppins (headlines) + Inter (body) |
-| **Section Padding** | py-24 (96px) | py-20 (80px desktop) / py-10 (40px mobile) |
-| **Card Padding** | p-6 (24px) | p-6 (24px) - Already correct |
-| **Button Padding** | px-4 py-2 / px-8 py-6 | px-6 py-3 (12px 24px) standardized |
-| **Card Hover Lift** | translateY(-8px) | translateY(-4px) - More subtle |
-| **Icon Sizes** | Mixed (4-6px) | 24px features, 48px hero callouts |
+| Component | Current Implementation |
+|-----------|------------------------|
+| **Authentication** | Supabase Auth with `signInWithPassword` |
+| **User Lookup** | `get_email_by_username` RPC function |
+| **Password Storage** | Supabase Auth (bcrypt internally) |
+| **Session Management** | Supabase Auth JWT tokens |
+| **Rate Limiting** | None |
+| **Login Auditing** | None |
 
 ---
 
-## Implementation Details
+## Architecture Overview
 
-### 1. Color Palette Update (src/index.css)
-
-Update CSS custom properties in `:root`:
-
-```css
-/* New color system */
---primary: 217 91% 60%;           /* #0d6efd - Bootstrap Blue */
---primary-foreground: 0 0% 100%;  /* White text on blue */
---primary-glow: 217 91% 70%;      /* Lighter glow variant */
-
---secondary: 210 11% 45%;         /* #6c757d - Muted gray */
---secondary-foreground: 0 0% 100%;
-
---accent: 152 69% 31%;            /* #198754 - Success Green for CTAs */
---accent-foreground: 0 0% 100%;
-
---background: 210 17% 98%;        /* #f8f9fa - Light gray */
---card: 0 0% 100%;                /* Pure white cards */
-
-/* Updated gradients */
---gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(152 69% 40%));
---hero-gradient: linear-gradient(135deg, hsl(217 91% 97%) 0%, hsl(152 69% 97%) 50%, hsl(217 91% 98%) 100%);
+```text
++------------------+     +---------------------+     +-------------------+
+|  Auth.tsx        |---->|  useAuth.ts         |---->| Supabase Auth     |
+|  (Login Form)    |     |  (Enhanced)         |     | (JWT Generation)  |
++------------------+     +---------------------+     +-------------------+
+                                |                            |
+                                v                            v
+                    +-------------------+        +---------------------+
+                    | login_attempts    |        | user_sessions       |
+                    | (Rate Limiting)   |        | (Session Tracking)  |
+                    +-------------------+        +---------------------+
+                                |
+                                v
+                    +-------------------+
+                    | RPC Functions     |
+                    | - check_rate_limit|
+                    | - log_login       |
+                    | - logout_user     |
+                    +-------------------+
 ```
 
-### 2. Typography System (index.html + tailwind.config.ts)
+---
 
-**index.html** - Add Poppins and Inter fonts:
-```html
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="https://fonts.gstatic.com/s/poppins/v21/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500&display=swap">
+## Database Schema
+
+### 1. Login Attempts Table
+Tracks all login attempts for rate limiting and security auditing.
+
+```sql
+CREATE TABLE public.login_attempts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  username text NOT NULL,
+  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  ip_address inet NOT NULL,
+  user_agent text,
+  success boolean NOT NULL DEFAULT false,
+  failure_reason text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Index for efficient rate limiting queries
+CREATE INDEX idx_login_attempts_username_created 
+  ON login_attempts(username, created_at DESC);
+CREATE INDEX idx_login_attempts_ip_created 
+  ON login_attempts(ip_address, created_at DESC);
 ```
 
-**tailwind.config.ts** - Add font families:
+### 2. User Sessions Table
+Tracks active sessions for multi-device management and logout capability.
+
+```sql
+CREATE TABLE public.user_sessions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  token_hash text NOT NULL,
+  ip_address inet,
+  user_agent text,
+  device_info jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL,
+  last_activity_at timestamptz DEFAULT now(),
+  is_active boolean NOT NULL DEFAULT true
+);
+
+-- Indexes for efficient session management
+CREATE INDEX idx_user_sessions_user_active 
+  ON user_sessions(user_id, is_active);
+CREATE INDEX idx_user_sessions_token_hash 
+  ON user_sessions(token_hash);
+CREATE INDEX idx_user_sessions_expires 
+  ON user_sessions(expires_at) WHERE is_active = true;
+```
+
+---
+
+## Security Functions (RPC)
+
+### 1. Rate Limit Check Function
+Prevents brute force attacks by limiting failed attempts.
+
+```sql
+CREATE OR REPLACE FUNCTION public.check_login_rate_limit(
+  p_username text,
+  p_ip_address inet
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_failed_count integer;
+  v_locked_until timestamptz;
+  v_window_start timestamptz;
+BEGIN
+  -- 15-minute sliding window
+  v_window_start := now() - interval '15 minutes';
+  
+  -- Count failed attempts in window (by username OR IP)
+  SELECT COUNT(*) INTO v_failed_count
+  FROM login_attempts
+  WHERE (username = p_username OR ip_address = p_ip_address)
+    AND success = false
+    AND created_at > v_window_start;
+  
+  -- If >= 5 failed attempts, account is locked
+  IF v_failed_count >= 5 THEN
+    -- Calculate when the lockout expires (15 min from oldest attempt in window)
+    SELECT MIN(created_at) + interval '15 minutes' INTO v_locked_until
+    FROM login_attempts
+    WHERE (username = p_username OR ip_address = p_ip_address)
+      AND success = false
+      AND created_at > v_window_start;
+    
+    RETURN jsonb_build_object(
+      'allowed', false,
+      'remaining_attempts', 0,
+      'locked_until', v_locked_until,
+      'message', 'Too many failed attempts. Please try again later.'
+    );
+  END IF;
+  
+  RETURN jsonb_build_object(
+    'allowed', true,
+    'remaining_attempts', 5 - v_failed_count,
+    'locked_until', null,
+    'message', null
+  );
+END;
+$$;
+```
+
+### 2. Log Login Attempt Function
+Records login attempts for auditing.
+
+```sql
+CREATE OR REPLACE FUNCTION public.log_login_attempt(
+  p_username text,
+  p_ip_address inet,
+  p_user_agent text,
+  p_success boolean,
+  p_failure_reason text DEFAULT NULL,
+  p_user_id uuid DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_attempt_id uuid;
+BEGIN
+  INSERT INTO login_attempts (
+    username,
+    user_id,
+    ip_address,
+    user_agent,
+    success,
+    failure_reason
+  ) VALUES (
+    p_username,
+    p_user_id,
+    p_ip_address,
+    p_user_agent,
+    p_success,
+    p_failure_reason
+  )
+  RETURNING id INTO v_attempt_id;
+  
+  RETURN v_attempt_id;
+END;
+$$;
+```
+
+### 3. Create Session Function
+Records a new session after successful login.
+
+```sql
+CREATE OR REPLACE FUNCTION public.create_user_session(
+  p_user_id uuid,
+  p_token_hash text,
+  p_ip_address inet,
+  p_user_agent text,
+  p_expires_at timestamptz
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_session_id uuid;
+BEGIN
+  INSERT INTO user_sessions (
+    user_id,
+    token_hash,
+    ip_address,
+    user_agent,
+    expires_at
+  ) VALUES (
+    p_user_id,
+    p_token_hash,
+    p_ip_address,
+    p_user_agent,
+    p_expires_at
+  )
+  RETURNING id INTO v_session_id;
+  
+  -- Update last_login_at on profile
+  UPDATE profiles 
+  SET last_login_at = now() 
+  WHERE user_id = p_user_id;
+  
+  RETURN v_session_id;
+END;
+$$;
+```
+
+### 4. Refresh Session Function
+Extends session expiry for active users.
+
+```sql
+CREATE OR REPLACE FUNCTION public.refresh_user_session(
+  p_token_hash text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_session record;
+  v_new_expires_at timestamptz;
+BEGIN
+  -- Find active session
+  SELECT * INTO v_session
+  FROM user_sessions
+  WHERE token_hash = p_token_hash
+    AND is_active = true
+    AND expires_at > now();
+  
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'message', 'Session not found or expired'
+    );
+  END IF;
+  
+  -- Extend session by 7 days
+  v_new_expires_at := now() + interval '7 days';
+  
+  UPDATE user_sessions
+  SET expires_at = v_new_expires_at,
+      last_activity_at = now()
+  WHERE id = v_session.id;
+  
+  RETURN jsonb_build_object(
+    'success', true,
+    'session_id', v_session.id,
+    'expires_at', v_new_expires_at
+  );
+END;
+$$;
+```
+
+### 5. Logout Function
+Invalidates session(s) for a user.
+
+```sql
+CREATE OR REPLACE FUNCTION public.logout_user(
+  p_user_id uuid,
+  p_session_id uuid DEFAULT NULL,
+  p_logout_all boolean DEFAULT false
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_invalidated_count integer;
+BEGIN
+  IF p_logout_all THEN
+    -- Invalidate all sessions for this user
+    UPDATE user_sessions
+    SET is_active = false
+    WHERE user_id = p_user_id AND is_active = true;
+  ELSIF p_session_id IS NOT NULL THEN
+    -- Invalidate specific session
+    UPDATE user_sessions
+    SET is_active = false
+    WHERE id = p_session_id AND user_id = p_user_id AND is_active = true;
+  ELSE
+    -- Invalid parameters
+    RETURN jsonb_build_object(
+      'success', false,
+      'message', 'Must provide session_id or set logout_all=true'
+    );
+  END IF;
+  
+  GET DIAGNOSTICS v_invalidated_count = ROW_COUNT;
+  
+  RETURN jsonb_build_object(
+    'success', true,
+    'invalidated_sessions', v_invalidated_count
+  );
+END;
+$$;
+```
+
+### 6. Cleanup Expired Sessions (Scheduled Job)
+```sql
+CREATE OR REPLACE FUNCTION public.cleanup_expired_sessions()
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_deleted_count integer;
+BEGIN
+  -- Mark expired sessions as inactive
+  UPDATE user_sessions
+  SET is_active = false
+  WHERE expires_at < now() AND is_active = true;
+  
+  GET DIAGNOSTICS v_deleted_count = ROW_COUNT;
+  
+  -- Delete old login attempts (keep 30 days)
+  DELETE FROM login_attempts
+  WHERE created_at < now() - interval '30 days';
+  
+  -- Delete old inactive sessions (keep 90 days)
+  DELETE FROM user_sessions
+  WHERE is_active = false AND created_at < now() - interval '90 days';
+  
+  RETURN v_deleted_count;
+END;
+$$;
+```
+
+---
+
+## RLS Policies
+
+### login_attempts Table
+```sql
+-- Enable RLS
+ALTER TABLE login_attempts ENABLE ROW LEVEL SECURITY;
+
+-- Only super admins can view login attempts
+CREATE POLICY "Super admins can view login attempts"
+  ON login_attempts FOR SELECT
+  USING (is_super_admin(auth.uid()));
+
+-- System can insert via RPC functions
+CREATE POLICY "System can log attempts"
+  ON login_attempts FOR INSERT
+  WITH CHECK (true);
+```
+
+### user_sessions Table
+```sql
+-- Enable RLS
+ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own sessions
+CREATE POLICY "Users can view own sessions"
+  ON user_sessions FOR SELECT
+  USING (user_id = auth.uid());
+
+-- Super admins can view all sessions
+CREATE POLICY "Super admins can view all sessions"
+  ON user_sessions FOR SELECT
+  USING (is_super_admin(auth.uid()));
+
+-- System can manage via RPC functions
+CREATE POLICY "System can manage sessions"
+  ON user_sessions FOR ALL
+  WITH CHECK (true);
+```
+
+---
+
+## Frontend Implementation
+
+### Enhanced useAuth Hook
+Update `src/hooks/useAuth.ts` to include:
+
+1. **Rate limit check before login**
+2. **Log login attempts (success/failure)**
+3. **Session creation on successful login**
+4. **Session invalidation on logout**
+
 ```typescript
-fontFamily: {
-  sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-  heading: ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-}
+// Key changes to signIn function:
+const signIn = async (username: string, password: string) => {
+  // 1. Check rate limit
+  const { data: rateLimit } = await supabase.rpc('check_login_rate_limit', {
+    p_username: username,
+    p_ip_address: await getClientIP() // Use IP detection service
+  });
+  
+  if (!rateLimit?.allowed) {
+    return { error: { message: rateLimit?.message || 'Too many attempts' } };
+  }
+  
+  // 2. Attempt login
+  const { data: email } = await supabase.rpc('get_email_by_username', {...});
+  const { data, error } = await supabase.auth.signInWithPassword({...});
+  
+  // 3. Log the attempt
+  await supabase.rpc('log_login_attempt', {
+    p_username: username,
+    p_success: !error,
+    p_failure_reason: error?.message,
+    p_user_id: data?.user?.id
+  });
+  
+  // 4. Create session on success
+  if (!error && data?.session) {
+    const tokenHash = await hashToken(data.session.access_token);
+    await supabase.rpc('create_user_session', {
+      p_user_id: data.user.id,
+      p_token_hash: tokenHash,
+      p_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    });
+  }
+  
+  return { error };
+};
+
+// Enhanced signOut function:
+const signOut = async (logoutAll = false) => {
+  if (user) {
+    await supabase.rpc('logout_user', {
+      p_user_id: user.id,
+      p_logout_all: logoutAll
+    });
+  }
+  return await supabase.auth.signOut();
+};
 ```
-
-### 3. Typography Scale (src/index.css)
-
-Add responsive heading utilities:
-```css
-/* Responsive typography scale */
-.text-h1 {
-  @apply text-3xl md:text-5xl font-heading font-bold;  /* 32px mobile, 48px desktop */
-}
-.text-h2 {
-  @apply text-2xl md:text-4xl font-heading font-semibold;  /* 28px mobile, 36px desktop */
-}
-.text-body {
-  @apply text-sm md:text-base font-sans;  /* 14px mobile, 16px desktop */
-}
-```
-
-### 4. Spacing System (Components)
-
-Standardize section padding across all landing sections:
-
-| Component | Current | New |
-|-----------|---------|-----|
-| HeroSection | pt-20 pb-32 | py-10 md:py-20 |
-| FeaturesSection | py-24 | py-10 md:py-20 |
-| BenefitsSection | py-24 | py-10 md:py-20 |
-| HowItWorksSection | py-24 | py-10 md:py-20 |
-| TestimonialsSection | py-24 | py-10 md:py-20 |
-| PricingSection | py-24 | py-10 md:py-20 |
-| FAQSection | py-24 | py-10 md:py-20 |
-| CTASection | py-24 | py-10 md:py-20 |
-
-### 5. Button Refinements (src/components/ui/button.tsx)
-
-Update size variants and add success variant:
-```typescript
-size: {
-  default: "h-10 px-6 py-3",     /* 12px 24px padding */
-  sm: "h-9 px-4 py-2",
-  lg: "h-12 px-8 py-3",
-  icon: "h-10 w-10",
-},
-// Add success variant for accent CTAs
-variant: {
-  // ... existing
-  success: "bg-[hsl(152,69%,31%)] text-white hover:brightness-110 transition-all",
-}
-```
-
-### 6. Animation Refinements (src/index.css)
-
-Update hover-lift to be more subtle:
-```css
-.hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-4px);  /* Was -8px */
-  box-shadow: var(--shadow-elegant);
-}
-```
-
-Add button hover brightness effect:
-```css
-.hover-brightness {
-  transition: filter 0.2s ease;
-}
-.hover-brightness:hover {
-  filter: brightness(1.1);
-}
-```
-
-### 7. Icon Size Standardization (Components)
-
-**Feature icons** - Consistent 24px (h-6 w-6):
-- Already correct in FeatureCard component
-
-**Hero callout icons** - Increase to 48px for badges:
-- Update HeroSection badge icon from h-4 w-4 to h-5 w-5
-- Update stat card icons to h-8 w-8 for prominence
 
 ---
 
-## Files to Modify
+## Files to Create/Modify
 
-| File | Changes |
-|------|---------|
-| `src/index.css` | Color palette, typography classes, hover-lift refinement |
-| `index.html` | Poppins + Inter font preloads |
-| `tailwind.config.ts` | Font family configuration |
-| `src/components/ui/button.tsx` | Size refinements, success variant |
-| `src/components/landing/HeroSection.tsx` | Font classes, spacing, icon sizes |
-| `src/components/landing/FeaturesSection.tsx` | Font classes, py-10 md:py-20 |
-| `src/components/landing/BenefitsSection.tsx` | Font classes, spacing |
-| `src/components/landing/HowItWorksSection.tsx` | Font classes, spacing |
-| `src/components/landing/TestimonialsSection.tsx` | Font classes, spacing |
-| `src/components/landing/PricingSection.tsx` | Font classes, spacing |
-| `src/components/landing/FAQSection.tsx` | Font classes, spacing |
-| `src/components/landing/CTASection.tsx` | Font classes, spacing, success button |
-| `src/components/landing/shared.tsx` | FeatureCard, PricingCard refinements |
+| File | Action | Description |
+|------|--------|-------------|
+| `supabase/migrations/*` | Create | Database migration for tables and functions |
+| `src/hooks/useAuth.ts` | Modify | Add rate limiting, logging, session management |
+| `src/lib/security.ts` | Create | Token hashing utility, IP detection |
+| `src/pages/Auth.tsx` | Modify | Display rate limit warnings, remaining attempts |
+| `src/components/SessionManager.tsx` | Create | UI for viewing/revoking sessions |
 
 ---
 
-## Technical Details
+## Security Considerations
 
-### Color Conversion Reference
-| Hex | HSL Value |
-|-----|-----------|
-| #0d6efd | 217 91% 60% |
-| #6c757d | 210 11% 45% |
-| #198754 | 152 69% 31% |
-| #f8f9fa | 210 17% 98% |
-| #ffffff | 0 0% 100% |
-
-### Responsive Typography Mapping
-| Element | Mobile | Desktop |
-|---------|--------|---------|
-| H1 | 32px (2rem) | 48px (3rem) |
-| H2 | 28px (1.75rem) | 36px (2.25rem) |
-| Body | 14px (0.875rem) | 16px (1rem) |
-
-### Animation Timing
-- Hover lift: 0.3s ease
-- Button brightness: 0.2s ease
-- Scroll animations: 0.6s ease-out
-- Stagger delays: 100-150ms increments
+1. **Token Hashing**: Store SHA-256 hash of access tokens, never raw tokens
+2. **IP Detection**: Use trusted header from reverse proxy or fallback service
+3. **Rate Limiting**: Combined username + IP check prevents distributed attacks
+4. **No Error Disclosure**: Generic "Invalid credentials" message for all failures
+5. **Session Cleanup**: Automatic expiry of old sessions prevents data bloat
 
 ---
 
-## Visual Comparison
+## Migration Summary
 
-**Before:**
-- Purple/Cyan color scheme
-- Space Grotesk only
-- Large hover lift (-8px)
-- Inconsistent section padding
+The implementation requires a single database migration containing:
+- 2 new tables (`login_attempts`, `user_sessions`)
+- 6 new RPC functions (rate limit, logging, session CRUD, cleanup)
+- 5 RLS policies for secure access control
+- 3 indexes for query performance
 
-**After:**
-- Professional Blue/Green scheme
-- Poppins headlines + Inter body
-- Subtle hover lift (-4px)
-- Consistent 80px/40px section padding
+All functions use `SECURITY DEFINER` with explicit `search_path` to prevent privilege escalation.
+
