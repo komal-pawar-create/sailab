@@ -58,11 +58,17 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
   const [selectedOperator, setSelectedOperator] = useState('');
 
   useEffect(() => {
-    if (open) {
-      fetchPatients();
-      generateBillNumber();
-    }
-  }, [open, selectedOperator, profile?.branch_id]);
+    const initForm = async () => {
+      if (open) {
+        fetchPatients();
+        // Preview bill number based on lab_id
+        if (profile?.lab_id) {
+          await fetchPreviewBillNumber(profile.lab_id);
+        }
+      }
+    };
+    initForm();
+  }, [open, selectedOperator, profile?.branch_id, profile?.lab_id]);
 
   // Auto-select patient when preSelectedPatientId changes and patients are loaded
   useEffect(() => {
@@ -112,10 +118,39 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
     }
   };
 
-  const generateBillNumber = () => {
-    const now = new Date();
-    const billNumber = `BILL-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-    setFormData(prev => ({ ...prev, bill_number: billNumber }));
+  const fetchPreviewBillNumber = async (labId: string) => {
+    try {
+      const { data: billNumber, error } = await supabase
+        .rpc('preview_bill_number', { p_lab_id: labId });
+      
+      if (error) {
+        // Fallback to client-side generation if RPC fails
+        const now = new Date();
+        const fallbackNumber = `BILL-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+        setFormData(prev => ({ ...prev, bill_number: fallbackNumber }));
+        return;
+      }
+      
+      setFormData(prev => ({ ...prev, bill_number: billNumber }));
+    } catch {
+      // Fallback on any error
+      const now = new Date();
+      const fallbackNumber = `BILL-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      setFormData(prev => ({ ...prev, bill_number: fallbackNumber }));
+    }
+  };
+
+  const generateBillNumber = async (labId: string): Promise<string> => {
+    const { data: billNumber, error } = await supabase
+      .rpc('generate_bill_number', { p_lab_id: labId });
+    
+    if (error || !billNumber) {
+      // Fallback to client-side if RPC fails
+      const now = new Date();
+      return `BILL-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+    }
+    
+    return billNumber;
   };
 
   const addItem = () => {
@@ -232,10 +267,13 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
 
       const totalAmount = getTotalAmount();
       
+      // Generate the actual bill number using database RPC
+      const actualBillNumber = await generateBillNumber(labId!);
+      
       const { data: newBill, error } = await supabase
         .from('bills')
         .insert({
-          bill_number: formData.bill_number,
+          bill_number: actualBillNumber,
           patient_id: formData.patient_id,
           total_amount: totalAmount,
           due_amount: totalAmount,
@@ -280,7 +318,10 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
       });
       setItems([{ description: '', quantity: 1, rate: 0, amount: 0, tax_rate: 0 }]);
       setSelectedOperator('');
-      generateBillNumber(); // Generate new bill number for next bill
+      // Preview new bill number for next bill
+      if (labId) {
+        fetchPreviewBillNumber(labId);
+      }
       onBillAdded();
     } catch (error: any) {
       toast({
