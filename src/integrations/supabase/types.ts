@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_history: {
+        Row: {
+          id: string
+          metric_value: number
+          notification_error: string | null
+          notification_sent: boolean
+          resolved_at: string | null
+          rule_id: string
+          triggered_at: string
+        }
+        Insert: {
+          id?: string
+          metric_value: number
+          notification_error?: string | null
+          notification_sent?: boolean
+          resolved_at?: string | null
+          rule_id: string
+          triggered_at?: string
+        }
+        Update: {
+          id?: string
+          metric_value?: number
+          notification_error?: string | null
+          notification_sent?: boolean
+          resolved_at?: string | null
+          rule_id?: string
+          triggered_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_history_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "alert_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alert_rules: {
+        Row: {
+          comparison: string
+          created_at: string
+          id: string
+          is_active: boolean
+          metric_type: string
+          notification_channels: string[] | null
+          rule_name: string
+          threshold_value: number
+          time_window_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          comparison?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metric_type: string
+          notification_channels?: string[] | null
+          rule_name: string
+          threshold_value: number
+          time_window_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          comparison?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metric_type?: string
+          notification_channels?: string[] | null
+          rule_name?: string
+          threshold_value?: number
+          time_window_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointment_reminders: {
         Row: {
           appointment_id: string
@@ -662,6 +739,101 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      endpoint_metrics: {
+        Row: {
+          endpoint: string
+          id: string
+          lab_id: string | null
+          method: string
+          recorded_at: string
+          response_time_ms: number
+          status_code: number
+        }
+        Insert: {
+          endpoint: string
+          id?: string
+          lab_id?: string | null
+          method?: string
+          recorded_at?: string
+          response_time_ms: number
+          status_code: number
+        }
+        Update: {
+          endpoint?: string
+          id?: string
+          lab_id?: string | null
+          method?: string
+          recorded_at?: string
+          response_time_ms?: number
+          status_code?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "endpoint_metrics_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      error_logs: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          endpoint: string | null
+          error_code: string
+          id: string
+          lab_id: string | null
+          message: string
+          metadata: Json | null
+          severity: string
+          stack_trace: string | null
+          user_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          endpoint?: string | null
+          error_code: string
+          id?: string
+          lab_id?: string | null
+          message: string
+          metadata?: Json | null
+          severity?: string
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          endpoint?: string | null
+          error_code?: string
+          id?: string
+          lab_id?: string | null
+          message?: string
+          metadata?: Json | null
+          severity?: string
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_logs_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "error_logs_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
             referencedColumns: ["id"]
           },
         ]
@@ -1861,6 +2033,44 @@ export type Database = {
           },
         ]
       }
+      system_health: {
+        Row: {
+          id: string
+          lab_id: string | null
+          metadata: Json | null
+          metric_type: string
+          metric_value: number | null
+          recorded_at: string
+          status: string
+        }
+        Insert: {
+          id?: string
+          lab_id?: string | null
+          metadata?: Json | null
+          metric_type: string
+          metric_value?: number | null
+          recorded_at?: string
+          status?: string
+        }
+        Update: {
+          id?: string
+          lab_id?: string | null
+          metadata?: Json | null
+          metric_type?: string
+          metric_value?: number | null
+          recorded_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_health_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test_reports: {
         Row: {
           branch_id: string | null
@@ -2094,6 +2304,7 @@ export type Database = {
       }
       cleanup_expired_sessions: { Args: never; Returns: number }
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
+      cleanup_old_error_logs: { Args: never; Returns: number }
       cleanup_test_environment: { Args: never; Returns: Json }
       clear_lab_data: {
         Args: {
@@ -2138,6 +2349,10 @@ export type Database = {
         Args: { input_username: string }
         Returns: string
       }
+      get_monitoring_metrics: {
+        Args: { p_lab_id?: string; p_time_range?: unknown }
+        Returns: Json
+      }
       get_next_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
@@ -2168,6 +2383,20 @@ export type Database = {
       }
       is_lab_admin: { Args: { user_id: string }; Returns: boolean }
       is_super_admin: { Args: { user_id: string }; Returns: boolean }
+      log_application_error: {
+        Args: {
+          p_branch_id?: string
+          p_endpoint?: string
+          p_error_code: string
+          p_lab_id?: string
+          p_message: string
+          p_metadata?: Json
+          p_severity?: string
+          p_stack_trace?: string
+          p_user_id?: string
+        }
+        Returns: string
+      }
       log_audit_event: {
         Args: {
           p_action: string
@@ -2201,6 +2430,15 @@ export type Database = {
       preview_bill_number: { Args: { p_lab_id: string }; Returns: string }
       preview_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
+        Returns: string
+      }
+      record_health_check: {
+        Args: {
+          p_metadata?: Json
+          p_metric_type: string
+          p_metric_value: number
+          p_status: string
+        }
         Returns: string
       }
       refresh_daily_stats: { Args: never; Returns: undefined }
