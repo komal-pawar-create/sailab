@@ -2072,7 +2072,20 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mv_daily_stats: {
+        Row: {
+          branch_id: string | null
+          collections: number | null
+          document_count: number | null
+          jpeg_count: number | null
+          lab_id: string | null
+          patient_count: number | null
+          pending_reports: number | null
+          revenue: number | null
+          stat_date: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_login_rate_limit: {
@@ -2110,6 +2123,15 @@ export type Database = {
       generate_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
+      }
+      get_dashboard_stats: {
+        Args: {
+          p_branch_ids?: string[]
+          p_date_from?: string
+          p_date_to?: string
+          p_lab_id: string
+        }
+        Returns: Json
       }
       get_email_by_username: {
         Args: { input_username: string }
@@ -2174,11 +2196,13 @@ export type Database = {
         }
         Returns: Json
       }
+      prepare_bills_partitioning: { Args: never; Returns: string }
       preview_bill_number: { Args: { p_lab_id: string }; Returns: string }
       preview_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
       }
+      refresh_daily_stats: { Args: never; Returns: undefined }
       refresh_user_session: { Args: { p_token_hash: string }; Returns: Json }
     }
     Enums: {
