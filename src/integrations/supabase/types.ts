@@ -2094,6 +2094,7 @@ export type Database = {
       }
       cleanup_expired_sessions: { Args: never; Returns: number }
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
+      cleanup_test_environment: { Args: never; Returns: Json }
       clear_lab_data: {
         Args: {
           p_clear_bills?: boolean
@@ -2204,6 +2205,7 @@ export type Database = {
       }
       refresh_daily_stats: { Args: never; Returns: undefined }
       refresh_user_session: { Args: { p_token_hash: string }; Returns: Json }
+      setup_test_environment: { Args: never; Returns: Json }
     }
     Enums: {
       user_role:
