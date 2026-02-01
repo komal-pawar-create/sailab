@@ -1,23 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuth, type AuthError } from '@/hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
-import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { type RateLimitState, getTimeUntilUnlock } from '@/lib/security';
+import { AlertTriangle, Clock, ShieldAlert } from 'lucide-react';
 
 const Auth = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [rateLimitState, setRateLimitState] = useState<RateLimitState | null>(null);
+  const [lockoutCountdown, setLockoutCountdown] = useState<string | null>(null);
   
   const { signIn, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (!rateLimitState?.lockedUntil) {
+      setLockoutCountdown(null);
+      return;
+    }
+
+    const updateCountdown = () => {
+      const now = new Date();
+      if (rateLimitState.lockedUntil && rateLimitState.lockedUntil > now) {
+        setLockoutCountdown(getTimeUntilUnlock(rateLimitState.lockedUntil));
+      } else {
+        setLockoutCountdown(null);
+        setRateLimitState(null); // Reset rate limit state when lockout expires
+      }
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [rateLimitState?.lockedUntil]);
 
   // Redirect authenticated users to their appropriate dashboard
   useEffect(() => {
@@ -43,22 +68,31 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Don't allow login during lockout
+    if (rateLimitState && !rateLimitState.allowed && lockoutCountdown) {
+      return;
+    }
+    
     setIsLoading(true);
     
-    const { error } = await signIn(username, password);
+    const result = await signIn(username, password);
     
-    if (error) {
+    // Update rate limit state from response
+    if (result.rateLimitState) {
+      setRateLimitState(result.rateLimitState);
+    }
+    
+    if (result.error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: result.error.message,
         variant: "destructive",
       });
     }
     
     setIsLoading(false);
   };
-
-  // Sign up functionality removed - only admins can create users
 
   // Show loading state while checking authentication
   if (authLoading) {
@@ -72,6 +106,9 @@ const Auth = () => {
     );
   }
 
+  const isLockedOut = rateLimitState && !rateLimitState.allowed && lockoutCountdown;
+  const showWarning = rateLimitState && rateLimitState.allowed && rateLimitState.remainingAttempts < 5;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
@@ -80,6 +117,27 @@ const Auth = () => {
           <CardDescription>Access your laboratory management system</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Lockout Alert */}
+          {isLockedOut && (
+            <Alert variant="destructive" className="mb-4">
+              <ShieldAlert className="h-4 w-4" />
+              <AlertDescription className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Account locked. Try again in <strong>{lockoutCountdown}</strong>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Warning when attempts are low */}
+          {showWarning && (
+            <Alert className="mb-4 border-warning bg-warning/10">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              <AlertDescription className="text-warning">
+                {rateLimitState.remainingAttempts} login attempt{rateLimitState.remainingAttempts !== 1 ? 's' : ''} remaining before temporary lockout.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -96,6 +154,7 @@ const Auth = () => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
+                    disabled={!!isLockedOut}
                   />
                 </div>
                 <div className="space-y-2">
@@ -107,6 +166,7 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={!!isLockedOut}
                   />
                 </div>
                 <div className="text-right">
@@ -117,8 +177,12 @@ const Auth = () => {
                     Forgot Password?
                   </Link>
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Signing In...' : 'Sign In'}
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoading || !!isLockedOut}
+                >
+                  {isLoading ? 'Signing In...' : isLockedOut ? 'Account Locked' : 'Sign In'}
                 </Button>
               </form>
             </TabsContent>
