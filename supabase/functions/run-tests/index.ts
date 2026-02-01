@@ -391,7 +391,7 @@ async function runCrudTests(
           patient_id: fixtures.patient_id,
           lab_id: fixtures.lab_id,
           branch_id: fixtures.branch_id,
-          test_name: "TEST_LIPID_PANEL",
+          test_type: "TEST_LIPID_PANEL",
           status: "pending",
           created_by: fixtures.operator_id,
         })
