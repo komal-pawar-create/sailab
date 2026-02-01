@@ -1417,6 +1417,39 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          created_at: string
+          failure_reason: string | null
+          id: string
+          ip_address: unknown
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          ip_address: unknown
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           address_line1: string | null
@@ -1890,6 +1923,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_info: Json | null
+          expires_at: string
+          id: string
+          ip_address: unknown
+          is_active: boolean
+          last_activity_at: string | null
+          token_hash: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: Json | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean
+          last_activity_at?: string | null
+          token_hash: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: Json | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean
+          last_activity_at?: string | null
+          token_hash?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       walk_in_tokens: {
         Row: {
           branch_id: string
@@ -1968,6 +2040,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_login_rate_limit: {
+        Args: { p_ip_address: unknown; p_username: string }
+        Returns: Json
+      }
+      cleanup_expired_sessions: { Args: never; Returns: number }
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
       clear_lab_data: {
         Args: {
@@ -1983,6 +2060,16 @@ export type Database = {
           p_lab_id: string
         }
         Returns: Json
+      }
+      create_user_session: {
+        Args: {
+          p_expires_at: string
+          p_ip_address: unknown
+          p_token_hash: string
+          p_user_agent: string
+          p_user_id: string
+        }
+        Returns: string
       }
       generate_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
@@ -2032,10 +2119,30 @@ export type Database = {
         }
         Returns: string
       }
+      log_login_attempt: {
+        Args: {
+          p_failure_reason?: string
+          p_ip_address: unknown
+          p_success: boolean
+          p_user_agent: string
+          p_user_id?: string
+          p_username: string
+        }
+        Returns: string
+      }
+      logout_user: {
+        Args: {
+          p_logout_all?: boolean
+          p_session_id?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       preview_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
       }
+      refresh_user_session: { Args: { p_token_hash: string }; Returns: Json }
     }
     Enums: {
       user_role:
