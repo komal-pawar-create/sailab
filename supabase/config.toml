@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.check-license-expiry]
 verify_jwt = false
+
+[functions.run-tests]
+verify_jwt = false
