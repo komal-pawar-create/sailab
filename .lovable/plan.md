@@ -1,695 +1,352 @@
 
 
-# Comprehensive API Error Handling Plan
+# Comprehensive Data Validation Plan for LabFlow Tables
 
 ## Overview
-Implement a robust, standardized error handling system for LabFlow that provides user-friendly messages while logging detailed error information for debugging. This includes a shared error library, PostgreSQL error mapping, an error_logs table for debugging, and consistent error responses across all edge functions and frontend code.
+Add robust database-level validation to all LabFlow core tables using CHECK constraints, trigger functions, and unique constraints. This ensures data integrity at the database level regardless of how data is inserted.
 
 ---
 
 ## Current State Analysis
 
-| Component | Current Implementation | Issues |
-|-----------|----------------------|--------|
-| Edge functions | Basic try/catch with raw `error.message` | Exposes internal errors |
-| Frontend RPC calls | Direct Supabase error display | Inconsistent messaging |
-| Error logging | None (except audit_logs for data changes) | No error debugging trail |
-| Error format | Inconsistent across functions | Hard to parse programmatically |
-| PostgreSQL errors | Raw error codes exposed | Not user-friendly |
+### Existing Validation
+| Table | Current Constraints | Current Triggers |
+|-------|---------------------|------------------|
+| **patients** | `UNIQUE(lab_id, patient_id)` | `update_updated_at`, `ensure_lab_id_matches_branch` |
+| **bills** | `CHECK (status IN ('pending', 'paid', 'partially_paid', 'overdue'))` | `update_updated_at`, `update_bill_after_payment` |
+| **test_reports** | None | `update_updated_at` |
+| **feedback** | `CHECK (rating >= 1 AND rating <= 5)` | None |
+
+### Identified Gaps
+1. **patients**: No validation on full_name length, age range, gender values, phone format, or email format
+2. **bills**: No validation on amounts being non-negative, discount limits
+3. **test_reports**: Status values not constrained
+4. **Phone/email uniqueness**: No unique constraints per lab
+5. **Bill number generation**: Currently client-side random string
 
 ---
 
-## Architecture Overview
+## Database Schema Changes
 
-```text
-+------------------+     +-------------------+     +------------------+
-|  Frontend        |---->| Edge Function /   |---->| Database         |
-|  (React)         |     | RPC Call          |     | (PostgreSQL)     |
-+------------------+     +-------------------+     +------------------+
-       |                        |                        |
-       v                        v                        v
-+------------------+     +-------------------+     +------------------+
-| errorUtils.ts    |     | errorHandler.ts   |     | handle_db_error()|
-| - parseApiError  |     | - withErrorHandler|     | - Map PG codes   |
-| - getErrorMessage|     | - standardResponse|     | - Log to table   |
-+------------------+     +-------------------+     +------------------+
-                                |
-                                v
-                         +-------------------+
-                         | error_logs table  |
-                         | - Full stack trace|
-                         | - Request context |
-                         +-------------------+
-```
+### 1. Patients Table Validation
 
----
-
-## Standardized Error Response Format
-
-### Success Response
-```json
-{
-  "success": true,
-  "data": { ... }
-}
-```
-
-### Error Response
-```json
-{
-  "success": false,
-  "error": {
-    "code": "PATIENT_NOT_FOUND",
-    "message": "Patient with ID xxx not found",
-    "field": "patient_id"
-  }
-}
-```
-
-### Error Codes (Enumerated)
-| Code | Description | HTTP Status |
-|------|-------------|-------------|
-| `VALIDATION_ERROR` | Input validation failed | 400 |
-| `DUPLICATE_RECORD` | Record already exists | 409 |
-| `RECORD_NOT_FOUND` | Requested record not found | 404 |
-| `REFERENCE_ERROR` | Foreign key constraint violation | 400 |
-| `ACCESS_DENIED` | RLS policy violation | 403 |
-| `UNAUTHORIZED` | Authentication required | 401 |
-| `RATE_LIMITED` | Too many requests | 429 |
-| `INTERNAL_ERROR` | Server-side error (generic) | 500 |
-| `SERVICE_UNAVAILABLE` | External service failure | 503 |
-
----
-
-## Database Schema
-
-### error_logs Table
 ```sql
-CREATE TABLE public.error_logs (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  error_code text NOT NULL,
-  error_message text NOT NULL,
-  stack_trace text,
-  context jsonb,
-  user_id uuid,
-  request_path text,
-  request_method text,
-  request_body jsonb,
-  ip_address text,
-  user_agent text,
-  lab_id uuid,
-  branch_id uuid,
-  pg_error_code text,
-  created_at timestamptz NOT NULL DEFAULT now()
+-- Add CHECK constraints for patients table
+ALTER TABLE public.patients
+  ADD CONSTRAINT patients_full_name_length 
+    CHECK (char_length(full_name) >= 2 AND char_length(full_name) <= 100),
+  ADD CONSTRAINT patients_age_range 
+    CHECK (age IS NULL OR (age >= 0 AND age <= 150)),
+  ADD CONSTRAINT patients_age_in_months_range 
+    CHECK (age_in_months IS NULL OR (age_in_months >= 0 AND age_in_months <= 1800)),
+  ADD CONSTRAINT patients_gender_values 
+    CHECK (gender IS NULL OR gender IN ('MALE', 'FEMALE', 'OTHER'));
+
+-- Phone validation trigger (more flexible than regex CHECK)
+CREATE OR REPLACE FUNCTION validate_phone_number()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Allow NULL phones (if field is optional)
+  IF NEW.phone IS NOT NULL THEN
+    -- Remove spaces and check if it's 10 digits
+    NEW.phone := regexp_replace(NEW.phone, '\s', '', 'g');
+    IF NOT (NEW.phone ~ '^[0-9]{10}$') THEN
+      RAISE EXCEPTION 'Phone number must be exactly 10 digits';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+**Note**: Phone is currently NOT NULL in the schema, so the trigger will validate all phones.
+
+### 2. Bills Table Validation
+
+```sql
+-- Add CHECK constraints for bills table
+ALTER TABLE public.bills
+  ADD CONSTRAINT bills_total_amount_positive 
+    CHECK (total_amount >= 0),
+  ADD CONSTRAINT bills_paid_amount_positive 
+    CHECK (paid_amount IS NULL OR paid_amount >= 0),
+  ADD CONSTRAINT bills_due_amount_positive 
+    CHECK (due_amount >= 0),
+  ADD CONSTRAINT bills_discount_amount_valid 
+    CHECK (discount_amount IS NULL OR discount_amount >= 0),
+  ADD CONSTRAINT bills_discount_not_exceed_total 
+    CHECK (discount_amount IS NULL OR discount_amount <= total_amount);
+```
+
+### 3. Test Reports Table Validation
+
+```sql
+-- Add status CHECK constraint for test_reports
+ALTER TABLE public.test_reports
+  ADD CONSTRAINT test_reports_status_values 
+    CHECK (status IN ('pending', 'in_progress', 'completed', 'delivered'));
+```
+
+---
+
+## Trigger Functions for Auto-Generation
+
+### 1. Bill Number Auto-Generation
+
+Create a database function to generate bill numbers in the format `LAB-YYYYMM-XXXX`:
+
+```sql
+-- Create sequence tracking table for bill numbers (like patient IDs)
+CREATE TABLE IF NOT EXISTS public.bill_number_sequences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lab_id UUID NOT NULL REFERENCES public.labs(id) ON DELETE CASCADE,
+  year_month TEXT NOT NULL, -- Format: YYYYMM
+  last_sequence INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(lab_id, year_month)
 );
 
--- Index for efficient querying
-CREATE INDEX idx_error_logs_created ON error_logs(created_at DESC);
-CREATE INDEX idx_error_logs_code ON error_logs(error_code);
-CREATE INDEX idx_error_logs_lab ON error_logs(lab_id);
+-- Function to generate bill number
+CREATE OR REPLACE FUNCTION public.generate_bill_number(p_lab_id UUID)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_lab_initials TEXT;
+  v_year_month TEXT;
+  v_sequence INTEGER;
+  v_bill_number TEXT;
+BEGIN
+  -- Get lab initials
+  SELECT initials INTO v_lab_initials
+  FROM labs WHERE id = p_lab_id;
+  
+  IF v_lab_initials IS NULL THEN
+    RAISE EXCEPTION 'Lab not found or initials not set';
+  END IF;
+  
+  -- Get current year-month
+  v_year_month := TO_CHAR(CURRENT_DATE, 'YYYYMM');
+  
+  -- Get or create sequence for this month
+  INSERT INTO bill_number_sequences (lab_id, year_month, last_sequence)
+  VALUES (p_lab_id, v_year_month, 1)
+  ON CONFLICT (lab_id, year_month)
+  DO UPDATE SET 
+    last_sequence = bill_number_sequences.last_sequence + 1,
+    updated_at = NOW()
+  RETURNING last_sequence INTO v_sequence;
+  
+  -- Generate bill number: LAB-YYYYMM-XXXX
+  v_bill_number := v_lab_initials || '-' || v_year_month || '-' || LPAD(v_sequence::TEXT, 4, '0');
+  
+  RETURN v_bill_number;
+END;
+$$;
 ```
 
-### RLS Policies for error_logs
+### 2. Preview Bill Number Function
+
 ```sql
--- Super admins can view all error logs
-CREATE POLICY "Super admins can view error logs"
-  ON error_logs FOR SELECT
+CREATE OR REPLACE FUNCTION public.preview_bill_number(p_lab_id UUID)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_lab_initials TEXT;
+  v_year_month TEXT;
+  v_sequence INTEGER;
+  v_bill_number TEXT;
+BEGIN
+  SELECT initials INTO v_lab_initials FROM labs WHERE id = p_lab_id;
+  
+  IF v_lab_initials IS NULL THEN
+    RAISE EXCEPTION 'Lab not found or initials not set';
+  END IF;
+  
+  v_year_month := TO_CHAR(CURRENT_DATE, 'YYYYMM');
+  
+  -- Get next sequence without incrementing
+  SELECT COALESCE(last_sequence, 0) + 1 INTO v_sequence
+  FROM bill_number_sequences
+  WHERE lab_id = p_lab_id AND year_month = v_year_month;
+  
+  IF v_sequence IS NULL THEN
+    v_sequence := 1;
+  END IF;
+  
+  v_bill_number := v_lab_initials || '-' || v_year_month || '-' || LPAD(v_sequence::TEXT, 4, '0');
+  
+  RETURN v_bill_number;
+END;
+$$;
+```
+
+---
+
+## Unique Constraints
+
+### 1. Phone Uniqueness Per Lab
+
+```sql
+-- Create partial unique index for phone per lab (allows NULLs)
+-- Note: phone is NOT NULL currently, so this is effectively a full unique
+CREATE UNIQUE INDEX IF NOT EXISTS idx_patients_phone_lab_unique 
+  ON public.patients (lab_id, phone);
+```
+
+### 2. Bill Number Uniqueness Per Lab
+
+```sql
+-- Bill number should be unique per lab (not globally)
+-- Drop existing global unique if present, add lab-scoped
+DROP INDEX IF EXISTS bills_bill_number_key;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_bills_number_lab_unique 
+  ON public.bills (lab_id, bill_number);
+```
+
+---
+
+## Validation Trigger for Data Integrity
+
+### Combined Validation Trigger
+
+```sql
+CREATE OR REPLACE FUNCTION public.validate_patient_data()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Normalize phone: remove spaces
+  IF NEW.phone IS NOT NULL THEN
+    NEW.phone := regexp_replace(NEW.phone, '\s', '', 'g');
+    IF NOT (NEW.phone ~ '^[0-9]{10}$') THEN
+      RAISE EXCEPTION 'Phone number must be exactly 10 digits';
+    END IF;
+  END IF;
+  
+  -- Normalize and validate full_name
+  NEW.full_name := UPPER(TRIM(NEW.full_name));
+  IF char_length(NEW.full_name) < 2 THEN
+    RAISE EXCEPTION 'Patient name must be at least 2 characters';
+  END IF;
+  
+  -- Validate age consistency
+  IF NEW.age IS NOT NULL AND NEW.age_in_months IS NULL THEN
+    -- Auto-calculate age_in_months if not provided
+    NEW.age_in_months := NEW.age * 12;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$;
+
+-- Apply to patients table
+CREATE TRIGGER validate_patient_before_save
+  BEFORE INSERT OR UPDATE ON public.patients
+  FOR EACH ROW
+  EXECUTE FUNCTION public.validate_patient_data();
+```
+
+---
+
+## RLS for New Sequence Table
+
+```sql
+-- Enable RLS on bill_number_sequences
+ALTER TABLE public.bill_number_sequences ENABLE ROW LEVEL SECURITY;
+
+-- Branch operators can access sequences for their lab
+CREATE POLICY "Operators can access lab sequences"
+  ON bill_number_sequences FOR ALL
+  USING (lab_id = get_user_lab(auth.uid()));
+
+-- Super admins can manage all
+CREATE POLICY "Super admins manage all sequences"
+  ON bill_number_sequences FOR ALL
   USING (is_super_admin(auth.uid()));
-
--- Lab admins can view error logs from their lab
-CREATE POLICY "Lab admins can view lab error logs"
-  ON error_logs FOR SELECT
-  USING (
-    is_lab_admin(auth.uid()) AND 
-    lab_id = get_user_lab(auth.uid())
-  );
-
--- System can insert error logs
-CREATE POLICY "System can insert error logs"
-  ON error_logs FOR INSERT
-  WITH CHECK (true);
 ```
 
 ---
 
-## Database Functions
+## Frontend Updates Required
 
-### 1. PostgreSQL Error Mapper Function
-```sql
-CREATE OR REPLACE FUNCTION public.map_pg_error(
-  p_sqlstate text,
-  p_message text,
-  p_detail text DEFAULT NULL
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_result jsonb;
-  v_user_message text;
-  v_error_code text;
-  v_field text;
-BEGIN
-  -- Map PostgreSQL error codes to user-friendly messages
-  CASE p_sqlstate
-    WHEN '23505' THEN -- unique_violation
-      v_error_code := 'DUPLICATE_RECORD';
-      v_user_message := 'This record already exists';
-      -- Try to extract field name from detail
-      IF p_detail LIKE '%Key (%)%' THEN
-        v_field := substring(p_detail from 'Key \(([^)]+)\)');
-      END IF;
-      
-    WHEN '23503' THEN -- foreign_key_violation
-      v_error_code := 'REFERENCE_ERROR';
-      v_user_message := 'Referenced record not found';
-      IF p_detail LIKE '%Key (%)%' THEN
-        v_field := substring(p_detail from 'Key \(([^)]+)\)');
-      END IF;
-      
-    WHEN '23514' THEN -- check_violation
-      v_error_code := 'VALIDATION_ERROR';
-      v_user_message := 'Data validation failed';
-      
-    WHEN '42501' THEN -- insufficient_privilege (RLS)
-      v_error_code := 'ACCESS_DENIED';
-      v_user_message := 'You do not have permission to perform this action';
-      
-    WHEN '23502' THEN -- not_null_violation
-      v_error_code := 'VALIDATION_ERROR';
-      v_user_message := 'Required field is missing';
-      IF p_message LIKE '%column "%' THEN
-        v_field := substring(p_message from 'column "([^"]+)"');
-      END IF;
-      
-    WHEN '22001' THEN -- string_data_right_truncation
-      v_error_code := 'VALIDATION_ERROR';
-      v_user_message := 'Value is too long';
-      
-    WHEN '22P02' THEN -- invalid_text_representation
-      v_error_code := 'VALIDATION_ERROR';
-      v_user_message := 'Invalid data format';
-      
-    WHEN 'P0001' THEN -- raise_exception (custom errors)
-      v_error_code := 'VALIDATION_ERROR';
-      v_user_message := p_message; -- Custom errors are already user-friendly
-      
-    ELSE
-      v_error_code := 'INTERNAL_ERROR';
-      v_user_message := 'An unexpected error occurred';
-  END CASE;
-  
-  v_result := jsonb_build_object(
-    'code', v_error_code,
-    'message', v_user_message
-  );
-  
-  IF v_field IS NOT NULL THEN
-    v_result := v_result || jsonb_build_object('field', v_field);
-  END IF;
-  
-  RETURN v_result;
-END;
-$$;
-```
+### AddBillForm.tsx Changes
 
-### 2. Error Logging Function
-```sql
-CREATE OR REPLACE FUNCTION public.log_error(
-  p_error_code text,
-  p_error_message text,
-  p_stack_trace text DEFAULT NULL,
-  p_context jsonb DEFAULT NULL,
-  p_request_path text DEFAULT NULL,
-  p_request_method text DEFAULT NULL,
-  p_request_body jsonb DEFAULT NULL,
-  p_ip_address text DEFAULT NULL,
-  p_user_agent text DEFAULT NULL,
-  p_pg_error_code text DEFAULT NULL
-)
-RETURNS uuid
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_log_id uuid;
-  v_user_id uuid;
-  v_lab_id uuid;
-  v_branch_id uuid;
-BEGIN
-  v_user_id := auth.uid();
-  
-  -- Get user's lab and branch if authenticated
-  IF v_user_id IS NOT NULL THEN
-    SELECT lab_id, branch_id INTO v_lab_id, v_branch_id
-    FROM profiles
-    WHERE user_id = v_user_id;
-  END IF;
-  
-  INSERT INTO error_logs (
-    error_code,
-    error_message,
-    stack_trace,
-    context,
-    user_id,
-    request_path,
-    request_method,
-    request_body,
-    ip_address,
-    user_agent,
-    lab_id,
-    branch_id,
-    pg_error_code
-  ) VALUES (
-    p_error_code,
-    p_error_message,
-    p_stack_trace,
-    p_context,
-    v_user_id,
-    p_request_path,
-    p_request_method,
-    p_request_body,
-    p_ip_address,
-    p_user_agent,
-    v_lab_id,
-    v_branch_id,
-    p_pg_error_code
-  )
-  RETURNING id INTO v_log_id;
-  
-  RETURN v_log_id;
-END;
-$$;
-```
-
-### 3. RPC Wrapper for Safe Database Operations
-```sql
-CREATE OR REPLACE FUNCTION public.safe_execute(
-  p_operation text,
-  p_params jsonb
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_result jsonb;
-  v_error_info jsonb;
-BEGIN
-  -- Execute the operation based on type
-  -- This is a template - specific operations would be implemented
-  
-  RETURN jsonb_build_object(
-    'success', true,
-    'data', v_result
-  );
-  
-EXCEPTION
-  WHEN OTHERS THEN
-    -- Map the PostgreSQL error to user-friendly format
-    v_error_info := map_pg_error(SQLSTATE, SQLERRM, NULL);
-    
-    -- Log the error with full details
-    PERFORM log_error(
-      v_error_info->>'code',
-      v_error_info->>'message',
-      pg_exception_context(),
-      p_params,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      SQLSTATE
-    );
-    
-    RETURN jsonb_build_object(
-      'success', false,
-      'error', v_error_info
-    );
-END;
-$$;
-```
-
----
-
-## Edge Function Error Handler
-
-### Shared Error Handler Module
-Create `supabase/functions/_shared/errorHandler.ts`:
+Replace the client-side `generateBillNumber` function:
 
 ```typescript
-// Standard error codes
-export enum ErrorCode {
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  DUPLICATE_RECORD = 'DUPLICATE_RECORD',
-  RECORD_NOT_FOUND = 'RECORD_NOT_FOUND',
-  REFERENCE_ERROR = 'REFERENCE_ERROR',
-  ACCESS_DENIED = 'ACCESS_DENIED',
-  UNAUTHORIZED = 'UNAUTHORIZED',
-  RATE_LIMITED = 'RATE_LIMITED',
-  INTERNAL_ERROR = 'INTERNAL_ERROR',
-  SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
-}
+// Current (random):
+const billNumber = `BILL-${now.getFullYear()}...${random}`;
 
-// Error response interface
-export interface ApiError {
-  code: ErrorCode | string;
-  message: string;
-  field?: string;
-}
+// New (database-generated):
+const { data: billNumber, error } = await supabase
+  .rpc('preview_bill_number', { p_lab_id: labId });
 
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: ApiError;
-}
-
-// PostgreSQL error code mapping
-const PG_ERROR_MAP: Record<string, { code: ErrorCode; message: string }> = {
-  '23505': { code: ErrorCode.DUPLICATE_RECORD, message: 'This record already exists' },
-  '23503': { code: ErrorCode.REFERENCE_ERROR, message: 'Referenced record not found' },
-  '23514': { code: ErrorCode.VALIDATION_ERROR, message: 'Data validation failed' },
-  '42501': { code: ErrorCode.ACCESS_DENIED, message: 'You do not have permission' },
-  '23502': { code: ErrorCode.VALIDATION_ERROR, message: 'Required field is missing' },
-  'PGRST301': { code: ErrorCode.RECORD_NOT_FOUND, message: 'Record not found' },
-  'PGRST116': { code: ErrorCode.RECORD_NOT_FOUND, message: 'Record not found' },
-};
-
-// Map any error to standardized format
-export function mapError(error: unknown): ApiError {
-  if (error instanceof Error) {
-    // Check for PostgreSQL/PostgREST error codes
-    const errorAny = error as any;
-    const pgCode = errorAny.code || errorAny.details?.code;
-    
-    if (pgCode && PG_ERROR_MAP[pgCode]) {
-      return {
-        code: PG_ERROR_MAP[pgCode].code,
-        message: PG_ERROR_MAP[pgCode].message,
-      };
-    }
-    
-    // Custom application errors (thrown intentionally)
-    if (error.message.startsWith('[')) {
-      try {
-        const parsed = JSON.parse(error.message);
-        return {
-          code: parsed.code || ErrorCode.INTERNAL_ERROR,
-          message: parsed.message || 'An error occurred',
-          field: parsed.field,
-        };
-      } catch {
-        // Not JSON, continue
-      }
-    }
-  }
-  
-  // Default: never expose internal error details
-  return {
-    code: ErrorCode.INTERNAL_ERROR,
-    message: 'An unexpected error occurred. Please try again.',
-  };
-}
-
-// Create success response
-export function successResponse<T>(data: T, status = 200): Response {
-  return new Response(
-    JSON.stringify({ success: true, data }),
-    {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
-}
-
-// Create error response
-export function errorResponse(
-  error: ApiError,
-  status = 400,
-  corsHeaders: Record<string, string> = {}
-): Response {
-  return new Response(
-    JSON.stringify({ success: false, error }),
-    {
-      status,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    }
-  );
-}
-
-// HTTP status code from error code
-export function getStatusFromErrorCode(code: ErrorCode | string): number {
-  switch (code) {
-    case ErrorCode.VALIDATION_ERROR:
-    case ErrorCode.REFERENCE_ERROR:
-      return 400;
-    case ErrorCode.UNAUTHORIZED:
-      return 401;
-    case ErrorCode.ACCESS_DENIED:
-      return 403;
-    case ErrorCode.RECORD_NOT_FOUND:
-      return 404;
-    case ErrorCode.DUPLICATE_RECORD:
-      return 409;
-    case ErrorCode.RATE_LIMITED:
-      return 429;
-    case ErrorCode.SERVICE_UNAVAILABLE:
-      return 503;
-    default:
-      return 500;
-  }
-}
-
-// Throw custom application error
-export function throwAppError(
-  code: ErrorCode,
-  message: string,
-  field?: string
-): never {
-  throw new Error(JSON.stringify({ code, message, field }));
-}
+// On submit, generate actual bill number:
+const { data: actualBillNumber } = await supabase
+  .rpc('generate_bill_number', { p_lab_id: labId });
 ```
-
----
-
-## Frontend Error Utilities
-
-### Create `src/lib/errorUtils.ts`:
-
-```typescript
-/**
- * Standardized error handling utilities for frontend
- */
-
-export interface ApiError {
-  code: string;
-  message: string;
-  field?: string;
-}
-
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: ApiError;
-}
-
-// User-friendly error messages for common codes
-const ERROR_MESSAGES: Record<string, string> = {
-  VALIDATION_ERROR: 'Please check your input and try again',
-  DUPLICATE_RECORD: 'This record already exists',
-  RECORD_NOT_FOUND: 'The requested record was not found',
-  REFERENCE_ERROR: 'Cannot complete action: related record not found',
-  ACCESS_DENIED: 'You do not have permission to perform this action',
-  UNAUTHORIZED: 'Please sign in to continue',
-  RATE_LIMITED: 'Too many requests. Please wait and try again',
-  INTERNAL_ERROR: 'Something went wrong. Please try again later',
-  SERVICE_UNAVAILABLE: 'Service temporarily unavailable. Please try later',
-  NETWORK_ERROR: 'Network error. Please check your connection',
-};
-
-/**
- * Parse API response and extract error information
- */
-export function parseApiError(response: unknown): ApiError {
-  if (typeof response === 'object' && response !== null) {
-    const resp = response as Record<string, unknown>;
-    
-    // Standard API error format
-    if (resp.error && typeof resp.error === 'object') {
-      const error = resp.error as Record<string, unknown>;
-      return {
-        code: String(error.code || 'INTERNAL_ERROR'),
-        message: String(error.message || getDefaultMessage('INTERNAL_ERROR')),
-        field: error.field ? String(error.field) : undefined,
-      };
-    }
-    
-    // Supabase error format
-    if (resp.message) {
-      return {
-        code: String(resp.code || 'INTERNAL_ERROR'),
-        message: String(resp.message),
-      };
-    }
-  }
-  
-  return {
-    code: 'INTERNAL_ERROR',
-    message: getDefaultMessage('INTERNAL_ERROR'),
-  };
-}
-
-/**
- * Get user-friendly message for error code
- */
-export function getDefaultMessage(code: string): string {
-  return ERROR_MESSAGES[code] || ERROR_MESSAGES.INTERNAL_ERROR;
-}
-
-/**
- * Get display message (uses custom message or falls back to default)
- */
-export function getErrorMessage(error: ApiError | null | undefined): string {
-  if (!error) return getDefaultMessage('INTERNAL_ERROR');
-  return error.message || getDefaultMessage(error.code);
-}
-
-/**
- * Check if error is a specific type
- */
-export function isErrorCode(error: unknown, code: string): boolean {
-  if (typeof error === 'object' && error !== null) {
-    const err = error as Record<string, unknown>;
-    return err.code === code || (err.error as Record<string, unknown>)?.code === code;
-  }
-  return false;
-}
-
-/**
- * Handle Supabase query errors with standardized format
- */
-export function handleSupabaseError(error: {
-  code?: string;
-  message?: string;
-  details?: string;
-  hint?: string;
-}): ApiError {
-  // Map Supabase/PostgREST error codes
-  const pgCodeMap: Record<string, string> = {
-    '23505': 'DUPLICATE_RECORD',
-    '23503': 'REFERENCE_ERROR',
-    '23514': 'VALIDATION_ERROR',
-    '42501': 'ACCESS_DENIED',
-    '23502': 'VALIDATION_ERROR',
-    'PGRST301': 'RECORD_NOT_FOUND',
-    'PGRST116': 'RECORD_NOT_FOUND',
-  };
-  
-  const mappedCode = error.code ? pgCodeMap[error.code] : undefined;
-  
-  if (mappedCode) {
-    return {
-      code: mappedCode,
-      message: getDefaultMessage(mappedCode),
-    };
-  }
-  
-  // For other errors, don't expose internal details
-  console.error('Database error:', error);
-  return {
-    code: 'INTERNAL_ERROR',
-    message: getDefaultMessage('INTERNAL_ERROR'),
-  };
-}
-```
-
----
-
-## Files to Create/Modify
-
-| File | Action | Purpose |
-|------|--------|---------|
-| `supabase/migrations/[timestamp]_error_handling.sql` | Create | error_logs table, RPC functions |
-| `supabase/functions/_shared/errorHandler.ts` | Create | Shared error handling for edge functions |
-| `src/lib/errorUtils.ts` | Create | Frontend error handling utilities |
-| `src/hooks/useApiError.ts` | Create | React hook for error state management |
-| `supabase/functions/verify-otp/index.ts` | Modify | Update to use new error handler |
-| `supabase/functions/admin-update-password/index.ts` | Modify | Update to use new error handler |
-| All edge functions | Modify | Standardize error responses |
 
 ---
 
 ## Implementation Summary
 
 ### Database Migration Contents
-- 1 new table (`error_logs`)
-- 3 new functions (`map_pg_error`, `log_error`, `safe_execute`)
-- 3 RLS policies for secure access
-- 2 indexes for query performance
 
-### Frontend Changes
-- New `errorUtils.ts` library with standardized parsing
-- All Supabase query error handlers updated to use `handleSupabaseError()`
-- Toast messages use `getErrorMessage()` for consistency
+| Component | Type | Description |
+|-----------|------|-------------|
+| `patients_full_name_length` | CHECK | 2-100 characters |
+| `patients_age_range` | CHECK | 0-150 |
+| `patients_gender_values` | CHECK | MALE, FEMALE, OTHER |
+| `validate_patient_data()` | TRIGGER | Phone normalization, name validation |
+| `bills_*_positive` | CHECK | Non-negative amounts |
+| `bills_discount_not_exceed_total` | CHECK | Discount <= Total |
+| `test_reports_status_values` | CHECK | pending, in_progress, completed, delivered |
+| `bill_number_sequences` | TABLE | Sequence tracking per lab/month |
+| `generate_bill_number()` | FUNCTION | LAB-YYYYMM-XXXX format |
+| `preview_bill_number()` | FUNCTION | Preview without consuming |
+| `idx_patients_phone_lab_unique` | INDEX | Unique phone per lab |
+| `idx_bills_number_lab_unique` | INDEX | Unique bill number per lab |
 
-### Edge Function Changes
-- All functions import from `_shared/errorHandler.ts`
-- All responses follow `{ success, data?, error? }` format
-- All internal errors logged to `error_logs` table
-- No raw PostgreSQL errors exposed to clients
+### Files to Modify
 
----
-
-## Security Considerations
-
-1. **Never expose internal errors**: All PostgreSQL errors mapped to generic user-friendly messages
-2. **Stack traces logged only**: Detailed error info in `error_logs`, not in API responses
-3. **RLS on error_logs**: Only super_admins and lab_admins can view error logs
-4. **Request body sanitization**: Sensitive fields (passwords) stripped before logging
-5. **Consistent error codes**: Prevents information leakage through error variation
+| File | Changes |
+|------|---------|
+| `supabase/migrations/[new].sql` | All schema changes |
+| `src/components/forms/AddBillForm.tsx` | Use RPC for bill numbers |
+| `src/components/forms/EditBillForm.tsx` | Keep existing bill number |
 
 ---
 
-## Example Usage
+## Rollback Strategy
 
-### Edge Function (After)
-```typescript
-import { errorResponse, successResponse, mapError, throwAppError, ErrorCode } from '../_shared/errorHandler.ts';
+Each constraint is added with `IF NOT EXISTS` or wrapped in a DO block to ensure idempotency. Rollback SQL will be included in comments for each constraint.
 
-serve(async (req) => {
-  try {
-    // Validate input
-    if (!userId) {
-      throwAppError(ErrorCode.VALIDATION_ERROR, 'User ID is required', 'userId');
-    }
-    
-    // Business logic...
-    
-    return successResponse({ user: userData });
-    
-  } catch (error) {
-    const apiError = mapError(error);
-    await logErrorToDb(apiError, req); // Log internally
-    return errorResponse(apiError, getStatusFromErrorCode(apiError.code), corsHeaders);
-  }
-});
+---
+
+## Existing Data Considerations
+
+Before applying constraints, existing data must be validated:
+
+```sql
+-- Check for invalid phone numbers
+SELECT id, phone FROM patients WHERE phone !~ '^[0-9]{10}$';
+
+-- Check for invalid ages
+SELECT id, age FROM patients WHERE age < 0 OR age > 150;
+
+-- Check for duplicate phones per lab
+SELECT lab_id, phone, COUNT(*) FROM patients 
+GROUP BY lab_id, phone HAVING COUNT(*) > 1;
 ```
 
-### Frontend (After)
-```typescript
-import { handleSupabaseError, getErrorMessage } from '@/lib/errorUtils';
-
-const { data, error } = await supabase.from('patients').insert(patient);
-
-if (error) {
-  const apiError = handleSupabaseError(error);
-  toast.error(getErrorMessage(apiError));
-  return;
-}
-```
+If invalid data exists, it will be cleaned up as part of the migration with appropriate notifications to super admins.
 
