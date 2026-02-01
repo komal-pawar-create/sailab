@@ -23,21 +23,21 @@ const BenefitsSection = ({ benefits, sectionContent }: BenefitsSectionProps) => 
   return (
     <>
       <section id="benefits" />
-      <section className="relative py-24 px-4">
+      <section className="relative py-10 md:py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <AnimatedSection animation="fade-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
-                <HeartHandshake className="h-4 w-4 text-primary" />
+                <HeartHandshake className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium text-foreground">
                   {sectionContent?.benefits_badge || t('benefits.badge')}
                 </span>
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
+              <h2 className="text-2xl md:text-4xl font-heading font-semibold mb-6 text-foreground">
                 {sectionContent?.benefits_title || t('benefits.title')}
                 <span className="gradient-text"> {sectionContent?.benefits_title_highlight || t('benefits.titleHighlight')}</span>
               </h2>
-              <p className="text-xl text-muted-foreground mb-8">
+              <p className="text-base md:text-lg text-muted-foreground mb-8">
                 {sectionContent?.benefits_subtitle || t('benefits.subtitle')}
               </p>
               
