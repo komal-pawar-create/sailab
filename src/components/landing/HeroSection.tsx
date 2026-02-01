@@ -17,7 +17,7 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
   
   return (
     <section 
-      className="relative min-h-screen flex items-center justify-center px-4 pt-20 pb-32"
+      className="relative min-h-screen flex items-center justify-center px-4 py-10 md:py-20"
       aria-label="Hero"
     >
       {/* Parallax background pattern */}
@@ -30,14 +30,14 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
       <div className="max-w-6xl mx-auto text-center relative z-10">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-slide-up opacity-0" style={{ animationFillMode: 'forwards' }}>
-          <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
+          <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
           <span className="text-sm font-medium text-foreground">
             {heroContent?.badge_text || t('hero.badge')}
           </span>
         </div>
 
         {/* Main heading - H1 for SEO */}
-        <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up opacity-0 delay-100" style={{ animationFillMode: 'forwards' }}>
+        <h1 className="text-3xl md:text-5xl font-heading font-bold mb-6 animate-slide-up opacity-0 delay-100" style={{ animationFillMode: 'forwards' }}>
           <span className="text-foreground">
             {heroContent?.main_headline?.split(' ').slice(0, 2).join(' ') || t('hero.headline').split(' ').slice(0, 2).join(' ')}
           </span>
@@ -48,7 +48,7 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
         </h1>
 
         {/* Subheading */}
-        <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto animate-slide-up opacity-0 delay-200" style={{ animationFillMode: 'forwards' }}>
+        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto animate-slide-up opacity-0 delay-200" style={{ animationFillMode: 'forwards' }}>
           {heroContent?.sub_headline || t('hero.subheadline')}
         </p>
 

@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 17% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -17,36 +17,36 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 258 90% 60%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 11% 45%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 220 12% 94%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 198 89% 48%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 152 69% 31%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 217 91% 60%;
 
     --radius: 0.75rem;
 
-    /* Futuristic tokens */
-    --primary-glow: 258 90% 70%;
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    /* Design tokens */
+    --primary-glow: 217 91% 70%;
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(152 69% 40%));
     --gradient-subtle: radial-gradient(1200px 600px at 10% -10%, hsl(var(--primary)/0.08), transparent 50%), radial-gradient(800px 400px at 110% 10%, hsl(var(--accent)/0.08), transparent 50%);
     --shadow-elegant: 0 10px 30px -10px hsl(var(--primary)/0.25);
     --shadow-glow: 0 0 40px hsl(var(--primary-glow)/0.35);
 
     /* Landing page specific */
-    --hero-gradient: linear-gradient(135deg, hsl(258 90% 97%) 0%, hsl(198 89% 97%) 50%, hsl(258 90% 98%) 100%);
+    --hero-gradient: linear-gradient(135deg, hsl(217 91% 97%) 0%, hsl(152 69% 97%) 50%, hsl(217 91% 98%) 100%);
     --glass-bg: hsl(0 0% 100% / 0.7);
     --glass-border: hsl(0 0% 100% / 0.3);
 
@@ -400,8 +400,16 @@ All colors MUST be HSL.
   }
   
   .hover-lift:hover {
-    transform: translateY(-8px);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-elegant);
+  }
+  
+  /* Button hover brightness effect */
+  .hover-brightness {
+    transition: filter 0.2s ease;
+  }
+  .hover-brightness:hover {
+    filter: brightness(1.1);
   }
   
   /* Animated border */

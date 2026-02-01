@@ -16,18 +16,18 @@ const FAQSection = ({ faqs }: FAQSectionProps) => {
   const [inquiryDialogOpen, setInquiryDialogOpen] = useState(false);
   
   return (
-    <section id="faq" className="relative py-24 px-4">
+    <section id="faq" className="relative py-10 md:py-20 px-4">
       <div className="max-w-4xl mx-auto">
         <AnimatedSection className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
-            <HelpCircle className="h-4 w-4 text-primary" />
+            <HelpCircle className="h-5 w-5 text-primary" />
             <span className="text-sm font-medium text-foreground">{t('faq.badge')}</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+          <h2 className="text-2xl md:text-4xl font-heading font-semibold mb-4 text-foreground">
             {t('faq.title')}
             <span className="gradient-text"> {t('faq.titleHighlight')}</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
             {t('faq.subtitle')}
           </p>
         </AnimatedSection>

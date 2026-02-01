@@ -17,18 +17,18 @@ const PricingSection = ({ pricingPlans }: PricingSectionProps) => {
   const [inquiryDialogOpen, setInquiryDialogOpen] = useState(false);
   
   return (
-    <section id="pricing" className="relative py-24 px-4 bg-muted/30">
+    <section id="pricing" className="relative py-10 md:py-20 px-4 bg-muted/30">
       <div className="max-w-6xl mx-auto">
         <AnimatedSection className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-4">
-            <CreditCard className="h-4 w-4 text-primary" />
+            <CreditCard className="h-5 w-5 text-primary" />
             <span className="text-sm font-medium text-foreground">{t('pricing.badge')}</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+          <h2 className="text-2xl md:text-4xl font-heading font-semibold mb-4 text-foreground">
             {t('pricing.title')}
             <span className="gradient-text"> {t('pricing.titleHighlight')}</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
             {t('pricing.subtitle')}
           </p>
         </AnimatedSection>

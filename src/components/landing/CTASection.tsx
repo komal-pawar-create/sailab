@@ -13,17 +13,17 @@ const CTASection = ({ ctaContent }: CTASectionProps) => {
   const { t } = useTranslation();
   
   return (
-    <section className="relative py-24 px-4 bg-muted/30">
+    <section className="relative py-10 md:py-20 px-4 bg-muted/30">
       <div className="max-w-4xl mx-auto">
         <div className="relative glass-strong rounded-3xl p-12 text-center overflow-hidden">
           {/* Animated background */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 animate-gradient" />
           
           <div className="relative z-10">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+            <h2 className="text-2xl md:text-4xl font-heading font-semibold mb-4 text-foreground">
               {ctaContent?.final_cta?.title || t('cta.title')}
             </h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
               {ctaContent?.final_cta?.subtitle || t('cta.subtitle')}
             </p>
             
