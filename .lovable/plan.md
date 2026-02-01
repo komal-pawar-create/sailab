@@ -1,362 +1,397 @@
 
-
-# LabFlow API Comprehensive Test Suite
+# LabFlow Production Monitoring System
 
 ## Overview
-Create a production-grade test suite for the LabFlow API that includes automated testing for authentication, CRUD operations, RLS policies, validation, edge cases, and performance metrics. The suite runs as a Supabase Edge Function and returns JSON reports for CI/CD integration.
+Implement a comprehensive production monitoring infrastructure for LabFlow with real-time health checks, error logging, performance metrics, and automated alerting. This enables proactive system monitoring and rapid incident response.
 
 ---
 
 ## Architecture
 
 ```text
-+---------------------------+
-|     run-tests Edge Fn     |
-+---------------------------+
++---------------------------+     +---------------------------+
+|    health-check Edge Fn   |     |  monitoring-dashboard Fn  |
++---------------------------+     +---------------------------+
+            |                                 |
+            v                                 v
++-----------------------------------------------------------+
+|                    Supabase Database                      |
+|  +-------------+  +-------------+  +-------------------+  |
+|  | error_logs  |  |system_health|  | endpoint_metrics  |  |
+|  +-------------+  +-------------+  +-------------------+  |
++-----------------------------------------------------------+
             |
             v
 +---------------------------+
-|     Test Runner Core      |
-|  - Setup / Cleanup        |
-|  - Test Categories        |
-|  - Result Aggregation     |
+|     Alert Processing      |
+|  (check-alerts Edge Fn)   |
 +---------------------------+
             |
-    +-------+-------+-------+-------+-------+
-    |       |       |       |       |       |
-    v       v       v       v       v       v
-  Auth    CRUD    RLS   Validate  Edge  Perf
-  Tests   Tests   Tests  Tests   Cases  Tests
+    +-------+-------+
+    |               |
+    v               v
+  Email           SMS
 ```
 
 ---
 
-## Test Data Fixtures
+## Database Schema
 
-### Test Lab Configuration (TEST_LAB_001)
-```
-Organization: TEST_ORG_001
-Lab: TEST_LAB_001 (initials: "TL")
-Branch: TEST_BRANCH_001 (code: "TB01")
-Users:
-  - test_super_admin@test.labflow.com (super_admin)
-  - test_lab_admin@test.labflow.com (lab_admin)
-  - test_operator@test.labflow.com (branch_operator)
-  - test_operator_other@test.labflow.com (branch_operator - different lab)
-```
+### 1. `error_logs` Table
+Stores application errors with automatic 30-day cleanup.
 
-### Sample Test Data
-- Patient: "TEST PATIENT ONE", phone: "9999999901"
-- Bill: Standard test bill with 2 items
-- Test Report: CBC test in pending status
-- Document: Test PDF document
-- Feedback: 5-star test feedback
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| error_code | text | Error code (e.g., AUTH_001, DB_TIMEOUT) |
+| message | text | Error message |
+| stack_trace | text | Full stack trace |
+| endpoint | text | API endpoint that triggered error |
+| lab_id | uuid | Optional lab context |
+| branch_id | uuid | Optional branch context |
+| user_id | uuid | Optional user context |
+| severity | text | info, warning, error, critical |
+| metadata | jsonb | Additional context (request body, headers) |
+| created_at | timestamptz | Timestamp with auto-cleanup trigger |
 
----
+### 2. `system_health` Table
+Stores periodic health snapshots for trending.
 
-## Test Categories
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| metric_type | text | db_connection, auth_service, storage_service, etc. |
+| metric_value | numeric | Numeric value (response time, count) |
+| status | text | ok, warning, error |
+| lab_id | uuid | Optional lab-specific metric |
+| metadata | jsonb | Additional context |
+| recorded_at | timestamptz | Timestamp |
 
-### 1. Authentication Tests (8 tests)
-| Test ID | Description | Expected |
-|---------|-------------|----------|
-| AUTH_001 | Valid login with username/password | Success, session created |
-| AUTH_002 | Invalid username | Error, no session |
-| AUTH_003 | Invalid password | Error, attempt logged |
-| AUTH_004 | Rate limit after 5 failures | Locked for 15 min |
-| AUTH_005 | Token refresh | New expiry timestamp |
-| AUTH_006 | Logout single session | Session invalidated |
-| AUTH_007 | Logout all sessions | All sessions invalidated |
-| AUTH_008 | Expired session access | 401 Unauthorized |
+### 3. `endpoint_metrics` Table
+Tracks API endpoint performance.
 
-### 2. CRUD Tests (Per Table)
-Tables: patients, bills, bill_payments, test_reports, documents, feedback, patient_followups, test_types
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| endpoint | text | API endpoint path |
+| method | text | GET, POST, PUT, DELETE |
+| response_time_ms | integer | Response time in milliseconds |
+| status_code | integer | HTTP status code |
+| lab_id | uuid | Optional lab context |
+| recorded_at | timestamptz | Timestamp |
 
-| Operation | Tests Per Table |
-|-----------|-----------------|
-| CREATE | Valid insert, required fields, foreign keys |
-| READ | Select by ID, list with filters, pagination |
-| UPDATE | Valid update, partial update, timestamp update |
-| DELETE | Soft/hard delete, cascade verification |
+### 4. `alert_rules` Table
+Configurable alert thresholds.
 
-**Total: ~48 CRUD tests** (6 tests x 8 tables)
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| rule_name | text | Descriptive name |
+| metric_type | text | error_rate, response_time, failed_logins |
+| threshold_value | numeric | Threshold to trigger alert |
+| comparison | text | gt, lt, eq (greater than, less than, equal) |
+| time_window_minutes | integer | Window for aggregation |
+| is_active | boolean | Enable/disable rule |
+| notification_channels | text[] | ['email', 'sms'] |
+| created_at | timestamptz | Timestamp |
 
-### 3. RLS Tests (16 tests)
-| Test ID | Description | Expected |
-|---------|-------------|----------|
-| RLS_001 | Super admin reads all labs | Full access |
-| RLS_002 | Lab admin reads own org only | Filtered by org |
-| RLS_003 | Operator reads own branch only | Filtered by branch |
-| RLS_004 | Cross-tenant patient access | Empty result |
-| RLS_005 | Cross-tenant bill access | Empty result |
-| RLS_006 | Cross-tenant test report access | Empty result |
-| RLS_007 | Cross-tenant document access | Empty result |
-| RLS_008 | Cross-tenant followup access | Empty result |
-| RLS_009 | Operator cannot delete bills | Permission denied |
-| RLS_010 | Lab admin can delete in org | Success |
-| RLS_011 | Super admin can manage all | Full CRUD |
-| RLS_012 | Anonymous cannot access patients | 401 error |
-| RLS_013 | Anonymous cannot access bills | 401 error |
-| RLS_014 | Audit log visibility by role | Scoped access |
-| RLS_015 | Login attempts view (super only) | Scoped access |
-| RLS_016 | Global test types visibility | Public read |
+### 5. `alert_history` Table
+Tracks triggered alerts.
 
-### 4. Validation Tests (20 tests)
-| Test ID | Description | Expected |
-|---------|-------------|----------|
-| VAL_001 | Patient name < 2 chars | Rejected |
-| VAL_002 | Phone number != 10 digits | Rejected |
-| VAL_003 | Bill total < 0 | Rejected |
-| VAL_004 | Invalid email format | Rejected |
-| VAL_005 | Missing required lab_id | Rejected |
-| VAL_006 | Invalid branch_id FK | FK violation |
-| VAL_007 | Invalid patient_id FK | FK violation |
-| VAL_008 | Duplicate bill_number | Unique constraint |
-| VAL_009 | Duplicate patient_id | Unique constraint |
-| VAL_010 | Invalid test status | Check constraint |
-| VAL_011 | Bill date in future | Accepted (valid) |
-| VAL_012 | Negative payment amount | Rejected |
-| VAL_013 | Payment > due amount | Accepted (overpay) |
-| VAL_014 | Empty string patient name | Rejected |
-| VAL_015 | Whitespace-only fields | Trimmed/rejected |
-| VAL_016 | Very long strings (>1000 chars) | Truncated/accepted |
-| VAL_017 | Unicode characters in names | Accepted |
-| VAL_018 | Special chars in phone | Stripped |
-| VAL_019 | HTML in text fields | Stored as-is |
-| VAL_020 | JSON injection in JSONB | Parsed/stored |
-
-### 5. Edge Case Tests (15 tests)
-| Test ID | Description | Expected |
-|---------|-------------|----------|
-| EDGE_001 | SQL injection in username | Escaped, no breach |
-| EDGE_002 | SQL injection in search | Escaped, no breach |
-| EDGE_003 | XSS in patient name | Stored as text |
-| EDGE_004 | Null in optional fields | Accepted |
-| EDGE_005 | Empty array for bill items | Accepted |
-| EDGE_006 | Concurrent bill creation | Sequential numbers |
-| EDGE_007 | Concurrent patient ID gen | Sequential IDs |
-| EDGE_008 | Zero-amount bill | Accepted |
-| EDGE_009 | Past due date | Accepted |
-| EDGE_010 | Leap year date handling | Correct |
-| EDGE_011 | Timezone edge cases | UTC stored |
-| EDGE_012 | Max integer values | Handled |
-| EDGE_013 | Delete patient with bills | FK constraint |
-| EDGE_014 | Circular FK prevention | Not possible |
-| EDGE_015 | Large batch insert (100) | <5s completion |
-
-### 6. Performance Tests (10 tests)
-| Test ID | Description | Target |
-|---------|-------------|--------|
-| PERF_001 | Patient list (1000 rows) | <200ms |
-| PERF_002 | Bill search by date range | <200ms |
-| PERF_003 | Dashboard stats RPC | <100ms |
-| PERF_004 | Patient search by name | <150ms |
-| PERF_005 | Outstanding bills query | <200ms |
-| PERF_006 | Test reports by status | <200ms |
-| PERF_007 | Bill creation transaction | <300ms |
-| PERF_008 | Payment insert + update | <200ms |
-| PERF_009 | Complex join (bill+patient) | <250ms |
-| PERF_010 | Materialized view refresh | <1000ms |
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| rule_id | uuid | Reference to alert_rules |
+| triggered_at | timestamptz | When alert was triggered |
+| resolved_at | timestamptz | When alert was resolved |
+| metric_value | numeric | Actual value that triggered alert |
+| notification_sent | boolean | Whether notification was sent |
+| notification_error | text | Error if notification failed |
 
 ---
 
-## Implementation Details
+## Edge Functions
 
-### File Structure
-```
-supabase/functions/run-tests/
-  index.ts           # Main edge function
-  lib/
-    test-runner.ts   # Test execution engine
-    fixtures.ts      # Test data fixtures
-    assertions.ts    # Custom assertion helpers
-    cleanup.ts       # Test data cleanup
-  tests/
-    auth.ts          # Authentication tests
-    crud.ts          # CRUD operation tests
-    rls.ts           # Row-level security tests
-    validation.ts    # Input validation tests
-    edge-cases.ts    # Edge case tests
-    performance.ts   # Performance benchmark tests
-```
+### 1. `health-check` Edge Function
+Lightweight endpoint for uptime monitoring.
 
-### Edge Function Entry Point
-```typescript
-// Endpoints:
-// POST /run-tests - Run all tests
-// POST /run-tests?category=auth - Run specific category
-// GET /run-tests/coverage - Get test coverage report
-// DELETE /run-tests/cleanup - Force cleanup test data
-```
+**Endpoint**: `GET /functions/v1/health-check`
 
-### Response Format
+**Response**:
 ```json
 {
-  "success": true,
-  "timestamp": "2026-02-01T12:30:00Z",
-  "duration_ms": 15420,
-  "summary": {
-    "total": 117,
-    "passed": 115,
-    "failed": 2,
-    "skipped": 0
-  },
-  "categories": {
-    "auth": { "passed": 8, "failed": 0, "duration_ms": 1200 },
-    "crud": { "passed": 48, "failed": 0, "duration_ms": 5400 },
-    "rls": { "passed": 14, "failed": 2, "duration_ms": 3200 },
-    "validation": { "passed": 20, "failed": 0, "duration_ms": 2100 },
-    "edge_cases": { "passed": 15, "failed": 0, "duration_ms": 1800 },
-    "performance": { "passed": 10, "failed": 0, "duration_ms": 1720 }
-  },
-  "failures": [
-    {
-      "test_id": "RLS_005",
-      "category": "rls",
-      "description": "Cross-tenant bill access",
-      "expected": "Empty result",
-      "actual": "Returned 1 row",
-      "error": "RLS policy not filtering correctly"
+  "status": "healthy",
+  "timestamp": "2026-02-01T12:00:00Z",
+  "checks": {
+    "database": {
+      "status": "ok",
+      "response_time_ms": 12
+    },
+    "auth": {
+      "status": "ok",
+      "response_time_ms": 8
+    },
+    "storage": {
+      "status": "ok",
+      "response_time_ms": 15
     }
-  ],
-  "coverage": {
-    "tables_tested": ["patients", "bills", "test_reports", "..."],
-    "rpc_functions_tested": ["check_login_rate_limit", "generate_patient_id", "..."],
-    "untested_tables": [],
-    "coverage_percent": 95.2
+  },
+  "version": "1.0.0"
+}
+```
+
+**Checks performed**:
+1. **Database**: Simple query (`SELECT 1`)
+2. **Auth service**: Validate service role key
+3. **Storage**: List buckets
+
+### 2. `monitoring-dashboard` Edge Function
+Aggregated metrics for admin dashboard.
+
+**Endpoint**: `POST /functions/v1/monitoring-dashboard`
+
+**Request** (optional filters):
+```json
+{
+  "time_range": "24h",
+  "lab_id": "uuid"
+}
+```
+
+**Response**:
+```json
+{
+  "summary": {
+    "requests_per_minute": 45.2,
+    "error_rate_percent": 0.8,
+    "avg_response_time_ms": 85,
+    "active_sessions": 142,
+    "daily_active_users": 89
+  },
+  "errors": {
+    "total_24h": 127,
+    "by_severity": {
+      "critical": 0,
+      "error": 12,
+      "warning": 115
+    },
+    "top_endpoints": [
+      { "endpoint": "/api/patients", "count": 45 },
+      { "endpoint": "/api/bills", "count": 32 }
+    ]
+  },
+  "performance": {
+    "slowest_endpoints": [
+      { "endpoint": "/api/reports/export", "avg_ms": 450 },
+      { "endpoint": "/api/bills/search", "avg_ms": 280 }
+    ],
+    "p95_response_time_ms": 220,
+    "p99_response_time_ms": 450
+  },
+  "storage": {
+    "total_usage_mb": 4521,
+    "by_lab": [
+      { "lab_name": "Lab A", "usage_mb": 1200 },
+      { "lab_name": "Lab B", "usage_mb": 890 }
+    ]
   }
 }
 ```
 
----
+### 3. `check-alerts` Edge Function
+Scheduled function to evaluate alert rules.
 
-## Technical Implementation
+**Trigger**: Cron job every 5 minutes
 
-### 1. Test Data Isolation
-- All test data prefixed with `TEST_` or uses specific test IDs
-- Cleanup runs automatically after tests
-- Manual cleanup endpoint for stuck test data
-
-### 2. Authentication Simulation
-```typescript
-// Create test users with service role key
-const supabaseAdmin = createClient(url, serviceRoleKey);
-
-// Simulate user auth for RLS testing
-const userClient = createClient(url, anonKey, {
-  global: { headers: { Authorization: `Bearer ${userToken}` } }
-});
-```
-
-### 3. Performance Measurement
-```typescript
-const startTime = performance.now();
-await query();
-const duration = performance.now() - startTime;
-assert(duration < 200, `Query took ${duration}ms, expected <200ms`);
-```
-
-### 4. CI/CD Integration
-- Webhook-compatible endpoint
-- Supports `X-Webhook-Secret` header for security
-- Returns non-200 status on failures for CI pipelines
+**Logic**:
+1. Fetch active alert rules
+2. For each rule, aggregate metrics within time window
+3. Compare against thresholds
+4. If triggered, send notifications and log to alert_history
+5. Auto-resolve alerts when conditions normalize
 
 ---
 
-## Database Migration
+## Alert Rules (Pre-configured)
 
-### Test Data Functions
+| Rule | Metric | Threshold | Window |
+|------|--------|-----------|--------|
+| High Error Rate | error_rate | > 5% | 15 min |
+| Slow Response | avg_response_time | > 500ms | 10 min |
+| Login Attacks | failed_logins | > 10/min | 5 min |
+| Database Slow | db_response_time | > 1000ms | 5 min |
+| Storage Critical | storage_usage | > 90% | 1 hour |
+
+---
+
+## Database Functions
+
+### `log_application_error()`
+RPC function to log errors from edge functions.
+
 ```sql
--- Function to setup test environment
-CREATE OR REPLACE FUNCTION setup_test_environment()
-RETURNS jsonb SECURITY DEFINER AS $$
-  -- Creates TEST_ORG_001, TEST_LAB_001, TEST_BRANCH_001
-  -- Creates test users
-  -- Returns created IDs for test reference
-$$;
+CREATE OR REPLACE FUNCTION log_application_error(
+  p_error_code TEXT,
+  p_message TEXT,
+  p_stack_trace TEXT DEFAULT NULL,
+  p_endpoint TEXT DEFAULT NULL,
+  p_lab_id UUID DEFAULT NULL,
+  p_severity TEXT DEFAULT 'error',
+  p_metadata JSONB DEFAULT NULL
+) RETURNS UUID
+```
 
--- Function to cleanup test data
-CREATE OR REPLACE FUNCTION cleanup_test_environment()
-RETURNS void SECURITY DEFINER AS $$
-  -- Deletes all records with TEST_ prefix
-  -- Removes test users
-$$;
+### `get_monitoring_metrics()`
+RPC function for dashboard aggregation.
+
+```sql
+CREATE OR REPLACE FUNCTION get_monitoring_metrics(
+  p_time_range INTERVAL DEFAULT '24 hours',
+  p_lab_id UUID DEFAULT NULL
+) RETURNS JSONB
+```
+
+### `cleanup_old_error_logs()`
+Scheduled function for 30-day cleanup.
+
+```sql
+CREATE OR REPLACE FUNCTION cleanup_old_error_logs()
+RETURNS INTEGER -- Returns count of deleted rows
 ```
 
 ---
 
-## Configuration
+## RLS Policies
 
-### supabase/config.toml addition
+### `error_logs`
+- Super Admin: Full read access
+- Lab Admin: Read errors for their lab only
+- Others: No access
+
+### `system_health`
+- Super Admin: Full read access
+- Others: No access
+
+### `endpoint_metrics`
+- Super Admin: Full read access
+- Others: No access
+
+### `alert_rules`
+- Super Admin: Full CRUD
+- Others: No access
+
+### `alert_history`
+- Super Admin: Full read access
+- Others: No access
+
+---
+
+## Implementation Tasks
+
+### Phase 1: Database Setup
+1. Create `error_logs` table with indexes on (created_at, lab_id, severity)
+2. Create `system_health` table with indexes on (recorded_at, metric_type)
+3. Create `endpoint_metrics` table with indexes on (recorded_at, endpoint)
+4. Create `alert_rules` and `alert_history` tables
+5. Create RLS policies for all tables
+6. Create `log_application_error()` RPC
+7. Create `get_monitoring_metrics()` RPC
+8. Create `cleanup_old_error_logs()` function with pg_cron trigger
+
+### Phase 2: Edge Functions
+1. Create `health-check` edge function
+   - Database connectivity check
+   - Auth service check
+   - Storage service check
+   - Response time measurement
+2. Create `monitoring-dashboard` edge function
+   - Aggregate metrics from all tables
+   - Calculate error rates, response times, DAU
+   - Return JSON report
+3. Create `check-alerts` edge function
+   - Evaluate alert rules
+   - Trigger notifications via existing SMS/email functions
+   - Log alert history
+
+### Phase 3: Cron Jobs
+1. Set up `check-alerts` to run every 5 minutes
+2. Set up `cleanup_old_error_logs` to run daily
+
+### Phase 4: Integration
+1. Update `supabase/config.toml` with new functions
+2. Integrate error logging into existing edge functions
+3. Add endpoint metrics collection middleware
+
+---
+
+## Configuration Updates
+
+### supabase/config.toml
 ```toml
-[functions.run-tests]
-verify_jwt = false  # Uses X-Webhook-Secret for auth
-```
+[functions.health-check]
+verify_jwt = false
 
-### Environment Variables
-- Uses existing `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
-- Optional: `TEST_WEBHOOK_SECRET` for CI/CD security
+[functions.monitoring-dashboard]
+verify_jwt = true
+
+[functions.check-alerts]
+verify_jwt = false
+```
 
 ---
 
-## Deliverables
+## Cron Job Setup (pg_cron)
 
-1. **Edge Function**: `supabase/functions/run-tests/index.ts`
-   - Main test runner with all categories
-   - JSON report generation
-   - Webhook support for CI/CD
+```sql
+-- Check alerts every 5 minutes
+SELECT cron.schedule(
+  'check-alerts-job',
+  '*/5 * * * *',
+  $$
+  SELECT net.http_post(
+    url:='https://jlqocytwodbbebrgboaw.supabase.co/functions/v1/check-alerts',
+    headers:='{"Content-Type": "application/json", "Authorization": "Bearer <ANON_KEY>"}'::jsonb
+  );
+  $$
+);
 
-2. **Database Migration**: Test environment setup/cleanup functions
-   - `setup_test_environment()` RPC
-   - `cleanup_test_environment()` RPC
-
-3. **Test Coverage Endpoint**:
-   - Lists all tables and their test coverage
-   - Shows untested areas
-   - Generates coverage percentage
-
-4. **Documentation**:
-   - Test case descriptions
-   - Expected behaviors
-   - CI/CD integration guide
+-- Cleanup old error logs daily at 3 AM
+SELECT cron.schedule(
+  'cleanup-error-logs',
+  '0 3 * * *',
+  $$SELECT cleanup_old_error_logs()$$
+);
+```
 
 ---
 
-## Test Execution Flow
+## File Changes Summary
 
-```text
-1. Request received
-      |
-2. Validate webhook secret (if provided)
-      |
-3. Setup test environment
-   - Create TEST_ORG_001, TEST_LAB_001, TEST_BRANCH_001
-   - Create test users and get auth tokens
-      |
-4. Run test categories (parallel where safe)
-   - Auth tests (sequential - rate limiting)
-   - CRUD tests (parallel by table)
-   - RLS tests (sequential - user switching)
-   - Validation tests (parallel)
-   - Edge case tests (parallel)
-   - Performance tests (sequential - timing)
-      |
-5. Aggregate results
-      |
-6. Cleanup test environment
-   - Delete all TEST_ prefixed data
-   - Remove test users
-      |
-7. Return JSON report
-```
+| File | Action |
+|------|--------|
+| Migration: Create monitoring tables | Create |
+| `supabase/functions/health-check/index.ts` | Create |
+| `supabase/functions/monitoring-dashboard/index.ts` | Create |
+| `supabase/functions/check-alerts/index.ts` | Create |
+| `supabase/config.toml` | Update |
 
 ---
 
 ## Security Considerations
 
-1. **Test data isolation**: All test data uses distinct prefixes
-2. **No production data access**: Tests only touch TEST_ records
-3. **Service role key**: Only used for setup/cleanup
-4. **Webhook secret**: Prevents unauthorized test runs
-5. **Rate limiting**: Auth tests respect rate limits
-6. **Audit logging**: Test actions excluded from audit logs
+1. **health-check**: Public endpoint (no JWT) for external uptime monitors
+2. **monitoring-dashboard**: Requires authentication, super_admin role
+3. **check-alerts**: No JWT but uses service role key internally
+4. **Error logs**: Never log sensitive data (passwords, tokens, PII)
+5. **Alerts**: Rate-limit notification sending to prevent spam
 
+---
+
+## Success Metrics
+
+After implementation:
+- Health check responds in < 50ms
+- Dashboard loads metrics in < 500ms
+- Alerts fire within 5 minutes of threshold breach
+- Error logs auto-cleanup maintains < 30 days of data
+- Storage per lab tracked in real-time
