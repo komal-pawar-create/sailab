@@ -1,405 +1,362 @@
 
-# LabFlow Database Production Optimization Plan
+
+# LabFlow API Comprehensive Test Suite
 
 ## Overview
-Optimize the LabFlow database for production scale (100k+ records) by adding strategic indexes, partial indexes for common filters, a materialized view for dashboard statistics, and preparing for future partitioning.
+Create a production-grade test suite for the LabFlow API that includes automated testing for authentication, CRUD operations, RLS policies, validation, edge cases, and performance metrics. The suite runs as a Supabase Edge Function and returns JSON reports for CI/CD integration.
 
 ---
 
-## Current State Analysis
+## Architecture
 
-### Query Patterns Identified
-
-| Table | Primary Query Patterns | Filters Used |
-|-------|----------------------|--------------|
-| **patients** | List by lab/branch, search by name/phone/patient_id, date filtering | `lab_id`, `branch_id`, `created_at`, `full_name ILIKE`, `phone ILIKE` |
-| **bills** | List by lab/branch, date range, status filtering, join to patients | `lab_id`, `branch_id`, `bill_date`, `status`, `patient_id` |
-| **test_reports** | List by lab/branch, date range, status filtering, join to patients | `lab_id`, `branch_id`, `test_date`, `status`, `patient_id` |
-| **bill_payments** | List by branch, date range, join to bills | `branch_id`, `payment_date`, `bill_id` |
-| **documents** | List by branch, date range, file type filtering | `branch_id`, `created_at`, `file_type` |
-| **test_types** | List by branch/lab | `lab_id`, `branch_id` |
-
-### Dashboard Stats Queries (Performance Critical)
-The dashboard executes 5+ parallel count queries on every load:
-- `patients` count with branch + date filter
-- `test_reports` count with branch + date filter  
-- `documents` count with branch + date filter
-- `bills` sum of due_amount with branch + date filter
-- `documents` count where file_type = 'image/jpeg'
-
----
-
-## Implementation Plan
-
-### Phase 1: B-Tree Indexes for Core Tables
-
-#### patients Table
-```sql
--- Primary lookup index (already exists via RLS, but explicit helps)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_patients_lab_id 
-  ON public.patients (lab_id);
-
--- Branch-scoped queries (operators see their branch)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_patients_branch_id 
-  ON public.patients (branch_id);
-
--- Search by name within lab (dashboard search)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_patients_lab_full_name 
-  ON public.patients (lab_id, full_name);
-
--- Phone lookup (unique per lab, but also searched)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_patients_lab_phone 
-  ON public.patients (lab_id, phone);
-
--- Date-range queries on dashboard
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_patients_branch_created 
-  ON public.patients (branch_id, created_at DESC);
-```
-
-#### bills Table
-```sql
--- Status + date queries (most common dashboard filter)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bills_lab_status_date 
-  ON public.bills (lab_id, status, bill_date DESC);
-
--- Branch scoped date queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bills_branch_date 
-  ON public.bills (branch_id, bill_date DESC);
-
--- Patient history lookups
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bills_patient_id 
-  ON public.bills (patient_id);
-
--- Outstanding amount queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bills_lab_due_amount 
-  ON public.bills (lab_id, due_amount) 
-  WHERE due_amount > 0;
-```
-
-#### test_reports Table
-```sql
--- Status filtering (pending, in_progress commonly queried)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_test_reports_lab_status 
-  ON public.test_reports (lab_id, status);
-
--- Branch + date queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_test_reports_branch_date 
-  ON public.test_reports (branch_id, test_date DESC);
-
--- Patient history lookups
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_test_reports_patient_id 
-  ON public.test_reports (patient_id);
-
--- Date range queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_test_reports_lab_date 
-  ON public.test_reports (lab_id, test_date DESC);
-```
-
-#### bill_payments Table
-```sql
--- Date range queries for collection reports
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bill_payments_branch_date 
-  ON public.bill_payments (branch_id, payment_date DESC);
-
--- Bill lookup for payment history
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bill_payments_bill_id 
-  ON public.bill_payments (bill_id);
-```
-
-#### documents Table
-```sql
--- Branch + date queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_documents_branch_created 
-  ON public.documents (branch_id, created_at DESC);
-
--- File type filtering (JPEG count on dashboard)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_documents_branch_type 
-  ON public.documents (branch_id, file_type);
-```
-
-#### test_types Table
-```sql
--- Lab + branch scoped queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_test_types_lab_id 
-  ON public.test_types (lab_id);
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_test_types_branch_id 
-  ON public.test_types (branch_id);
+```text
++---------------------------+
+|     run-tests Edge Fn     |
++---------------------------+
+            |
+            v
++---------------------------+
+|     Test Runner Core      |
+|  - Setup / Cleanup        |
+|  - Test Categories        |
+|  - Result Aggregation     |
++---------------------------+
+            |
+    +-------+-------+-------+-------+-------+
+    |       |       |       |       |       |
+    v       v       v       v       v       v
+  Auth    CRUD    RLS   Validate  Edge  Perf
+  Tests   Tests   Tests  Tests   Cases  Tests
 ```
 
 ---
 
-### Phase 2: Partial Indexes for Common Filters
+## Test Data Fixtures
 
-```sql
--- Pending bills (frequently queried for outstanding reports)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bills_pending 
-  ON public.bills (lab_id, bill_date DESC) 
-  WHERE status = 'pending';
-
--- Partially paid bills (outstanding reports)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bills_partially_paid 
-  ON public.bills (lab_id, bill_date DESC) 
-  WHERE status = 'partially_paid';
-
--- Outstanding bills (due_amount > 0)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bills_outstanding 
-  ON public.bills (lab_id, due_amount DESC) 
-  WHERE due_amount > 0;
-
--- Active test reports (not delivered yet)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_test_reports_active 
-  ON public.test_reports (lab_id, test_date DESC) 
-  WHERE status != 'delivered';
-
--- Pending test reports only
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_test_reports_pending 
-  ON public.test_reports (lab_id, test_date DESC) 
-  WHERE status = 'pending';
-
--- JPEG images for dashboard count
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_documents_jpeg 
-  ON public.documents (branch_id, created_at DESC) 
-  WHERE file_type = 'image/jpeg';
-
--- Active followups (not completed)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_followups_active 
-  ON public.patient_followups (lab_id, due_at) 
-  WHERE status != 'completed';
+### Test Lab Configuration (TEST_LAB_001)
 ```
+Organization: TEST_ORG_001
+Lab: TEST_LAB_001 (initials: "TL")
+Branch: TEST_BRANCH_001 (code: "TB01")
+Users:
+  - test_super_admin@test.labflow.com (super_admin)
+  - test_lab_admin@test.labflow.com (lab_admin)
+  - test_operator@test.labflow.com (branch_operator)
+  - test_operator_other@test.labflow.com (branch_operator - different lab)
+```
+
+### Sample Test Data
+- Patient: "TEST PATIENT ONE", phone: "9999999901"
+- Bill: Standard test bill with 2 items
+- Test Report: CBC test in pending status
+- Document: Test PDF document
+- Feedback: 5-star test feedback
 
 ---
 
-### Phase 3: Materialized View for Dashboard Stats
+## Test Categories
 
-#### Create Materialized View
-```sql
--- Daily aggregated stats per lab and branch
-CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_daily_stats AS
-SELECT 
-  DATE(p.created_at) as stat_date,
-  p.lab_id,
-  p.branch_id,
-  COUNT(DISTINCT p.id) as patient_count,
-  COALESCE(SUM(b.total_amount), 0) as revenue,
-  COALESCE(SUM(bp.payment_amount), 0) as collections,
-  COUNT(DISTINCT tr.id) FILTER (WHERE tr.status != 'delivered') as pending_reports,
-  COUNT(DISTINCT d.id) as document_count,
-  COUNT(DISTINCT d.id) FILTER (WHERE d.file_type = 'image/jpeg') as jpeg_count
-FROM public.patients p
-LEFT JOIN public.bills b ON b.patient_id = p.id AND DATE(b.bill_date) = DATE(p.created_at)
-LEFT JOIN public.bill_payments bp ON bp.bill_id = b.id AND DATE(bp.payment_date) = DATE(p.created_at)
-LEFT JOIN public.test_reports tr ON tr.patient_id = p.id AND DATE(tr.test_date) = DATE(p.created_at)
-LEFT JOIN public.documents d ON d.patient_id = p.id AND DATE(d.created_at) = DATE(p.created_at)
-GROUP BY DATE(p.created_at), p.lab_id, p.branch_id
-WITH DATA;
+### 1. Authentication Tests (8 tests)
+| Test ID | Description | Expected |
+|---------|-------------|----------|
+| AUTH_001 | Valid login with username/password | Success, session created |
+| AUTH_002 | Invalid username | Error, no session |
+| AUTH_003 | Invalid password | Error, attempt logged |
+| AUTH_004 | Rate limit after 5 failures | Locked for 15 min |
+| AUTH_005 | Token refresh | New expiry timestamp |
+| AUTH_006 | Logout single session | Session invalidated |
+| AUTH_007 | Logout all sessions | All sessions invalidated |
+| AUTH_008 | Expired session access | 401 Unauthorized |
 
--- Unique index required for REFRESH CONCURRENTLY
-CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_daily_stats_pk 
-  ON public.mv_daily_stats (stat_date, lab_id, branch_id);
+### 2. CRUD Tests (Per Table)
+Tables: patients, bills, bill_payments, test_reports, documents, feedback, patient_followups, test_types
 
--- Lookup indexes
-CREATE INDEX IF NOT EXISTS idx_mv_daily_stats_lab 
-  ON public.mv_daily_stats (lab_id, stat_date DESC);
+| Operation | Tests Per Table |
+|-----------|-----------------|
+| CREATE | Valid insert, required fields, foreign keys |
+| READ | Select by ID, list with filters, pagination |
+| UPDATE | Valid update, partial update, timestamp update |
+| DELETE | Soft/hard delete, cascade verification |
 
-CREATE INDEX IF NOT EXISTS idx_mv_daily_stats_branch 
-  ON public.mv_daily_stats (branch_id, stat_date DESC);
-```
+**Total: ~48 CRUD tests** (6 tests x 8 tables)
 
-#### Refresh Function
-```sql
-CREATE OR REPLACE FUNCTION public.refresh_daily_stats()
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_daily_stats;
-END;
-$$;
-```
+### 3. RLS Tests (16 tests)
+| Test ID | Description | Expected |
+|---------|-------------|----------|
+| RLS_001 | Super admin reads all labs | Full access |
+| RLS_002 | Lab admin reads own org only | Filtered by org |
+| RLS_003 | Operator reads own branch only | Filtered by branch |
+| RLS_004 | Cross-tenant patient access | Empty result |
+| RLS_005 | Cross-tenant bill access | Empty result |
+| RLS_006 | Cross-tenant test report access | Empty result |
+| RLS_007 | Cross-tenant document access | Empty result |
+| RLS_008 | Cross-tenant followup access | Empty result |
+| RLS_009 | Operator cannot delete bills | Permission denied |
+| RLS_010 | Lab admin can delete in org | Success |
+| RLS_011 | Super admin can manage all | Full CRUD |
+| RLS_012 | Anonymous cannot access patients | 401 error |
+| RLS_013 | Anonymous cannot access bills | 401 error |
+| RLS_014 | Audit log visibility by role | Scoped access |
+| RLS_015 | Login attempts view (super only) | Scoped access |
+| RLS_016 | Global test types visibility | Public read |
 
-#### pg_cron Scheduling (5-minute refresh)
-```sql
--- Note: pg_cron must be enabled in Supabase Dashboard > Database > Extensions
-SELECT cron.schedule(
-  'refresh-daily-stats',
-  '*/5 * * * *',  -- Every 5 minutes
-  $$SELECT public.refresh_daily_stats()$$
-);
-```
+### 4. Validation Tests (20 tests)
+| Test ID | Description | Expected |
+|---------|-------------|----------|
+| VAL_001 | Patient name < 2 chars | Rejected |
+| VAL_002 | Phone number != 10 digits | Rejected |
+| VAL_003 | Bill total < 0 | Rejected |
+| VAL_004 | Invalid email format | Rejected |
+| VAL_005 | Missing required lab_id | Rejected |
+| VAL_006 | Invalid branch_id FK | FK violation |
+| VAL_007 | Invalid patient_id FK | FK violation |
+| VAL_008 | Duplicate bill_number | Unique constraint |
+| VAL_009 | Duplicate patient_id | Unique constraint |
+| VAL_010 | Invalid test status | Check constraint |
+| VAL_011 | Bill date in future | Accepted (valid) |
+| VAL_012 | Negative payment amount | Rejected |
+| VAL_013 | Payment > due amount | Accepted (overpay) |
+| VAL_014 | Empty string patient name | Rejected |
+| VAL_015 | Whitespace-only fields | Trimmed/rejected |
+| VAL_016 | Very long strings (>1000 chars) | Truncated/accepted |
+| VAL_017 | Unicode characters in names | Accepted |
+| VAL_018 | Special chars in phone | Stripped |
+| VAL_019 | HTML in text fields | Stored as-is |
+| VAL_020 | JSON injection in JSONB | Parsed/stored |
 
----
+### 5. Edge Case Tests (15 tests)
+| Test ID | Description | Expected |
+|---------|-------------|----------|
+| EDGE_001 | SQL injection in username | Escaped, no breach |
+| EDGE_002 | SQL injection in search | Escaped, no breach |
+| EDGE_003 | XSS in patient name | Stored as text |
+| EDGE_004 | Null in optional fields | Accepted |
+| EDGE_005 | Empty array for bill items | Accepted |
+| EDGE_006 | Concurrent bill creation | Sequential numbers |
+| EDGE_007 | Concurrent patient ID gen | Sequential IDs |
+| EDGE_008 | Zero-amount bill | Accepted |
+| EDGE_009 | Past due date | Accepted |
+| EDGE_010 | Leap year date handling | Correct |
+| EDGE_011 | Timezone edge cases | UTC stored |
+| EDGE_012 | Max integer values | Handled |
+| EDGE_013 | Delete patient with bills | FK constraint |
+| EDGE_014 | Circular FK prevention | Not possible |
+| EDGE_015 | Large batch insert (100) | <5s completion |
 
-### Phase 4: Query Optimization Functions
-
-#### Optimized Dashboard Stats RPC
-```sql
--- Fast dashboard stats using materialized view when available
-CREATE OR REPLACE FUNCTION public.get_dashboard_stats(
-  p_lab_id UUID,
-  p_branch_ids UUID[] DEFAULT NULL,
-  p_date_from DATE DEFAULT NULL,
-  p_date_to DATE DEFAULT NULL
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_result jsonb;
-BEGIN
-  SELECT jsonb_build_object(
-    'patients', COALESCE(SUM(patient_count), 0),
-    'revenue', COALESCE(SUM(revenue), 0),
-    'collections', COALESCE(SUM(collections), 0),
-    'pending_reports', COALESCE(SUM(pending_reports), 0),
-    'documents', COALESCE(SUM(document_count), 0),
-    'jpeg_images', COALESCE(SUM(jpeg_count), 0)
-  )
-  INTO v_result
-  FROM public.mv_daily_stats
-  WHERE lab_id = p_lab_id
-    AND (p_branch_ids IS NULL OR branch_id = ANY(p_branch_ids))
-    AND (p_date_from IS NULL OR stat_date >= p_date_from)
-    AND (p_date_to IS NULL OR stat_date <= p_date_to);
-  
-  RETURN COALESCE(v_result, '{"patients":0,"revenue":0,"collections":0,"pending_reports":0,"documents":0,"jpeg_images":0}'::jsonb);
-END;
-$$;
-```
-
----
-
-### Phase 5: Partitioning Strategy (Future - When > 1M Rows)
-
-#### Partition Preparation Function
-```sql
--- This creates a partitioned shadow table for bills
--- To be executed when row count exceeds 1M
-CREATE OR REPLACE FUNCTION public.prepare_bills_partitioning()
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  -- Check current row count
-  IF (SELECT COUNT(*) FROM public.bills) < 1000000 THEN
-    RAISE NOTICE 'Bills table has fewer than 1M rows. Partitioning not needed yet.';
-    RETURN;
-  END IF;
-  
-  -- Create partitioned table structure
-  CREATE TABLE IF NOT EXISTS public.bills_partitioned (
-    LIKE public.bills INCLUDING ALL
-  ) PARTITION BY RANGE (bill_date);
-  
-  -- Create monthly partitions for the last 2 years and next year
-  -- (Actual partition creation would be done via a cron job)
-  RAISE NOTICE 'Partitioned table created. Run migration to move data.';
-END;
-$$;
-```
+### 6. Performance Tests (10 tests)
+| Test ID | Description | Target |
+|---------|-------------|--------|
+| PERF_001 | Patient list (1000 rows) | <200ms |
+| PERF_002 | Bill search by date range | <200ms |
+| PERF_003 | Dashboard stats RPC | <100ms |
+| PERF_004 | Patient search by name | <150ms |
+| PERF_005 | Outstanding bills query | <200ms |
+| PERF_006 | Test reports by status | <200ms |
+| PERF_007 | Bill creation transaction | <300ms |
+| PERF_008 | Payment insert + update | <200ms |
+| PERF_009 | Complex join (bill+patient) | <250ms |
+| PERF_010 | Materialized view refresh | <1000ms |
 
 ---
 
-### Phase 6: EXPLAIN ANALYZE Comments
+## Implementation Details
 
-Add SQL comments documenting expected query plans for complex queries:
-
-```sql
--- EXPLAIN ANALYZE annotation for dashboard patient query
-COMMENT ON INDEX idx_patients_branch_created IS 
-'Expected plan: Index Scan on idx_patients_branch_created
- Filters: branch_id = $1, created_at >= $2
- Expected rows: ~1000 per day per branch
- Index size estimate: ~50MB per 100k patients';
-
--- EXPLAIN ANALYZE annotation for pending bills query
-COMMENT ON INDEX idx_bills_outstanding IS 
-'Expected plan: Index Scan using idx_bills_outstanding
- Filters: lab_id = $1, due_amount > 0
- Should avoid sequential scan on large tables
- Typical selectivity: 10-30% of bills';
+### File Structure
+```
+supabase/functions/run-tests/
+  index.ts           # Main edge function
+  lib/
+    test-runner.ts   # Test execution engine
+    fixtures.ts      # Test data fixtures
+    assertions.ts    # Custom assertion helpers
+    cleanup.ts       # Test data cleanup
+  tests/
+    auth.ts          # Authentication tests
+    crud.ts          # CRUD operation tests
+    rls.ts           # Row-level security tests
+    validation.ts    # Input validation tests
+    edge-cases.ts    # Edge case tests
+    performance.ts   # Performance benchmark tests
 ```
 
----
-
-## Migration File Summary
-
-The migration will create:
-- **15 B-tree indexes** on frequently queried columns
-- **7 partial indexes** for common filter patterns
-- **1 materialized view** for dashboard stats aggregation
-- **2 RPC functions** (refresh + get_dashboard_stats)
-- **1 pg_cron job** for 5-minute refresh
-- **Query plan comments** for debugging
-
----
-
-## Frontend Integration (Optional)
-
-After migration, the dashboard queries can be optimized to use the new RPC:
-
+### Edge Function Entry Point
 ```typescript
-// In useDashboardQueries.ts - optional optimization
-export function useStatsQuery(filters) {
-  return useQuery({
-    queryKey: ['dashboardStats', filters],
-    queryFn: async () => {
-      // Use the optimized RPC instead of multiple queries
-      const { data, error } = await supabase.rpc('get_dashboard_stats', {
-        p_lab_id: profile.lab_id,
-        p_branch_ids: filters.branchIds,
-        p_date_from: getDateFilter(filters.timePeriod)?.start,
-        p_date_to: getDateFilter(filters.timePeriod)?.end
-      });
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+// Endpoints:
+// POST /run-tests - Run all tests
+// POST /run-tests?category=auth - Run specific category
+// GET /run-tests/coverage - Get test coverage report
+// DELETE /run-tests/cleanup - Force cleanup test data
+```
+
+### Response Format
+```json
+{
+  "success": true,
+  "timestamp": "2026-02-01T12:30:00Z",
+  "duration_ms": 15420,
+  "summary": {
+    "total": 117,
+    "passed": 115,
+    "failed": 2,
+    "skipped": 0
+  },
+  "categories": {
+    "auth": { "passed": 8, "failed": 0, "duration_ms": 1200 },
+    "crud": { "passed": 48, "failed": 0, "duration_ms": 5400 },
+    "rls": { "passed": 14, "failed": 2, "duration_ms": 3200 },
+    "validation": { "passed": 20, "failed": 0, "duration_ms": 2100 },
+    "edge_cases": { "passed": 15, "failed": 0, "duration_ms": 1800 },
+    "performance": { "passed": 10, "failed": 0, "duration_ms": 1720 }
+  },
+  "failures": [
+    {
+      "test_id": "RLS_005",
+      "category": "rls",
+      "description": "Cross-tenant bill access",
+      "expected": "Empty result",
+      "actual": "Returned 1 row",
+      "error": "RLS policy not filtering correctly"
+    }
+  ],
+  "coverage": {
+    "tables_tested": ["patients", "bills", "test_reports", "..."],
+    "rpc_functions_tested": ["check_login_rate_limit", "generate_patient_id", "..."],
+    "untested_tables": [],
+    "coverage_percent": 95.2
+  }
 }
 ```
 
 ---
 
-## Performance Expectations
+## Technical Implementation
 
-| Metric | Before | After (Expected) |
-|--------|--------|------------------|
-| Dashboard load time | 800-1500ms | 100-300ms |
-| Patient search | 200-500ms | 50-100ms |
-| Bills by status | 300-800ms | 50-150ms |
-| Outstanding report | 500-1000ms | 100-200ms |
-| Collection report | 400-900ms | 100-250ms |
+### 1. Test Data Isolation
+- All test data prefixed with `TEST_` or uses specific test IDs
+- Cleanup runs automatically after tests
+- Manual cleanup endpoint for stuck test data
+
+### 2. Authentication Simulation
+```typescript
+// Create test users with service role key
+const supabaseAdmin = createClient(url, serviceRoleKey);
+
+// Simulate user auth for RLS testing
+const userClient = createClient(url, anonKey, {
+  global: { headers: { Authorization: `Bearer ${userToken}` } }
+});
+```
+
+### 3. Performance Measurement
+```typescript
+const startTime = performance.now();
+await query();
+const duration = performance.now() - startTime;
+assert(duration < 200, `Query took ${duration}ms, expected <200ms`);
+```
+
+### 4. CI/CD Integration
+- Webhook-compatible endpoint
+- Supports `X-Webhook-Secret` header for security
+- Returns non-200 status on failures for CI pipelines
 
 ---
 
-## Rollback Strategy
+## Database Migration
 
-All indexes use `CREATE INDEX CONCURRENTLY IF NOT EXISTS`, allowing safe rollback:
-
+### Test Data Functions
 ```sql
--- Rollback script (if needed)
-DROP INDEX CONCURRENTLY IF EXISTS idx_patients_lab_id;
-DROP INDEX CONCURRENTLY IF EXISTS idx_patients_branch_id;
--- ... (other indexes)
-DROP MATERIALIZED VIEW IF EXISTS mv_daily_stats;
-DROP FUNCTION IF EXISTS get_dashboard_stats;
-DROP FUNCTION IF EXISTS refresh_daily_stats;
-SELECT cron.unschedule('refresh-daily-stats');
+-- Function to setup test environment
+CREATE OR REPLACE FUNCTION setup_test_environment()
+RETURNS jsonb SECURITY DEFINER AS $$
+  -- Creates TEST_ORG_001, TEST_LAB_001, TEST_BRANCH_001
+  -- Creates test users
+  -- Returns created IDs for test reference
+$$;
+
+-- Function to cleanup test data
+CREATE OR REPLACE FUNCTION cleanup_test_environment()
+RETURNS void SECURITY DEFINER AS $$
+  -- Deletes all records with TEST_ prefix
+  -- Removes test users
+$$;
 ```
 
 ---
 
-## Technical Notes
+## Configuration
 
-1. **CONCURRENTLY**: All indexes use `CREATE INDEX CONCURRENTLY` to avoid table locks during creation
-2. **IF NOT EXISTS**: Ensures idempotent migration that can be re-run safely
-3. **pg_cron**: Requires enabling the extension in Supabase Dashboard before the cron job can be scheduled
-4. **Materialized View Refresh**: Uses `REFRESH CONCURRENTLY` which requires a unique index on the view
-5. **RLS Compatibility**: All indexes are created on user-facing columns that align with existing RLS policies
+### supabase/config.toml addition
+```toml
+[functions.run-tests]
+verify_jwt = false  # Uses X-Webhook-Secret for auth
+```
+
+### Environment Variables
+- Uses existing `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+- Optional: `TEST_WEBHOOK_SECRET` for CI/CD security
+
+---
+
+## Deliverables
+
+1. **Edge Function**: `supabase/functions/run-tests/index.ts`
+   - Main test runner with all categories
+   - JSON report generation
+   - Webhook support for CI/CD
+
+2. **Database Migration**: Test environment setup/cleanup functions
+   - `setup_test_environment()` RPC
+   - `cleanup_test_environment()` RPC
+
+3. **Test Coverage Endpoint**:
+   - Lists all tables and their test coverage
+   - Shows untested areas
+   - Generates coverage percentage
+
+4. **Documentation**:
+   - Test case descriptions
+   - Expected behaviors
+   - CI/CD integration guide
+
+---
+
+## Test Execution Flow
+
+```text
+1. Request received
+      |
+2. Validate webhook secret (if provided)
+      |
+3. Setup test environment
+   - Create TEST_ORG_001, TEST_LAB_001, TEST_BRANCH_001
+   - Create test users and get auth tokens
+      |
+4. Run test categories (parallel where safe)
+   - Auth tests (sequential - rate limiting)
+   - CRUD tests (parallel by table)
+   - RLS tests (sequential - user switching)
+   - Validation tests (parallel)
+   - Edge case tests (parallel)
+   - Performance tests (sequential - timing)
+      |
+5. Aggregate results
+      |
+6. Cleanup test environment
+   - Delete all TEST_ prefixed data
+   - Remove test users
+      |
+7. Return JSON report
+```
+
+---
+
+## Security Considerations
+
+1. **Test data isolation**: All test data uses distinct prefixes
+2. **No production data access**: Tests only touch TEST_ records
+3. **Service role key**: Only used for setup/cleanup
+4. **Webhook secret**: Prevents unauthorized test runs
+5. **Rate limiting**: Auth tests respect rate limits
+6. **Audit logging**: Test actions excluded from audit logs
+
