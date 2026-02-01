@@ -20,3 +20,21 @@ verify_jwt = false
 
 [functions.run-tests]
 verify_jwt = false
+
+[functions.health-check]
+verify_jwt = false
+
+[functions.monitoring-dashboard]
+verify_jwt = false
+
+[functions.check-alerts]
+verify_jwt = false
+
+[functions.send-email-notification]
+verify_jwt = false
+
+[functions.send-sms-notification]
+verify_jwt = false
+
+[functions.send-whatsapp-notification]
+verify_jwt = false
