@@ -203,6 +203,41 @@ export type Database = {
           },
         ]
       }
+      bill_number_sequences: {
+        Row: {
+          created_at: string | null
+          id: string
+          lab_id: string
+          last_sequence: number
+          updated_at: string | null
+          year_month: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lab_id: string
+          last_sequence?: number
+          updated_at?: string | null
+          year_month: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lab_id?: string
+          last_sequence?: number
+          updated_at?: string | null
+          year_month?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_number_sequences_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_payments: {
         Row: {
           bill_id: string
@@ -2071,6 +2106,7 @@ export type Database = {
         }
         Returns: string
       }
+      generate_bill_number: { Args: { p_lab_id: string }; Returns: string }
       generate_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
@@ -2138,6 +2174,7 @@ export type Database = {
         }
         Returns: Json
       }
+      preview_bill_number: { Args: { p_lab_id: string }; Returns: string }
       preview_patient_id: {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
