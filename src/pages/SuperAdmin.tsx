@@ -25,7 +25,8 @@ import { OnboardingWizard } from '@/components/super-admin/OnboardingWizard';
 import { SystemHealthTab } from '@/components/super-admin/SystemHealthTab';
 import { RevenueAnalyticsTab } from '@/components/super-admin/RevenueAnalyticsTab';
 import { CohortAnalysisTab } from '@/components/super-admin/CohortAnalysisTab';
-import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock, Users, IndianRupee, TrendingUp, CreditCard, Rocket, Activity, PieChart, Target } from 'lucide-react';
+import { ProductionMonitoringTab } from '@/components/super-admin/ProductionMonitoringTab';
+import { Edit, Database, Trash2, Settings, BarChart3, Video, Play, ExternalLink, Layout, Building2, UserX, UserCheck, Shield, AlertTriangle, CheckCircle, Clock, Users, IndianRupee, TrendingUp, CreditCard, Rocket, Activity, PieChart, Target, Gauge } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const rolePermissions: Record<string, string[]> = {
@@ -506,6 +507,10 @@ export default function SuperAdmin() {
               <Activity className="h-4 w-4" />
               System Health
             </TabsTrigger>
+            <TabsTrigger value="monitoring" className="flex items-center gap-1">
+              <Gauge className="h-4 w-4" />
+              Monitoring
+            </TabsTrigger>
             <TabsTrigger value="revenue" className="flex items-center gap-1">
               <PieChart className="h-4 w-4" />
               Revenue
@@ -677,6 +682,11 @@ export default function SuperAdmin() {
           {/* System Health Tab */}
           <TabsContent value="health" className="space-y-6">
             <SystemHealthTab />
+          </TabsContent>
+
+          {/* Production Monitoring Tab */}
+          <TabsContent value="monitoring" className="space-y-6">
+            <ProductionMonitoringTab />
           </TabsContent>
 
           {/* Revenue Analytics Tab */}
