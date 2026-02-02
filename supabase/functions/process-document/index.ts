@@ -8,6 +8,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const securityHeaders = {
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:;",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
+
 // Medical report field patterns - Updated to capture doctor details and signatures
 const MEDICAL_PATTERNS = {
   patientName: /(?:PATIENT\s*NAME|NAME|MR\.|MRS\.|MS\.|MASTER)\s*:?\s*(.+?)(?:\n|$)/i,
@@ -486,6 +495,7 @@ serve(async (req) => {
           status: 400, 
           headers: { 
             ...corsHeaders, 
+            ...securityHeaders,
             'Content-Type': 'application/json' 
           } 
         }
@@ -505,6 +515,7 @@ serve(async (req) => {
           status: 400, 
           headers: { 
             ...corsHeaders, 
+            ...securityHeaders,
             'Content-Type': 'application/json' 
           } 
         }
@@ -821,6 +832,7 @@ serve(async (req) => {
         { 
           headers: { 
             ...corsHeaders, 
+            ...securityHeaders,
             'Content-Type': 'application/json' 
           } 
         }
@@ -840,6 +852,7 @@ serve(async (req) => {
         status: 400, 
         headers: { 
           ...corsHeaders, 
+          ...securityHeaders,
           'Content-Type': 'application/json' 
         } 
       }

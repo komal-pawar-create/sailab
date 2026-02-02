@@ -5,6 +5,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const securityHeaders = {
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:;",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
+
 interface SmsRequest {
   to: string;
   message: string;
@@ -54,7 +63,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     return new Response(JSON.stringify({ success: true, data: result }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, ...securityHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {
     console.error('Error sending SMS:', error);
@@ -62,7 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ success: false, error: error.message }),
       {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, ...securityHeaders, 'Content-Type': 'application/json' },
       }
     );
   }
