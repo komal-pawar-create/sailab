@@ -1,200 +1,158 @@
 
-# Production Monitoring Dashboard UI
+# Security Headers Implementation via Edge Function Middleware
 
 ## Overview
-Create a new tab in the Super Admin dashboard that displays real-time production monitoring metrics from the `monitoring-dashboard` edge function. This tab will provide Super Admins with visibility into system performance, errors, and alerts.
+Add comprehensive security headers (CSP, X-Frame-Options, X-Content-Type-Options, and additional protections) to all Supabase Edge Functions to harden the API against common web security vulnerabilities like clickjacking, MIME sniffing attacks, and content injection.
 
 ---
 
-## Architecture
+## Security Headers to Add
 
-The new `ProductionMonitoringTab` component will:
-1. Call the `monitoring-dashboard` edge function to fetch aggregated metrics
-2. Display key performance indicators (KPIs) in stat cards
-3. Show charts for response times and error distribution
-4. List recent alerts and their status
-5. Provide time range filtering (1h, 24h, 7d, 30d)
-
----
-
-## UI Components
-
-### 1. Summary Stats Row (4 cards)
-- **Requests/min**: Real-time throughput with trend indicator
-- **Error Rate**: Percentage with color-coded severity
-- **Avg Response Time**: In milliseconds with P95/P99 breakdown
-- **Active Sessions**: Current active users/sessions
-
-### 2. Performance Section
-- **Slowest Endpoints Table**: Top 5 endpoints by response time
-- **Response Time Distribution Chart**: Line chart showing P50, P95, P99 over time
-
-### 3. Errors Section
-- **Error Breakdown by Severity**: Pie chart (critical/error/warning/info)
-- **Top Error Endpoints**: Bar chart of endpoints with most errors
-
-### 4. Storage Section
-- **Storage by Lab**: Horizontal bar chart showing usage per lab
-- **Total Storage**: Progress bar with percentage used
-
-### 5. Alerts Panel
-- **Active Alerts**: List of currently triggered alerts
-- **Alert History**: Recent 24h alert triggers with resolution status
+| Header | Value | Purpose |
+|--------|-------|---------|
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';` | Prevents XSS by restricting content sources |
+| `X-Frame-Options` | `DENY` | Prevents clickjacking by blocking iframe embedding |
+| `X-Content-Type-Options` | `nosniff` | Prevents MIME type sniffing attacks |
+| `X-XSS-Protection` | `1; mode=block` | Legacy XSS protection for older browsers |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Controls referrer information leakage |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Restricts browser feature access |
 
 ---
 
-## Time Range Filter
-Dropdown selector with options:
-- Last 1 hour
-- Last 24 hours (default)
-- Last 7 days
-- Last 30 days
+## Implementation Approach
 
----
+Create a centralized security headers object that can be spread into all Edge Function responses. Each function will be updated to include these headers alongside the existing CORS headers.
 
-## Data Flow
-
-```text
-ProductionMonitoringTab
-        |
-        v
-supabase.functions.invoke('monitoring-dashboard', { body: { time_range } })
-        |
-        v
-Parse response and populate state
-        |
-        v
-Render stats, charts, tables
+### New Security Headers Object
+```typescript
+const securityHeaders = {
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:;",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
 ```
+
+### Combined Headers Pattern
+```typescript
+const allHeaders = {
+  ...corsHeaders,
+  ...securityHeaders,
+  'Content-Type': 'application/json',
+};
+
+return new Response(JSON.stringify(data), {
+  status: 200,
+  headers: allHeaders,
+});
+```
+
+---
+
+## Files to Update
+
+All 14 Edge Functions will be updated to include security headers:
+
+| File | Status |
+|------|--------|
+| `supabase/functions/admin-update-password/index.ts` | Update |
+| `supabase/functions/check-alerts/index.ts` | Update |
+| `supabase/functions/check-license-expiry/index.ts` | Update |
+| `supabase/functions/health-check/index.ts` | Update |
+| `supabase/functions/monitoring-dashboard/index.ts` | Update |
+| `supabase/functions/predict-analytics/index.ts` | Update |
+| `supabase/functions/process-document/index.ts` | Update |
+| `supabase/functions/run-tests/index.ts` | Update |
+| `supabase/functions/send-analytics-report/index.ts` | Update |
+| `supabase/functions/send-email-notification/index.ts` | Update |
+| `supabase/functions/send-otp/index.ts` | Update |
+| `supabase/functions/send-sms-notification/index.ts` | Update |
+| `supabase/functions/send-whatsapp-notification/index.ts` | Update |
+| `supabase/functions/verify-otp/index.ts` | Update |
 
 ---
 
 ## Technical Details
 
-### Component Structure
-```
-src/components/super-admin/ProductionMonitoringTab.tsx
-```
+### Pattern for Each Function
 
-### State Management
-- `metrics`: Summary data from API
-- `loading`: Loading indicator
-- `timeRange`: Selected filter ('1h' | '24h' | '7d' | '30d')
-- `lastUpdated`: Timestamp of last refresh
+Add the `securityHeaders` constant after `corsHeaders`:
 
-### API Response Types
 ```typescript
-interface MonitoringMetrics {
-  summary: {
-    requests_per_minute: number;
-    error_rate_percent: number;
-    avg_response_time_ms: number;
-    active_sessions: number;
-    daily_active_users: number;
-  };
-  errors: {
-    total: number;
-    by_severity: {
-      critical: number;
-      error: number;
-      warning: number;
-      info: number;
-    };
-    top_endpoints: Array<{ endpoint: string; count: number }>;
-  };
-  performance: {
-    slowest_endpoints: Array<{ endpoint: string; avg_ms: number; count: number }>;
-    p95_response_time_ms: number;
-    p99_response_time_ms: number;
-  };
-  storage: {
-    total_usage_mb: number;
-    by_lab: Array<{ lab_id: string; lab_name: string; usage_mb: number }>;
-  };
-  meta: {
-    time_range: string;
-    generated_at: string;
-  };
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, ...',
+};
+
+const securityHeaders = {
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:;",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
+```
+
+Update all Response returns from:
+```typescript
+headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+```
+
+To:
+```typescript
+headers: { ...corsHeaders, ...securityHeaders, 'Content-Type': 'application/json' }
+```
+
+### OPTIONS Preflight Handling
+
+Keep CORS preflight responses simple (no security headers needed for preflight):
+```typescript
+if (req.method === 'OPTIONS') {
+  return new Response('ok', { headers: corsHeaders });
 }
 ```
 
-### Charts (using Recharts)
-- **Error Distribution**: PieChart with severity breakdown
-- **Slowest Endpoints**: Horizontal BarChart
-- **Storage by Lab**: Horizontal BarChart
+---
 
-### Refresh Strategy
-- Auto-refresh every 60 seconds
-- Manual refresh button
-- Show "Last updated" timestamp
+## CSP Policy Breakdown
+
+The Content-Security-Policy is configured for API responses:
+
+| Directive | Value | Reason |
+|-----------|-------|--------|
+| `default-src` | `'self'` | Default fallback restricts to same origin |
+| `script-src` | `'self' 'unsafe-inline'` | Allows inline scripts (needed for some dynamic responses) |
+| `style-src` | `'self' 'unsafe-inline'` | Allows inline styles |
+| `img-src` | `'self' data: https:` | Allows images from same origin, data URIs, and HTTPS sources |
+| `font-src` | `'self' https:` | Allows fonts from same origin and HTTPS |
+| `connect-src` | `'self' https:` | Allows API connections to same origin and HTTPS |
 
 ---
 
-## Integration with SuperAdmin.tsx
+## Security Benefits
 
-1. Import the new `ProductionMonitoringTab` component
-2. Add a new tab trigger with icon (Gauge or Monitor icon)
-3. Add corresponding TabsContent
-
-### Tab Position
-Insert after "System Health" tab:
-- System Health (existing - business metrics)
-- **Production Monitoring (new - technical metrics)**
+1. **Clickjacking Prevention**: `X-Frame-Options: DENY` prevents embedding API responses in iframes
+2. **MIME Sniffing Protection**: `X-Content-Type-Options: nosniff` prevents browsers from interpreting responses as different content types
+3. **XSS Mitigation**: CSP restricts sources of executable content
+4. **Information Leakage**: `Referrer-Policy` controls what referrer info is sent
+5. **Feature Restriction**: `Permissions-Policy` blocks access to sensitive browser APIs
 
 ---
 
-## File Changes
+## Testing
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/components/super-admin/ProductionMonitoringTab.tsx` | Create | New monitoring dashboard component |
-| `src/pages/SuperAdmin.tsx` | Update | Add tab trigger and content |
-
----
-
-## Visual Design
-
-### Color Coding
-- **Green**: Error rate < 1%, response time < 200ms
-- **Yellow**: Error rate 1-5%, response time 200-500ms
-- **Red**: Error rate > 5%, response time > 500ms
-
-### Card Layout
-```text
-+--------+--------+--------+--------+
-|  RPM   | Error% |  Avg   |Sessions|
-|        |        |Response|        |
-+--------+--------+--------+--------+
-
-+--------------------+--------------------+
-|  Slowest Endpoints |   Error Severity   |
-|     (Table)        |     (Pie Chart)    |
-+--------------------+--------------------+
-
-+--------------------+--------------------+
-|  Top Error Paths   |  Storage by Lab    |
-|   (Bar Chart)      |   (Bar Chart)      |
-+--------------------+--------------------+
-
-+----------------------------------------+
-|           Active Alerts                 |
-|  (List with severity badges)           |
-+----------------------------------------+
-```
+After implementation, verify headers using:
+1. Call any Edge Function and inspect response headers
+2. Use browser DevTools Network tab to confirm headers are present
+3. Use online CSP validators to ensure policy is correctly formatted
 
 ---
 
-## Error Handling
+## Compatibility Notes
 
-1. Show skeleton loading state during data fetch
-2. Display error toast if API call fails
-3. Graceful fallback with "No data available" messages
-4. Retry button on failure
-
----
-
-## Security
-
-- Component only renders for `super_admin` role (checked in SuperAdmin.tsx parent)
-- Edge function validates JWT and role before returning data
-- No sensitive data exposed in UI (only aggregated metrics)
+- CSP with `'unsafe-inline'` is included because Edge Functions may return HTML content in some cases (like email templates)
+- For stricter security, `'unsafe-inline'` could be replaced with nonces in the future
+- These headers apply to Edge Function API responses only, not the main web application (which uses Vercel/hosting provider headers)
