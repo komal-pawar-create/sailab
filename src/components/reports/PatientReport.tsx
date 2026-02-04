@@ -166,13 +166,8 @@ export function PatientReport() {
   }, [isAdmin, profile?.branch_id]);
 
   const handleExportExcel = () => {
-    const exportData = data.map((r) => ({
-      ...r,
-      paid: formatCurrency(r.paid),
-      unpaid: formatCurrency(r.unpaid),
-      discount: formatCurrency(r.discount),
-    }));
-    exportToExcel(exportData, columns, {
+    // Use plain numbers for Excel (no currency formatting)
+    exportToExcel(data, columns, {
       filename: `Patient_Report_${format(new Date(), 'yyyy-MM-dd')}`,
       title: 'Patient Report',
       dateRange: { from: filters.dateFrom, to: filters.dateTo },

@@ -146,13 +146,8 @@ export function BillsReport() {
   };
 
   const handleExportExcel = () => {
-    const exportData = data.map((b) => ({
-      ...b,
-      total_amount: formatCurrency(b.total_amount),
-      paid_amount: formatCurrency(b.paid_amount),
-      due_amount: formatCurrency(b.due_amount),
-    }));
-    exportToExcel(exportData, columns, {
+    // Use plain numbers for Excel (no currency formatting)
+    exportToExcel(data, columns, {
       filename: `Bills_Report_${format(new Date(), 'yyyy-MM-dd')}`,
       title: 'Bills Report',
       dateRange: { from: filters.dateFrom, to: filters.dateTo },

@@ -147,11 +147,8 @@ export function DoctorReferralReport() {
   }, [isAdmin, profile?.branch_id]);
 
   const handleExportExcel = () => {
-    const exportData = data.map((d) => ({
-      ...d,
-      total_revenue: formatCurrency(d.total_revenue),
-    }));
-    exportToExcel(exportData, columns, {
+    // Use plain numbers for Excel (no currency formatting)
+    exportToExcel(data, columns, {
       filename: `Doctor_Referral_Report_${format(new Date(), 'yyyy-MM-dd')}`,
       title: 'Doctor Referral Report',
       dateRange: { from: filters.dateFrom, to: filters.dateTo },

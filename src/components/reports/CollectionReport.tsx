@@ -167,11 +167,8 @@ export function CollectionReport() {
   };
 
   const handleExportExcel = () => {
-    const exportData = data.map((c) => ({
-      ...c,
-      payment_amount: formatCurrency(c.payment_amount),
-    }));
-    exportToExcel(exportData, columns, {
+    // Use plain numbers for Excel (no currency formatting)
+    exportToExcel(data, columns, {
       filename: `Collection_Report_${format(new Date(), 'yyyy-MM-dd')}`,
       title: 'Collection Report',
       dateRange: { from: filters.dateFrom, to: filters.dateTo },

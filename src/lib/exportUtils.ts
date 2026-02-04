@@ -34,6 +34,11 @@ export const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
+// Format number for Excel (plain number, no currency symbol or commas)
+export const formatNumberForExcel = (amount: number): number => {
+  return amount;
+};
+
 // Export to Excel
 export const exportToExcel = (
   data: Record<string, any>[],
