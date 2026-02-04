@@ -113,9 +113,10 @@ export function DailyActivityReport() {
   }, [isAdmin, profile?.branch_id]);
 
   const handleExportExcel = () => {
+    // Use plain numbers for Excel (no currency formatting)
     const exportData = data.map((d) => ({
       ...d,
-      amount: d.amount !== undefined ? formatCurrency(d.amount) : '-',
+      amount: d.amount !== undefined ? d.amount : '-',
     }));
     exportToExcel(exportData, columns, {
       filename: `Daily_Activity_Report_${format(filters.dateFrom!, 'yyyy-MM-dd')}`,

@@ -142,13 +142,8 @@ export function RevenueReport() {
   }, [isAdmin, profile?.branch_id]);
 
   const handleExportExcel = () => {
-    const exportData = data.map((r) => ({
-      ...r,
-      total_revenue: formatCurrency(r.total_revenue),
-      collections: formatCurrency(r.collections),
-      outstanding: formatCurrency(r.outstanding),
-    }));
-    exportToExcel(exportData, columns, {
+    // Use plain numbers for Excel (no currency formatting)
+    exportToExcel(data, columns, {
       filename: `Revenue_Report_${format(new Date(), 'yyyy-MM-dd')}`,
       title: 'Revenue Report',
       dateRange: { from: filters.dateFrom, to: filters.dateTo },
