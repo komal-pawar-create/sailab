@@ -1,106 +1,101 @@
 
-# Excel Export Clean Number Formatting
+# Auth Page Enhancement: Logo Prominence & Back to Home Navigation
 
-## Problem
-Currently, Excel exports show amount columns (PAID, UNPAID, DISCOUNT, etc.) with ₹ symbol and comma separators (e.g., `₹1,200`). This makes it difficult to use the data for calculations in Excel, as the values are treated as text rather than numbers.
-
-## Solution
-Create a separate formatting function for Excel exports that outputs plain numeric values without currency symbols or thousand separators. PDF and Print outputs will continue using the formatted currency display since they are meant for human reading.
+## Overview
+Improve the Auth page by adding a "Back to Home" button and making the logo more prominent, especially on mobile screens. The reference image shows the LabFlow logo prominently displayed in the landing page header.
 
 ---
 
-## Changes Overview
+## Changes Required
 
-### 1. Add New Helper Function
-Add `formatNumberForExcel` to `src/lib/exportUtils.ts`:
-- Returns the raw number as a simple string
-- No currency symbol, no commas
-- Example: `1200` instead of `₹1,200`
+### 1. Add Back to Home Button
+Add a prominent button at the top-left of the auth card (similar to ForgotPassword page pattern) that navigates users back to the landing page.
 
-### 2. Update Report Components
-Modify 6 report files to use plain numbers for Excel exports:
+### 2. Enhance Logo Prominence
+- Increase logo size significantly, especially on mobile
+- Add a subtle glow effect for visual appeal (matching NavHeader style)
+- Use responsive sizing: larger on mobile to fill more horizontal space
 
-| Report | Amount Columns Affected |
-|--------|------------------------|
-| PatientReport | paid, unpaid, discount |
-| BillsReport | total_amount, paid_amount, due_amount |
-| RevenueReport | total_revenue, collections, outstanding |
-| CollectionReport | payment_amount |
-| DoctorReferralReport | total_revenue |
-| DailyActivityReport | amount |
+---
+
+## Visual Design
+
+### Current Layout
+```
++---------------------------+
+|    [small logo]           |
+|    description            |
+|    ---------------------- |
+|    [Sign In Form]         |
++---------------------------+
+```
+
+### New Layout
+```
++---------------------------+
+| <- Back to Home           |
+|                           |
+|    [PROMINENT LOGO]       |
+|    description            |
+|    ---------------------- |
+|    [Sign In Form]         |
++---------------------------+
+```
 
 ---
 
 ## Technical Implementation
 
-### New Function in exportUtils.ts
+### File to Modify
+`src/pages/Auth.tsx`
+
+### Changes
+
+**1. Add Import**
 ```typescript
-// Format number for Excel (plain number, no currency symbol or commas)
-export const formatNumberForExcel = (amount: number): number => {
-  return amount;
-};
+import { ArrowLeft } from 'lucide-react';
 ```
 
-Note: Return the actual number rather than a string so Excel treats it as a numeric value.
+**2. Add Back to Home Button**
+Add above the logo in CardHeader, styled as a ghost button with left arrow icon.
 
-### Update Pattern for Each Report
-Change Excel export handlers from:
-```typescript
-const handleExportExcel = () => {
-  const exportData = data.map((r) => ({
-    ...r,
-    paid: formatCurrency(r.paid),      // ₹1,200
-    unpaid: formatCurrency(r.unpaid),  // ₹500
-  }));
-  exportToExcel(exportData, columns, options);
-};
-```
+**3. Enhanced Logo Styles**
+- Mobile: `h-16` to `h-20` (larger, more prominent)
+- Desktop: `h-14` to `h-16`
+- Add glow effect with gradient blur background
+- Center alignment with proper spacing
 
-To:
-```typescript
-const handleExportExcel = () => {
-  const exportData = data.map((r) => ({
-    ...r,
-    paid: r.paid,      // 1200
-    unpaid: r.unpaid,  // 500
-  }));
-  exportToExcel(exportData, columns, options);
-};
+### Responsive Logo Sizing
+| Screen | Current | New |
+|--------|---------|-----|
+| Mobile | h-12 | h-16 sm:h-20 |
+| Desktop | h-12 | h-14 md:h-16 |
+
+### Glow Effect
+Add a subtle animated glow behind the logo:
+```tsx
+<div className="relative">
+  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 blur-xl -z-10 rounded-full scale-150" />
+  <img src="/images/labflow-logo.png" ... />
+</div>
 ```
 
 ---
 
-## Files to Modify
+## Code Changes Summary
 
-| File | Change |
-|------|--------|
-| `src/lib/exportUtils.ts` | Add `formatNumberForExcel` helper function |
-| `src/components/reports/PatientReport.tsx` | Update `handleExportExcel` to use plain numbers |
-| `src/components/reports/BillsReport.tsx` | Update `handleExportExcel` to use plain numbers |
-| `src/components/reports/RevenueReport.tsx` | Update `handleExportExcel` to use plain numbers |
-| `src/components/reports/CollectionReport.tsx` | Update `handleExportExcel` to use plain numbers |
-| `src/components/reports/DoctorReferralReport.tsx` | Update `handleExportExcel` to use plain numbers |
-| `src/components/reports/DailyActivityReport.tsx` | Update `handleExportExcel` to use plain numbers |
-
----
-
-## Before/After Example
-
-**Before (Current)**
-| PAID | UNPAID | DISCOUNT |
-|------|--------|----------|
-| ₹500 | ₹0 | ₹0 |
-| ₹1,200 | ₹0 | ₹0 |
-
-**After (Fixed)**
-| PAID | UNPAID | DISCOUNT |
-|------|--------|----------|
-| 500 | 0 | 0 |
-| 1200 | 0 | 0 |
+| Element | Change |
+|---------|--------|
+| Back Button | Add ghost button with ArrowLeft icon linking to `/` |
+| Logo Size | Increase from `h-12` to `h-16 sm:h-20` |
+| Logo Effect | Add gradient glow background |
+| Layout | Add spacing between back button and logo |
 
 ---
 
 ## Benefits
-1. Excel can recognize values as numbers for SUM, calculations, and sorting
-2. PDF and Print outputs retain formatted display (₹ with commas) for readability
-3. Clean separation between machine-readable (Excel) and human-readable (PDF/Print) formats
+
+1. **Better Navigation** - Users can easily return to the landing page
+2. **Brand Recognition** - Larger, more prominent logo reinforces brand identity
+3. **Mobile UX** - Logo is now readable and professional on small screens
+4. **Visual Consistency** - Matches the glow effect used in the landing page NavHeader
