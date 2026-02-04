@@ -9,7 +9,7 @@ import { useAuth, type AuthError } from '@/hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { type RateLimitState, getTimeUntilUnlock } from '@/lib/security';
-import { AlertTriangle, Clock, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Clock, ShieldAlert } from 'lucide-react';
 
 const Auth = () => {
   const [username, setUsername] = useState('');
@@ -113,7 +113,23 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <img src="/images/labflow-logo.png" alt="LabFlow" className="h-12 w-auto mx-auto mb-2" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-4 w-fit"
+            onClick={() => navigate('/')}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
+          <div className="relative flex justify-center mb-4">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 blur-xl -z-10 rounded-full scale-150" />
+            <img 
+              src="/images/labflow-logo.png" 
+              alt="LabFlow" 
+              className="h-16 sm:h-20 md:h-16 w-auto object-contain relative z-10" 
+            />
+          </div>
           <CardDescription>Access your laboratory management system</CardDescription>
         </CardHeader>
         <CardContent>
