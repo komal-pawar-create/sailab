@@ -1,158 +1,106 @@
 
-# Security Headers Implementation via Edge Function Middleware
+# Excel Export Clean Number Formatting
 
-## Overview
-Add comprehensive security headers (CSP, X-Frame-Options, X-Content-Type-Options, and additional protections) to all Supabase Edge Functions to harden the API against common web security vulnerabilities like clickjacking, MIME sniffing attacks, and content injection.
+## Problem
+Currently, Excel exports show amount columns (PAID, UNPAID, DISCOUNT, etc.) with ₹ symbol and comma separators (e.g., `₹1,200`). This makes it difficult to use the data for calculations in Excel, as the values are treated as text rather than numbers.
 
----
-
-## Security Headers to Add
-
-| Header | Value | Purpose |
-|--------|-------|---------|
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';` | Prevents XSS by restricting content sources |
-| `X-Frame-Options` | `DENY` | Prevents clickjacking by blocking iframe embedding |
-| `X-Content-Type-Options` | `nosniff` | Prevents MIME type sniffing attacks |
-| `X-XSS-Protection` | `1; mode=block` | Legacy XSS protection for older browsers |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` | Controls referrer information leakage |
-| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Restricts browser feature access |
+## Solution
+Create a separate formatting function for Excel exports that outputs plain numeric values without currency symbols or thousand separators. PDF and Print outputs will continue using the formatted currency display since they are meant for human reading.
 
 ---
 
-## Implementation Approach
+## Changes Overview
 
-Create a centralized security headers object that can be spread into all Edge Function responses. Each function will be updated to include these headers alongside the existing CORS headers.
+### 1. Add New Helper Function
+Add `formatNumberForExcel` to `src/lib/exportUtils.ts`:
+- Returns the raw number as a simple string
+- No currency symbol, no commas
+- Example: `1200` instead of `₹1,200`
 
-### New Security Headers Object
+### 2. Update Report Components
+Modify 6 report files to use plain numbers for Excel exports:
+
+| Report | Amount Columns Affected |
+|--------|------------------------|
+| PatientReport | paid, unpaid, discount |
+| BillsReport | total_amount, paid_amount, due_amount |
+| RevenueReport | total_revenue, collections, outstanding |
+| CollectionReport | payment_amount |
+| DoctorReferralReport | total_revenue |
+| DailyActivityReport | amount |
+
+---
+
+## Technical Implementation
+
+### New Function in exportUtils.ts
 ```typescript
-const securityHeaders = {
-  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:;",
-  'X-Frame-Options': 'DENY',
-  'X-Content-Type-Options': 'nosniff',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+// Format number for Excel (plain number, no currency symbol or commas)
+export const formatNumberForExcel = (amount: number): number => {
+  return amount;
 };
 ```
 
-### Combined Headers Pattern
+Note: Return the actual number rather than a string so Excel treats it as a numeric value.
+
+### Update Pattern for Each Report
+Change Excel export handlers from:
 ```typescript
-const allHeaders = {
-  ...corsHeaders,
-  ...securityHeaders,
-  'Content-Type': 'application/json',
+const handleExportExcel = () => {
+  const exportData = data.map((r) => ({
+    ...r,
+    paid: formatCurrency(r.paid),      // ₹1,200
+    unpaid: formatCurrency(r.unpaid),  // ₹500
+  }));
+  exportToExcel(exportData, columns, options);
 };
-
-return new Response(JSON.stringify(data), {
-  status: 200,
-  headers: allHeaders,
-});
-```
-
----
-
-## Files to Update
-
-All 14 Edge Functions will be updated to include security headers:
-
-| File | Status |
-|------|--------|
-| `supabase/functions/admin-update-password/index.ts` | Update |
-| `supabase/functions/check-alerts/index.ts` | Update |
-| `supabase/functions/check-license-expiry/index.ts` | Update |
-| `supabase/functions/health-check/index.ts` | Update |
-| `supabase/functions/monitoring-dashboard/index.ts` | Update |
-| `supabase/functions/predict-analytics/index.ts` | Update |
-| `supabase/functions/process-document/index.ts` | Update |
-| `supabase/functions/run-tests/index.ts` | Update |
-| `supabase/functions/send-analytics-report/index.ts` | Update |
-| `supabase/functions/send-email-notification/index.ts` | Update |
-| `supabase/functions/send-otp/index.ts` | Update |
-| `supabase/functions/send-sms-notification/index.ts` | Update |
-| `supabase/functions/send-whatsapp-notification/index.ts` | Update |
-| `supabase/functions/verify-otp/index.ts` | Update |
-
----
-
-## Technical Details
-
-### Pattern for Each Function
-
-Add the `securityHeaders` constant after `corsHeaders`:
-
-```typescript
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, ...',
-};
-
-const securityHeaders = {
-  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:;",
-  'X-Frame-Options': 'DENY',
-  'X-Content-Type-Options': 'nosniff',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-};
-```
-
-Update all Response returns from:
-```typescript
-headers: { ...corsHeaders, 'Content-Type': 'application/json' }
 ```
 
 To:
 ```typescript
-headers: { ...corsHeaders, ...securityHeaders, 'Content-Type': 'application/json' }
+const handleExportExcel = () => {
+  const exportData = data.map((r) => ({
+    ...r,
+    paid: r.paid,      // 1200
+    unpaid: r.unpaid,  // 500
+  }));
+  exportToExcel(exportData, columns, options);
+};
 ```
 
-### OPTIONS Preflight Handling
+---
 
-Keep CORS preflight responses simple (no security headers needed for preflight):
-```typescript
-if (req.method === 'OPTIONS') {
-  return new Response('ok', { headers: corsHeaders });
-}
-```
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/lib/exportUtils.ts` | Add `formatNumberForExcel` helper function |
+| `src/components/reports/PatientReport.tsx` | Update `handleExportExcel` to use plain numbers |
+| `src/components/reports/BillsReport.tsx` | Update `handleExportExcel` to use plain numbers |
+| `src/components/reports/RevenueReport.tsx` | Update `handleExportExcel` to use plain numbers |
+| `src/components/reports/CollectionReport.tsx` | Update `handleExportExcel` to use plain numbers |
+| `src/components/reports/DoctorReferralReport.tsx` | Update `handleExportExcel` to use plain numbers |
+| `src/components/reports/DailyActivityReport.tsx` | Update `handleExportExcel` to use plain numbers |
 
 ---
 
-## CSP Policy Breakdown
+## Before/After Example
 
-The Content-Security-Policy is configured for API responses:
+**Before (Current)**
+| PAID | UNPAID | DISCOUNT |
+|------|--------|----------|
+| ₹500 | ₹0 | ₹0 |
+| ₹1,200 | ₹0 | ₹0 |
 
-| Directive | Value | Reason |
-|-----------|-------|--------|
-| `default-src` | `'self'` | Default fallback restricts to same origin |
-| `script-src` | `'self' 'unsafe-inline'` | Allows inline scripts (needed for some dynamic responses) |
-| `style-src` | `'self' 'unsafe-inline'` | Allows inline styles |
-| `img-src` | `'self' data: https:` | Allows images from same origin, data URIs, and HTTPS sources |
-| `font-src` | `'self' https:` | Allows fonts from same origin and HTTPS |
-| `connect-src` | `'self' https:` | Allows API connections to same origin and HTTPS |
-
----
-
-## Security Benefits
-
-1. **Clickjacking Prevention**: `X-Frame-Options: DENY` prevents embedding API responses in iframes
-2. **MIME Sniffing Protection**: `X-Content-Type-Options: nosniff` prevents browsers from interpreting responses as different content types
-3. **XSS Mitigation**: CSP restricts sources of executable content
-4. **Information Leakage**: `Referrer-Policy` controls what referrer info is sent
-5. **Feature Restriction**: `Permissions-Policy` blocks access to sensitive browser APIs
+**After (Fixed)**
+| PAID | UNPAID | DISCOUNT |
+|------|--------|----------|
+| 500 | 0 | 0 |
+| 1200 | 0 | 0 |
 
 ---
 
-## Testing
-
-After implementation, verify headers using:
-1. Call any Edge Function and inspect response headers
-2. Use browser DevTools Network tab to confirm headers are present
-3. Use online CSP validators to ensure policy is correctly formatted
-
----
-
-## Compatibility Notes
-
-- CSP with `'unsafe-inline'` is included because Edge Functions may return HTML content in some cases (like email templates)
-- For stricter security, `'unsafe-inline'` could be replaced with nonces in the future
-- These headers apply to Edge Function API responses only, not the main web application (which uses Vercel/hosting provider headers)
+## Benefits
+1. Excel can recognize values as numbers for SUM, calculations, and sorting
+2. PDF and Print outputs retain formatted display (₹ with commas) for readability
+3. Clean separation between machine-readable (Excel) and human-readable (PDF/Print) formats
