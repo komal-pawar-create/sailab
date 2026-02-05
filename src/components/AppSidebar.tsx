@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -75,6 +76,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const currentPath = location.pathname;
   const isCollapsed = state === "collapsed";
 
@@ -87,8 +89,8 @@ export function AppSidebar() {
     const { error } = await signOut();
     if (error) {
       toast({
-        title: "Error",
-        description: "Failed to sign out",
+        title: t('app.errors.failed'),
+        description: t('app.errors.signOutError'),
         variant: "destructive",
       });
     } else {
@@ -106,16 +108,28 @@ export function AppSidebar() {
   };
 
   const getRoleLabel = (role: string) => {
-    const roleLabels: Record<string, string> = {
-      super_admin: 'Super Admin',
-      lab_admin: 'Lab Admin',
-      admin: 'Admin',
-      operator_1: 'Operator 1',
-      operator_2: 'Operator 2',
-      operator_3: 'Operator 3',
-      branch_operator: 'Branch Operator',
+    return t(`app.roles.${role}`) || role;
+  };
+
+  const getNavItemTitle = (title: string) => {
+    const titleMap: Record<string, string> = {
+      'Dashboard': t('app.sidebar.dashboard'),
+      'Reports': t('app.sidebar.reports'),
+      'Outstanding Report': t('app.sidebar.outstandingReport'),
+      'Patient History': t('app.sidebar.patientHistory'),
+      'Follow-ups': t('app.sidebar.followups'),
+      'Analytics': t('app.sidebar.analytics'),
+      'Lab Profile': t('app.sidebar.labProfile'),
+      'Branch Settings': t('app.sidebar.branchSettings'),
+      'API Settings': t('app.sidebar.apiSettings'),
+      'Audit Logs': t('app.sidebar.auditLogs'),
+      'Super Admin': t('app.sidebar.superAdmin'),
+      'Sales & Leads': t('app.sidebar.salesLeads'),
+      'Subscriptions': t('app.sidebar.subscriptions'),
+      'Landing Page': t('app.sidebar.landingPage'),
+      'Data Management': t('app.sidebar.dataManagement'),
     };
-    return roleLabels[role] || role;
+    return titleMap[title] || title;
   };
 
   const filteredMainItems = filterByRole(mainItems);
@@ -133,7 +147,7 @@ export function AppSidebar() {
         {/* Main Navigation */}
         {filteredMainItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>Main</SidebarGroupLabel>
+            <SidebarGroupLabel>{t('app.sidebar.main')}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {filteredMainItems.map((item) => (
@@ -146,7 +160,7 @@ export function AppSidebar() {
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >
                         <item.icon className="h-4 w-4" />
-                        {!isCollapsed && <span>{item.title}</span>}
+                        {!isCollapsed && <span>{getNavItemTitle(item.title)}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -160,7 +174,7 @@ export function AppSidebar() {
         {/* Admin Navigation */}
         {filteredAdminItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupLabel>{t('app.sidebar.administration')}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {filteredAdminItems.map((item) => (
@@ -172,7 +186,7 @@ export function AppSidebar() {
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >
                         <item.icon className="h-4 w-4" />
-                        {!isCollapsed && <span>{item.title}</span>}
+                        {!isCollapsed && <span>{getNavItemTitle(item.title)}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -185,7 +199,7 @@ export function AppSidebar() {
         {/* Super Admin Navigation */}
         {filteredSuperAdminItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>Super Admin</SidebarGroupLabel>
+            <SidebarGroupLabel>{t('app.sidebar.superAdmin')}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {filteredSuperAdminItems.map((item) => (
@@ -197,7 +211,7 @@ export function AppSidebar() {
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >
                         <item.icon className="h-4 w-4" />
-                        {!isCollapsed && <span>{item.title}</span>}
+                        {!isCollapsed && <span>{getNavItemTitle(item.title)}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

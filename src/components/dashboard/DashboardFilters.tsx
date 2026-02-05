@@ -1,4 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTranslation } from "react-i18next";
 import { Calendar, CalendarDays, CalendarRange, Infinity, Building2, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -47,15 +48,16 @@ export function DashboardFilters({
   showBranchFilter = false,
 }: DashboardFiltersProps) {
   const isMobile = useIsMobile();
-  
+  const { t } = useTranslation();
+
   const tabs = [
-    { id: 'today' as const, label: 'Today', shortLabel: 'Today', icon: Calendar, count: counts?.today },
-    { id: 'week' as const, label: 'This Week', shortLabel: 'Week', icon: CalendarDays, count: counts?.week },
-    { id: 'month' as const, label: 'This Month', shortLabel: 'Month', icon: CalendarRange, count: counts?.month },
-    { id: 'lastMonth' as const, label: 'Last Month', shortLabel: 'Last Mo', icon: History, count: counts?.lastMonth },
-    { id: 'lastQuarter' as const, label: 'Last Quarter', shortLabel: 'Qtr', icon: History, count: counts?.lastQuarter },
-    { id: 'lastYear' as const, label: 'Last Year', shortLabel: 'Year', icon: History, count: counts?.lastYear },
-    { id: 'all' as const, label: 'All Time', shortLabel: 'All', icon: Infinity, count: counts?.all },
+    { id: 'today' as const, label: t('app.dashboard.today'), shortLabel: t('app.dashboard.today'), icon: Calendar, count: counts?.today },
+    { id: 'week' as const, label: t('app.dashboard.thisWeek'), shortLabel: t('app.dashboard.thisWeek').split(' ')[1] || 'Week', icon: CalendarDays, count: counts?.week },
+    { id: 'month' as const, label: t('app.dashboard.thisMonth'), shortLabel: t('app.dashboard.thisMonth').split(' ')[1] || 'Month', icon: CalendarRange, count: counts?.month },
+    { id: 'lastMonth' as const, label: t('app.dashboard.lastMonth'), shortLabel: t('app.dashboard.lastMonth').substring(0, 8), icon: History, count: counts?.lastMonth },
+    { id: 'lastQuarter' as const, label: t('app.dashboard.lastQuarter'), shortLabel: t('app.dashboard.lastQuarter').substring(0, 6), icon: History, count: counts?.lastQuarter },
+    { id: 'lastYear' as const, label: t('app.dashboard.lastYear'), shortLabel: t('app.dashboard.lastYear').substring(0, 6), icon: History, count: counts?.lastYear },
+    { id: 'all' as const, label: t('app.dashboard.allTime'), shortLabel: t('app.dashboard.allTime').split(' ')[0] || 'All', icon: Infinity, count: counts?.all },
   ];
 
   const TabsListContent = (
@@ -97,10 +99,10 @@ export function DashboardFilters({
           <Building2 className="h-4 w-4 text-muted-foreground" />
           <Select value={selectedBranch} onValueChange={onBranchChange}>
             <SelectTrigger className={cn("w-[180px]", isMobile && "h-11")}>
-              <SelectValue placeholder="Select branch" />
+              <SelectValue placeholder={t('app.dashboard.selectBranch')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Branches</SelectItem>
+              <SelectItem value="all">{t('app.dashboard.allBranches')}</SelectItem>
               {branches.map((branch) => (
                 <SelectItem key={branch.id} value={branch.id}>
                   {branch.name}

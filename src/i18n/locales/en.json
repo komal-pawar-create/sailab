@@ -627,5 +627,158 @@
     "errorGeneric": "Failed to submit. Please try again.",
     "validationPhone": "Please enter a valid 10-15 digit phone number",
     "validationName": "Name must be 2-100 characters"
+  },
+  "app": {
+    "common": {
+      "loading": "Loading...",
+      "refresh": "Refresh",
+      "search": "Search",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "add": "Add",
+      "back": "Back",
+      "backToHome": "Back to Home",
+      "backToLogin": "Back to login",
+      "submit": "Submit",
+      "sending": "Sending..."
+    },
+    "auth": {
+      "signIn": "Sign In",
+      "signOut": "Sign Out",
+      "signingIn": "Signing In...",
+      "username": "Username",
+      "password": "Password",
+      "enterUsername": "Enter your username",
+      "enterPassword": "Enter your password",
+      "forgotPassword": "Forgot Password?",
+      "resetPassword": "Reset Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "enterNewPassword": "Enter new password",
+      "confirmNewPassword": "Confirm new password",
+      "accountLocked": "Account Locked",
+      "accessSystem": "Access your laboratory management system",
+      "attemptsRemaining": "{count} login attempt(s) remaining before temporary lockout.",
+      "lockedMessage": "Account locked. Try again in",
+      "sendOtp": "Send OTP",
+      "otpCode": "OTP Code",
+      "enterOtp": "Enter 6-digit OTP",
+      "enterUsernameForOtp": "Enter your username to receive an OTP",
+      "otpSentTo": "Enter the OTP sent to {phone}"
+    },
+    "sidebar": {
+      "main": "Main",
+      "administration": "Administration",
+      "superAdmin": "Super Admin",
+      "dashboard": "Dashboard",
+      "reports": "Reports",
+      "outstandingReport": "Outstanding Report",
+      "patientHistory": "Patient History",
+      "followups": "Follow-ups",
+      "analytics": "Analytics",
+      "labProfile": "Lab Profile",
+      "branchSettings": "Branch Settings",
+      "apiSettings": "API Settings",
+      "auditLogs": "Audit Logs",
+      "salesLeads": "Sales & Leads",
+      "subscriptions": "Subscriptions",
+      "landingPage": "Landing Page",
+      "dataManagement": "Data Management"
+    },
+    "roles": {
+      "super_admin": "Super Admin",
+      "lab_admin": "Lab Admin",
+      "admin": "Admin",
+      "operator_1": "Operator 1",
+      "operator_2": "Operator 2",
+      "operator_3": "Operator 3",
+      "branch_operator": "Branch Operator"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "welcomeBack": "Welcome back, {name}",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month",
+      "lastQuarter": "Last Quarter",
+      "lastYear": "Last Year",
+      "allTime": "All Time",
+      "allBranches": "All Branches",
+      "selectBranch": "Select branch"
+    },
+    "tabs": {
+      "patients": "Patients",
+      "patientsShort": "Pts",
+      "testReports": "Test Reports",
+      "testReportsShort": "Tests",
+      "documents": "Documents",
+      "documentsShort": "Docs",
+      "bills": "Bills",
+      "billsShort": "Bills",
+      "followups": "Follow-ups",
+      "followupsShort": "F/ups",
+      "feedback": "Feedback",
+      "feedbackShort": "Fdbk",
+      "ledger": "Ledger",
+      "ledgerShort": "Ldgr"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "newPatient": "New Patient",
+      "newTest": "New Test",
+      "newBill": "New Bill",
+      "uploadDoc": "Upload Doc",
+      "addPatient": "Add New Patient",
+      "addTestReport": "Add Test Report",
+      "createBill": "Create Bill",
+      "uploadDocument": "Upload Document"
+    },
+    "mobileNav": {
+      "dashboard": "Dashboard",
+      "reports": "Reports",
+      "add": "Add",
+      "history": "History",
+      "more": "More",
+      "newPatient": "New Patient",
+      "newBill": "New Bill",
+      "newTestReport": "New Test Report",
+      "uploadDocument": "Upload Document"
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Generate and export reports in Excel or PDF format",
+      "patients": "Patients",
+      "bills": "Bills",
+      "testReports": "Test Reports",
+      "revenue": "Revenue",
+      "collections": "Collections",
+      "referrals": "Referrals",
+      "dailyActivity": "Daily Activity"
+    },
+    "export": {
+      "excel": "Excel",
+      "pdf": "PDF",
+      "print": "Print"
+    },
+    "notFound": {
+      "title": "404",
+      "message": "Oops! Page not found",
+      "returnHome": "Return to Home"
+    },
+    "errors": {
+      "failed": "Error",
+      "signOutError": "Failed to sign out",
+      "passwordMismatch": "Passwords do not match",
+      "sendOtpFailed": "Failed to send OTP",
+      "verifyOtpFailed": "Failed to verify OTP"
+    },
+    "success": {
+      "passwordReset": "Your password has been reset successfully",
+      "otpSent": "OTP Sent",
+      "otpSentDesc": "An OTP has been sent to {phone}"
+    }
   }
 }

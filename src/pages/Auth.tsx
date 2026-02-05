@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +13,7 @@ import { type RateLimitState, getTimeUntilUnlock } from '@/lib/security';
 import { AlertTriangle, ArrowLeft, Clock, ShieldAlert } from 'lucide-react';
 
 const Auth = () => {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -120,7 +122,7 @@ const Auth = () => {
             onClick={() => navigate('/')}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
+            {t('app.common.backToHome')}
           </Button>
           <div className="relative flex justify-center mb-4">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 blur-xl -z-10 rounded-full scale-150" />
@@ -130,7 +132,7 @@ const Auth = () => {
               className="h-16 sm:h-20 md:h-16 w-auto object-contain relative z-10" 
             />
           </div>
-          <CardDescription>Access your laboratory management system</CardDescription>
+          <CardDescription>{t('app.auth.accessSystem')}</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Lockout Alert */}
@@ -139,7 +141,7 @@ const Auth = () => {
               <ShieldAlert className="h-4 w-4" />
               <AlertDescription className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Account locked. Try again in <strong>{lockoutCountdown}</strong>
+                {t('app.auth.lockedMessage')} <strong>{lockoutCountdown}</strong>
               </AlertDescription>
             </Alert>
           )}
@@ -149,24 +151,24 @@ const Auth = () => {
             <Alert className="mb-4 border-warning bg-warning/10">
               <AlertTriangle className="h-4 w-4 text-warning" />
               <AlertDescription className="text-warning">
-                {rateLimitState.remainingAttempts} login attempt{rateLimitState.remainingAttempts !== 1 ? 's' : ''} remaining before temporary lockout.
+                {t('app.auth.attemptsRemaining', { count: rateLimitState.remainingAttempts })}
               </AlertDescription>
             </Alert>
           )}
 
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signin">{t('app.auth.signIn')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username">{t('app.auth.username')}</Label>
                   <Input
                     id="username"
                     type="text"
-                    placeholder="Enter your username"
+                    placeholder={t('app.auth.enterUsername')}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
@@ -174,11 +176,11 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('app.auth.password')}</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder={t('app.auth.enterPassword')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -190,7 +192,7 @@ const Auth = () => {
                     to="/forgot-password" 
                     className="text-sm text-primary hover:underline"
                   >
-                    Forgot Password?
+                    {t('app.auth.forgotPassword')}
                   </Link>
                 </div>
                 <Button 
@@ -198,7 +200,7 @@ const Auth = () => {
                   className="w-full" 
                   disabled={isLoading || !!isLockedOut}
                 >
-                  {isLoading ? 'Signing In...' : isLockedOut ? 'Account Locked' : 'Sign In'}
+                  {isLoading ? t('app.auth.signingIn') : isLockedOut ? t('app.auth.accountLocked') : t('app.auth.signIn')}
                 </Button>
               </form>
             </TabsContent>
