@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ interface PaginationState {
 const defaultPagination: PaginationState = { page: 1, pageSize: 25, search: '' };
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -162,7 +164,7 @@ const Dashboard = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Loading...</p>
+          <p className="mt-2 text-muted-foreground">{t('app.common.loading')}</p>
         </div>
       </div>
     );
@@ -196,8 +198,8 @@ const Dashboard = () => {
       <div className="container mx-auto p-4 sm:p-6 space-y-6 pb-20 md:pb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground text-sm">Welcome back, {profile.full_name}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('app.dashboard.title')}</h1>
+            <p className="text-muted-foreground text-sm">{t('app.dashboard.welcomeBack', { name: profile.full_name })}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="ghost" size="sm" onClick={resetTour} title="Restart Tour">
@@ -205,11 +207,11 @@ const Dashboard = () => {
             </Button>
             <Button variant="outline" size="sm" onClick={refetchAll} disabled={isRefreshing}>
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Refresh
+              {t('app.common.refresh')}
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate('/analytics')}>
               <BarChart3 className="h-4 w-4 mr-2" />
-              Analytics
+              {t('app.sidebar.analytics')}
             </Button>
           </div>
         </div>

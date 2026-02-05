@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, TestTube, FileText, Receipt, Bell, MessageSquare, Wallet } from "lucide-react";
 import { PatientsTable } from "./PatientsTable";
@@ -53,15 +54,16 @@ export const DataTabs = memo(function DataTabs({
   onTabChange
 }: DataTabsProps) {
   const isMobile = useIsMobile();
-  
+  const { t } = useTranslation();
+
   const tabs = [
-    { id: "patients", label: "Patients", shortLabel: "Pts", icon: Users, count: patientsPagination.totalCount, tourId: "patients-tab" },
-    { id: "reports", label: "Test Reports", shortLabel: "Tests", icon: TestTube, count: reportsPagination.totalCount, tourId: "reports-tab" },
-    { id: "documents", label: "Documents", shortLabel: "Docs", icon: FileText, count: documentsPagination.totalCount },
-    { id: "bills", label: "Bills", shortLabel: "Bills", icon: Receipt, count: billsPagination.totalCount, tourId: "bills-tab" },
-    { id: "followups", label: "Follow-ups", shortLabel: "F/ups", icon: Bell, count: followupsPagination.totalCount },
-    { id: "feedback", label: "Feedback", shortLabel: "Fdbk", icon: MessageSquare, count: feedbackPagination.totalCount },
-    { id: "ledger", label: "Ledger", shortLabel: "Ldgr", icon: Wallet, count: paymentsPagination.totalCount },
+    { id: "patients", label: t('app.tabs.patients'), shortLabel: t('app.tabs.patientsShort'), icon: Users, count: patientsPagination.totalCount, tourId: "patients-tab" },
+    { id: "reports", label: t('app.tabs.testReports'), shortLabel: t('app.tabs.testReportsShort'), icon: TestTube, count: reportsPagination.totalCount, tourId: "reports-tab" },
+    { id: "documents", label: t('app.tabs.documents'), shortLabel: t('app.tabs.documentsShort'), icon: FileText, count: documentsPagination.totalCount },
+    { id: "bills", label: t('app.tabs.bills'), shortLabel: t('app.tabs.billsShort'), icon: Receipt, count: billsPagination.totalCount, tourId: "bills-tab" },
+    { id: "followups", label: t('app.tabs.followups'), shortLabel: t('app.tabs.followupsShort'), icon: Bell, count: followupsPagination.totalCount },
+    { id: "feedback", label: t('app.tabs.feedback'), shortLabel: t('app.tabs.feedbackShort'), icon: MessageSquare, count: feedbackPagination.totalCount },
+    { id: "ledger", label: t('app.tabs.ledger'), shortLabel: t('app.tabs.ledgerShort'), icon: Wallet, count: paymentsPagination.totalCount },
   ];
 
   const TabsListContent = (

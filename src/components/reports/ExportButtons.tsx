@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 import { FileSpreadsheet, FileText, Printer, Loader2 } from 'lucide-react';
 
 interface ExportButtonsProps {
@@ -16,6 +17,8 @@ export function ExportButtons({
   loading = false,
   disabled = false,
 }: ExportButtonsProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex items-center gap-2">
       <Button
@@ -30,7 +33,7 @@ export function ExportButtons({
         ) : (
           <FileSpreadsheet className="h-4 w-4" />
         )}
-        Excel
+        {t('app.export.excel')}
       </Button>
       <Button
         variant="outline"
@@ -44,7 +47,7 @@ export function ExportButtons({
         ) : (
           <FileText className="h-4 w-4" />
         )}
-        PDF
+        {t('app.export.pdf')}
       </Button>
       <Button
         variant="outline"
@@ -54,7 +57,7 @@ export function ExportButtons({
         className="gap-2"
       >
         <Printer className="h-4 w-4" />
-        Print
+        {t('app.export.print')}
       </Button>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 export default function ForgotPassword() {
+  const { t } = useTranslation();
   const [step, setStep] = useState<'username' | 'otp' | 'password'>('username');
   const [username, setUsername] = useState("");
   const [otp, setOtp] = useState("");
@@ -36,14 +38,14 @@ export default function ForgotPassword() {
         setUserId(data.userId);
         setStep('otp');
         toast({
-          title: "OTP Sent",
-          description: `An OTP has been sent to ${data.maskedMobile}`,
+          title: t('app.success.otpSent'),
+          description: t('app.success.otpSentDesc', { phone: data.maskedMobile }),
         });
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to send OTP",
+        title: t('app.errors.failed'),
+        description: error.message || t('app.errors.sendOtpFailed'),
         variant: "destructive",
       });
     } finally {
@@ -56,8 +58,8 @@ export default function ForgotPassword() {
     
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Error",
-        description: "Passwords do not match",
+        title: t('app.errors.failed'),
+        description: t('app.errors.passwordMismatch'),
         variant: "destructive",
       });
       return;
@@ -78,15 +80,15 @@ export default function ForgotPassword() {
 
       if (data.success) {
         toast({
-          title: "Success",
-          description: "Your password has been reset successfully",
+          title: t('app.success.otpSent'),
+          description: t('app.success.passwordReset'),
         });
         navigate('/auth');
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to verify OTP",
+        title: t('app.errors.failed'),
+        description: error.message || t('app.errors.verifyOtpFailed'),
         variant: "destructive",
       });
     } finally {
@@ -105,24 +107,24 @@ export default function ForgotPassword() {
             onClick={() => navigate('/auth')}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to login
+            {t('app.common.backToLogin')}
           </Button>
-          <CardTitle>Reset Password</CardTitle>
+          <CardTitle>{t('app.auth.resetPassword')}</CardTitle>
           <CardDescription>
-            {step === 'username' && "Enter your username to receive an OTP"}
-            {step === 'otp' && `Enter the OTP sent to ${mobileNumber}`}
-            {step === 'password' && "Enter your new password"}
+            {step === 'username' && t('app.auth.enterUsernameForOtp')}
+            {step === 'otp' && t('app.auth.otpSentTo', { phone: mobileNumber })}
+            {step === 'password' && t('app.auth.enterNewPassword')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {step === 'username' && (
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">{t('app.auth.username')}</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="Enter your username"
+                  placeholder={t('app.auth.enterUsername')}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -135,7 +137,7 @@ export default function ForgotPassword() {
                 disabled={loading || !username}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Send OTP
+                {t('app.auth.sendOtp')}
               </Button>
             </form>
           )}
@@ -143,11 +145,11 @@ export default function ForgotPassword() {
           {step === 'otp' && (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="otp">OTP Code</Label>
+                <Label htmlFor="otp">{t('app.auth.otpCode')}</Label>
                 <Input
                   id="otp"
                   type="text"
-                  placeholder="Enter 6-digit OTP"
+                  placeholder={t('app.auth.enterOtp')}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   maxLength={6}
@@ -156,11 +158,11 @@ export default function ForgotPassword() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">{t('app.auth.newPassword')}</Label>
                 <Input
                   id="newPassword"
                   type="password"
-                  placeholder="Enter new password"
+                  placeholder={t('app.auth.enterNewPassword')}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
@@ -168,11 +170,11 @@ export default function ForgotPassword() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">{t('app.auth.confirmPassword')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
-                  placeholder="Confirm new password"
+                  placeholder={t('app.auth.confirmNewPassword')}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -185,7 +187,7 @@ export default function ForgotPassword() {
                 disabled={loading || !otp || !newPassword || !confirmPassword}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Reset Password
+                {t('app.auth.resetPassword')}
               </Button>
             </form>
           )}

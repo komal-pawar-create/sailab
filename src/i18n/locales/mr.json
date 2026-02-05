@@ -523,5 +523,158 @@
     "errorGeneric": "सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
     "validationPhone": "कृपया वैध 10-15 अंकी फोन नंबर प्रविष्ट करा",
     "validationName": "नाव 2-100 अक्षरांचे असणे आवश्यक आहे"
+  },
+  "app": {
+    "common": {
+      "loading": "लोड होत आहे...",
+      "refresh": "रिफ्रेश",
+      "search": "शोधा",
+      "save": "सेव्ह करा",
+      "cancel": "रद्द करा",
+      "delete": "हटवा",
+      "edit": "संपादित करा",
+      "add": "जोडा",
+      "back": "मागे",
+      "backToHome": "मुख्यपृष्ठावर परत जा",
+      "backToLogin": "लॉगिनवर परत जा",
+      "submit": "सबमिट करा",
+      "sending": "पाठवत आहे..."
+    },
+    "auth": {
+      "signIn": "साइन इन करा",
+      "signOut": "साइन आउट",
+      "signingIn": "साइन इन होत आहे...",
+      "username": "वापरकर्तानाव",
+      "password": "पासवर्ड",
+      "enterUsername": "तुमचे वापरकर्तानाव प्रविष्ट करा",
+      "enterPassword": "तुमचा पासवर्ड प्रविष्ट करा",
+      "forgotPassword": "पासवर्ड विसरलात?",
+      "resetPassword": "पासवर्ड रीसेट करा",
+      "newPassword": "नवीन पासवर्ड",
+      "confirmPassword": "पासवर्ड पुष्टी करा",
+      "enterNewPassword": "नवीन पासवर्ड प्रविष्ट करा",
+      "confirmNewPassword": "नवीन पासवर्डची पुष्टी करा",
+      "accountLocked": "खाते लॉक",
+      "accessSystem": "तुमच्या प्रयोगशाळा व्यवस्थापन प्रणालीमध्ये प्रवेश करा",
+      "attemptsRemaining": "तात्पुरत्या लॉकआउटपूर्वी {count} लॉगिन प्रयत्न शिल्लक.",
+      "lockedMessage": "खाते लॉक आहे. पुन्हा प्रयत्न करा",
+      "sendOtp": "OTP पाठवा",
+      "otpCode": "OTP कोड",
+      "enterOtp": "6-अंकी OTP प्रविष्ट करा",
+      "enterUsernameForOtp": "OTP प्राप्त करण्यासाठी तुमचे वापरकर्तानाव प्रविष्ट करा",
+      "otpSentTo": "{phone} वर पाठवलेला OTP प्रविष्ट करा"
+    },
+    "sidebar": {
+      "main": "मुख्य",
+      "administration": "प्रशासन",
+      "superAdmin": "सुपर अॅडमिन",
+      "dashboard": "डॅशबोर्ड",
+      "reports": "अहवाल",
+      "outstandingReport": "थकबाकी अहवाल",
+      "patientHistory": "रुग्ण इतिहास",
+      "followups": "फॉलो-अप्स",
+      "analytics": "विश्लेषण",
+      "labProfile": "लॅब प्रोफाइल",
+      "branchSettings": "शाखा सेटिंग्ज",
+      "apiSettings": "API सेटिंग्ज",
+      "auditLogs": "ऑडिट लॉग्ज",
+      "salesLeads": "विक्री आणि लीड्स",
+      "subscriptions": "सबस्क्रिप्शन",
+      "landingPage": "लँडिंग पेज",
+      "dataManagement": "डेटा व्यवस्थापन"
+    },
+    "roles": {
+      "super_admin": "सुपर अॅडमिन",
+      "lab_admin": "लॅब अॅडमिन",
+      "admin": "अॅडमिन",
+      "operator_1": "ऑपरेटर 1",
+      "operator_2": "ऑपरेटर 2",
+      "operator_3": "ऑपरेटर 3",
+      "branch_operator": "शाखा ऑपरेटर"
+    },
+    "dashboard": {
+      "title": "डॅशबोर्ड",
+      "welcomeBack": "पुन्हा स्वागत आहे, {name}",
+      "today": "आज",
+      "thisWeek": "या आठवड्यात",
+      "thisMonth": "या महिन्यात",
+      "lastMonth": "गेल्या महिन्यात",
+      "lastQuarter": "गेल्या तिमाहीत",
+      "lastYear": "गेल्या वर्षी",
+      "allTime": "सर्व काळ",
+      "allBranches": "सर्व शाखा",
+      "selectBranch": "शाखा निवडा"
+    },
+    "tabs": {
+      "patients": "रुग्ण",
+      "patientsShort": "रुग्ण",
+      "testReports": "चाचणी अहवाल",
+      "testReportsShort": "चाचणी",
+      "documents": "दस्तऐवज",
+      "documentsShort": "डॉक्स",
+      "bills": "बिले",
+      "billsShort": "बिले",
+      "followups": "फॉलो-अप्स",
+      "followupsShort": "फॉलो",
+      "feedback": "अभिप्राय",
+      "feedbackShort": "अभिप्राय",
+      "ledger": "लेजर",
+      "ledgerShort": "लेजर"
+    },
+    "quickActions": {
+      "title": "जलद क्रिया",
+      "newPatient": "नवीन रुग्ण",
+      "newTest": "नवीन चाचणी",
+      "newBill": "नवीन बिल",
+      "uploadDoc": "डॉक अपलोड",
+      "addPatient": "नवीन रुग्ण जोडा",
+      "addTestReport": "चाचणी अहवाल जोडा",
+      "createBill": "बिल तयार करा",
+      "uploadDocument": "दस्तऐवज अपलोड करा"
+    },
+    "mobileNav": {
+      "dashboard": "डॅशबोर्ड",
+      "reports": "अहवाल",
+      "add": "जोडा",
+      "history": "इतिहास",
+      "more": "अधिक",
+      "newPatient": "नवीन रुग्ण",
+      "newBill": "नवीन बिल",
+      "newTestReport": "नवीन चाचणी अहवाल",
+      "uploadDocument": "दस्तऐवज अपलोड करा"
+    },
+    "reports": {
+      "title": "अहवाल",
+      "subtitle": "Excel किंवा PDF फॉरमॅटमध्ये अहवाल तयार करा आणि निर्यात करा",
+      "patients": "रुग्ण",
+      "bills": "बिले",
+      "testReports": "चाचणी अहवाल",
+      "revenue": "महसूल",
+      "collections": "संकलन",
+      "referrals": "रेफरल",
+      "dailyActivity": "दैनंदिन क्रियाकलाप"
+    },
+    "export": {
+      "excel": "Excel",
+      "pdf": "PDF",
+      "print": "प्रिंट"
+    },
+    "notFound": {
+      "title": "404",
+      "message": "अरेरे! पृष्ठ सापडले नाही",
+      "returnHome": "मुख्यपृष्ठावर परत जा"
+    },
+    "errors": {
+      "failed": "त्रुटी",
+      "signOutError": "साइन आउट करण्यात अयशस्वी",
+      "passwordMismatch": "पासवर्ड जुळत नाहीत",
+      "sendOtpFailed": "OTP पाठवण्यात अयशस्वी",
+      "verifyOtpFailed": "OTP सत्यापित करण्यात अयशस्वी"
+    },
+    "success": {
+      "passwordReset": "तुमचा पासवर्ड यशस्वीरित्या रीसेट केला गेला आहे",
+      "otpSent": "OTP पाठवला",
+      "otpSentDesc": "{phone} वर OTP पाठवला गेला आहे"
+    }
   }
 }

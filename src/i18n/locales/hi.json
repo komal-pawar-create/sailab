@@ -523,5 +523,158 @@
     "errorGeneric": "सबमिट करने में विफल। कृपया पुनः प्रयास करें।",
     "validationPhone": "कृपया एक वैध 10-15 अंकों का फोन नंबर दर्ज करें",
     "validationName": "नाम 2-100 अक्षरों का होना चाहिए"
+  },
+  "app": {
+    "common": {
+      "loading": "लोड हो रहा है...",
+      "refresh": "रीफ्रेश",
+      "search": "खोजें",
+      "save": "सेव करें",
+      "cancel": "रद्द करें",
+      "delete": "हटाएं",
+      "edit": "संपादित करें",
+      "add": "जोड़ें",
+      "back": "वापस",
+      "backToHome": "होम पर वापस जाएं",
+      "backToLogin": "लॉगिन पर वापस जाएं",
+      "submit": "सबमिट करें",
+      "sending": "भेज रहा है..."
+    },
+    "auth": {
+      "signIn": "साइन इन",
+      "signOut": "साइन आउट",
+      "signingIn": "साइन इन हो रहा है...",
+      "username": "उपयोगकर्ता नाम",
+      "password": "पासवर्ड",
+      "enterUsername": "अपना उपयोगकर्ता नाम दर्ज करें",
+      "enterPassword": "अपना पासवर्ड दर्ज करें",
+      "forgotPassword": "पासवर्ड भूल गए?",
+      "resetPassword": "पासवर्ड रीसेट करें",
+      "newPassword": "नया पासवर्ड",
+      "confirmPassword": "पासवर्ड की पुष्टि करें",
+      "enterNewPassword": "नया पासवर्ड दर्ज करें",
+      "confirmNewPassword": "नए पासवर्ड की पुष्टि करें",
+      "accountLocked": "खाता लॉक",
+      "accessSystem": "अपने प्रयोगशाला प्रबंधन सिस्टम तक पहुंचें",
+      "attemptsRemaining": "अस्थायी लॉकआउट से पहले {count} लॉगिन प्रयास शेष।",
+      "lockedMessage": "खाता लॉक है। फिर से प्रयास करें",
+      "sendOtp": "OTP भेजें",
+      "otpCode": "OTP कोड",
+      "enterOtp": "6-अंकीय OTP दर्ज करें",
+      "enterUsernameForOtp": "OTP प्राप्त करने के लिए अपना उपयोगकर्ता नाम दर्ज करें",
+      "otpSentTo": "{phone} पर भेजे गए OTP दर्ज करें"
+    },
+    "sidebar": {
+      "main": "मुख्य",
+      "administration": "प्रशासन",
+      "superAdmin": "सुपर एडमिन",
+      "dashboard": "डैशबोर्ड",
+      "reports": "रिपोर्ट्स",
+      "outstandingReport": "बकाया रिपोर्ट",
+      "patientHistory": "रोगी इतिहास",
+      "followups": "फॉलो-अप्स",
+      "analytics": "एनालिटिक्स",
+      "labProfile": "लैब प्रोफ़ाइल",
+      "branchSettings": "शाखा सेटिंग्स",
+      "apiSettings": "API सेटिंग्स",
+      "auditLogs": "ऑडिट लॉग्स",
+      "salesLeads": "सेल्स और लीड्स",
+      "subscriptions": "सब्सक्रिप्शन",
+      "landingPage": "लैंडिंग पेज",
+      "dataManagement": "डेटा प्रबंधन"
+    },
+    "roles": {
+      "super_admin": "सुपर एडमिन",
+      "lab_admin": "लैब एडमिन",
+      "admin": "एडमिन",
+      "operator_1": "ऑपरेटर 1",
+      "operator_2": "ऑपरेटर 2",
+      "operator_3": "ऑपरेटर 3",
+      "branch_operator": "शाखा ऑपरेटर"
+    },
+    "dashboard": {
+      "title": "डैशबोर्ड",
+      "welcomeBack": "वापसी पर स्वागत है, {name}",
+      "today": "आज",
+      "thisWeek": "इस सप्ताह",
+      "thisMonth": "इस महीने",
+      "lastMonth": "पिछला महीना",
+      "lastQuarter": "पिछली तिमाही",
+      "lastYear": "पिछला साल",
+      "allTime": "सभी समय",
+      "allBranches": "सभी शाखाएं",
+      "selectBranch": "शाखा चुनें"
+    },
+    "tabs": {
+      "patients": "रोगी",
+      "patientsShort": "रोगी",
+      "testReports": "परीक्षण रिपोर्ट",
+      "testReportsShort": "परीक्षण",
+      "documents": "दस्तावेज़",
+      "documentsShort": "डॉक्स",
+      "bills": "बिल",
+      "billsShort": "बिल",
+      "followups": "फॉलो-अप्स",
+      "followupsShort": "फॉलो",
+      "feedback": "फीडबैक",
+      "feedbackShort": "फीडबैक",
+      "ledger": "लेजर",
+      "ledgerShort": "लेजर"
+    },
+    "quickActions": {
+      "title": "त्वरित कार्रवाई",
+      "newPatient": "नया रोगी",
+      "newTest": "नया परीक्षण",
+      "newBill": "नया बिल",
+      "uploadDoc": "डॉक अपलोड",
+      "addPatient": "नया रोगी जोड़ें",
+      "addTestReport": "परीक्षण रिपोर्ट जोड़ें",
+      "createBill": "बिल बनाएं",
+      "uploadDocument": "दस्तावेज़ अपलोड करें"
+    },
+    "mobileNav": {
+      "dashboard": "डैशबोर्ड",
+      "reports": "रिपोर्ट्स",
+      "add": "जोड़ें",
+      "history": "इतिहास",
+      "more": "अधिक",
+      "newPatient": "नया रोगी",
+      "newBill": "नया बिल",
+      "newTestReport": "नई परीक्षण रिपोर्ट",
+      "uploadDocument": "दस्तावेज़ अपलोड करें"
+    },
+    "reports": {
+      "title": "रिपोर्ट्स",
+      "subtitle": "Excel या PDF फॉर्मेट में रिपोर्ट जनरेट और एक्सपोर्ट करें",
+      "patients": "रोगी",
+      "bills": "बिल",
+      "testReports": "परीक्षण रिपोर्ट",
+      "revenue": "राजस्व",
+      "collections": "संग्रह",
+      "referrals": "रेफरल",
+      "dailyActivity": "दैनिक गतिविधि"
+    },
+    "export": {
+      "excel": "Excel",
+      "pdf": "PDF",
+      "print": "प्रिंट"
+    },
+    "notFound": {
+      "title": "404",
+      "message": "उफ़! पेज नहीं मिला",
+      "returnHome": "होम पर वापस जाएं"
+    },
+    "errors": {
+      "failed": "त्रुटि",
+      "signOutError": "साइन आउट करने में विफल",
+      "passwordMismatch": "पासवर्ड मेल नहीं खाते",
+      "sendOtpFailed": "OTP भेजने में विफल",
+      "verifyOtpFailed": "OTP सत्यापित करने में विफल"
+    },
+    "success": {
+      "passwordReset": "आपका पासवर्ड सफलतापूर्वक रीसेट हो गया है",
+      "otpSent": "OTP भेजा गया",
+      "otpSentDesc": "{phone} पर OTP भेजा गया है"
+    }
   }
 }

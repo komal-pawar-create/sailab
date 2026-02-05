@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { LayoutDashboard, FileText, Users, Plus, Menu, Receipt, TestTube, UserPlus, FileImage } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -29,22 +30,23 @@ export function MobileBottomNav({ onQuickAction }: MobileBottomNavProps) {
   const isMobile = useIsMobile();
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const { setOpenMobile } = useSidebar();
+  const { t } = useTranslation();
 
   if (!isMobile) return null;
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { id: "reports", label: "Reports", icon: FileText, path: "/reports" },
-    { id: "add", label: "Add", icon: Plus, isAction: true },
-    { id: "patients", label: "History", icon: Users, path: "/patient" },
-    { id: "menu", label: "More", icon: Menu, isMenu: true },
+    { id: "dashboard", label: t('app.mobileNav.dashboard'), icon: LayoutDashboard, path: "/dashboard" },
+    { id: "reports", label: t('app.mobileNav.reports'), icon: FileText, path: "/reports" },
+    { id: "add", label: t('app.mobileNav.add'), icon: Plus, isAction: true },
+    { id: "patients", label: t('app.mobileNav.history'), icon: Users, path: "/patient" },
+    { id: "menu", label: t('app.mobileNav.more'), icon: Menu, isMenu: true },
   ];
 
   const quickActions: QuickActionItem[] = [
-    { label: "New Patient", icon: UserPlus, action: "add-patient" },
-    { label: "New Bill", icon: Receipt, action: "add-bill" },
-    { label: "New Test Report", icon: TestTube, action: "add-report" },
-    { label: "Upload Document", icon: FileImage, action: "add-document" },
+    { label: t('app.mobileNav.newPatient'), icon: UserPlus, action: "add-patient" },
+    { label: t('app.mobileNav.newBill'), icon: Receipt, action: "add-bill" },
+    { label: t('app.mobileNav.newTestReport'), icon: TestTube, action: "add-report" },
+    { label: t('app.mobileNav.uploadDocument'), icon: FileImage, action: "add-document" },
   ];
 
   const isActive = (path: string) => {
@@ -109,7 +111,7 @@ export function MobileBottomNav({ onQuickAction }: MobileBottomNavProps) {
       <Drawer open={quickActionsOpen} onOpenChange={setQuickActionsOpen}>
         <DrawerContent className="pb-safe">
           <DrawerHeader>
-            <DrawerTitle>Quick Actions</DrawerTitle>
+            <DrawerTitle>{t('app.quickActions.title')}</DrawerTitle>
           </DrawerHeader>
           <div className="grid grid-cols-2 gap-3 p-4">
             {quickActions.map((action) => {
