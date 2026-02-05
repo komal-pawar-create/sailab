@@ -1,101 +1,308 @@
 
-# Auth Page Enhancement: Logo Prominence & Back to Home Navigation
+# Full i18n Coverage for All Pages, Buttons & Menus
 
 ## Overview
-Improve the Auth page by adding a "Back to Home" button and making the logo more prominent, especially on mobile screens. The reference image shows the LabFlow logo prominently displayed in the landing page header.
+Extend the existing multi-language support (English, Hindi, Marathi) from landing/product tour pages to ALL application pages including Authentication, Dashboard, Sidebar Navigation, Reports, Patient History, and all dialogs/buttons.
 
 ---
 
-## Changes Required
+## Current State
 
-### 1. Add Back to Home Button
-Add a prominent button at the top-left of the auth card (similar to ForgotPassword page pattern) that navigates users back to the landing page.
+### Already Translated
+- Landing page (Index.tsx) - All sections
+- Product Tour page - All components
+- Language selector - Working
 
-### 2. Enhance Logo Prominence
-- Increase logo size significantly, especially on mobile
-- Add a subtle glow effect for visual appeal (matching NavHeader style)
-- Use responsive sizing: larger on mobile to fill more horizontal space
-
----
-
-## Visual Design
-
-### Current Layout
-```
-+---------------------------+
-|    [small logo]           |
-|    description            |
-|    ---------------------- |
-|    [Sign In Form]         |
-+---------------------------+
-```
-
-### New Layout
-```
-+---------------------------+
-| <- Back to Home           |
-|                           |
-|    [PROMINENT LOGO]       |
-|    description            |
-|    ---------------------- |
-|    [Sign In Form]         |
-+---------------------------+
-```
+### Not Translated (Need Updates)
+| Page/Component | Hardcoded Strings |
+|----------------|-------------------|
+| Auth.tsx | "Back to Home", "Sign In", "Username", "Password", "Forgot Password?", loading states |
+| ForgotPassword.tsx | "Reset Password", "Back to login", OTP flow messages |
+| Dashboard.tsx | "Dashboard", "Welcome back", "Refresh", "Analytics" |
+| AppSidebar.tsx | Menu items: "Dashboard", "Reports", "Patient History", role labels |
+| MobileBottomNav.tsx | "Dashboard", "Reports", "Add", "History", "More", quick actions |
+| DashboardFilters.tsx | "Today", "This Week", "This Month", "All Branches" |
+| DataTabs.tsx | Tab labels: "Patients", "Test Reports", "Documents", "Bills" |
+| QuickActions.tsx | "Quick Actions", "New Patient", "New Test", "New Bill", dialog titles |
+| Reports.tsx | "Reports", tab labels |
+| NotFound.tsx | "404", "Oops! Page not found", "Return to Home" |
+| ExportButtons.tsx | "Excel", "PDF", "Print" |
 
 ---
 
-## Technical Implementation
+## Implementation Plan
 
-### File to Modify
-`src/pages/Auth.tsx`
+### Phase 1: Add Translation Keys to JSON Files
 
-### Changes
+Add new `app` section to all 3 language files with comprehensive keys:
 
-**1. Add Import**
+```json
+{
+  "app": {
+    "common": {
+      "loading": "Loading...",
+      "refresh": "Refresh",
+      "search": "Search",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "add": "Add",
+      "back": "Back",
+      "backToHome": "Back to Home",
+      "backToLogin": "Back to login",
+      "submit": "Submit",
+      "sending": "Sending..."
+    },
+    "auth": {
+      "signIn": "Sign In",
+      "signOut": "Sign Out",
+      "signingIn": "Signing In...",
+      "username": "Username",
+      "password": "Password",
+      "forgotPassword": "Forgot Password?",
+      "resetPassword": "Reset Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "accountLocked": "Account Locked",
+      "accessSystem": "Access your laboratory management system",
+      "attemptsRemaining": "{count} login attempt(s) remaining before temporary lockout.",
+      "lockedMessage": "Account locked. Try again in",
+      "sendOtp": "Send OTP",
+      "otpCode": "OTP Code",
+      "enterOtp": "Enter 6-digit OTP",
+      "enterUsername": "Enter your username to receive an OTP",
+      "otpSentTo": "Enter the OTP sent to {phone}"
+    },
+    "sidebar": {
+      "main": "Main",
+      "administration": "Administration",
+      "superAdmin": "Super Admin",
+      "dashboard": "Dashboard",
+      "reports": "Reports",
+      "outstandingReport": "Outstanding Report",
+      "patientHistory": "Patient History",
+      "followups": "Follow-ups",
+      "analytics": "Analytics",
+      "labProfile": "Lab Profile",
+      "branchSettings": "Branch Settings",
+      "apiSettings": "API Settings",
+      "auditLogs": "Audit Logs",
+      "salesLeads": "Sales & Leads",
+      "subscriptions": "Subscriptions",
+      "landingPage": "Landing Page",
+      "dataManagement": "Data Management"
+    },
+    "roles": {
+      "super_admin": "Super Admin",
+      "lab_admin": "Lab Admin",
+      "admin": "Admin",
+      "operator_1": "Operator 1",
+      "operator_2": "Operator 2",
+      "operator_3": "Operator 3",
+      "branch_operator": "Branch Operator"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "welcomeBack": "Welcome back, {name}",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month",
+      "lastQuarter": "Last Quarter",
+      "lastYear": "Last Year",
+      "allTime": "All Time",
+      "allBranches": "All Branches",
+      "selectBranch": "Select branch"
+    },
+    "tabs": {
+      "patients": "Patients",
+      "testReports": "Test Reports",
+      "documents": "Documents",
+      "bills": "Bills",
+      "followups": "Follow-ups",
+      "feedback": "Feedback",
+      "ledger": "Ledger"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "newPatient": "New Patient",
+      "newTest": "New Test",
+      "newBill": "New Bill",
+      "uploadDoc": "Upload Doc",
+      "addPatient": "Add New Patient",
+      "addTestReport": "Add Test Report",
+      "createBill": "Create Bill",
+      "uploadDocument": "Upload Document"
+    },
+    "mobileNav": {
+      "dashboard": "Dashboard",
+      "reports": "Reports",
+      "add": "Add",
+      "history": "History",
+      "more": "More",
+      "newPatient": "New Patient",
+      "newBill": "New Bill",
+      "newTestReport": "New Test Report",
+      "uploadDocument": "Upload Document"
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Generate and export reports in Excel or PDF format",
+      "patients": "Patients",
+      "bills": "Bills",
+      "testReports": "Test Reports",
+      "revenue": "Revenue",
+      "collections": "Collections",
+      "referrals": "Referrals",
+      "dailyActivity": "Daily Activity"
+    },
+    "export": {
+      "excel": "Excel",
+      "pdf": "PDF",
+      "print": "Print"
+    },
+    "notFound": {
+      "title": "404",
+      "message": "Oops! Page not found",
+      "returnHome": "Return to Home"
+    },
+    "errors": {
+      "failed": "Failed",
+      "signOutError": "Failed to sign out",
+      "passwordMismatch": "Passwords do not match"
+    },
+    "success": {
+      "passwordReset": "Your password has been reset successfully",
+      "otpSent": "OTP Sent"
+    }
+  }
+}
+```
+
+### Phase 2: Update Components
+
+Each component will import `useTranslation` and replace hardcoded strings:
+
+**Example pattern for Auth.tsx:**
 ```typescript
-import { ArrowLeft } from 'lucide-react';
-```
+import { useTranslation } from 'react-i18next';
 
-**2. Add Back to Home Button**
-Add above the logo in CardHeader, styled as a ghost button with left arrow icon.
-
-**3. Enhanced Logo Styles**
-- Mobile: `h-16` to `h-20` (larger, more prominent)
-- Desktop: `h-14` to `h-16`
-- Add glow effect with gradient blur background
-- Center alignment with proper spacing
-
-### Responsive Logo Sizing
-| Screen | Current | New |
-|--------|---------|-----|
-| Mobile | h-12 | h-16 sm:h-20 |
-| Desktop | h-12 | h-14 md:h-16 |
-
-### Glow Effect
-Add a subtle animated glow behind the logo:
-```tsx
-<div className="relative">
-  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 blur-xl -z-10 rounded-full scale-150" />
-  <img src="/images/labflow-logo.png" ... />
-</div>
+const Auth = () => {
+  const { t } = useTranslation();
+  
+  return (
+    <Button onClick={() => navigate('/')}>
+      {t('app.common.backToHome')}
+    </Button>
+    // ... more translations
+  );
+};
 ```
 
 ---
 
-## Code Changes Summary
+## Files to Modify
 
-| Element | Change |
-|---------|--------|
-| Back Button | Add ghost button with ArrowLeft icon linking to `/` |
-| Logo Size | Increase from `h-12` to `h-16 sm:h-20` |
-| Logo Effect | Add gradient glow background |
-| Layout | Add spacing between back button and logo |
+### Translation Files (3 files)
+| File | Action |
+|------|--------|
+| `src/i18n/locales/en.json` | Add `app` section with all keys |
+| `src/i18n/locales/hi.json` | Add `app` section with Hindi translations |
+| `src/i18n/locales/mr.json` | Add `app` section with Marathi translations |
+
+### React Components (11 files)
+| File | Changes |
+|------|---------|
+| `src/pages/Auth.tsx` | Add `useTranslation`, translate all strings |
+| `src/pages/ForgotPassword.tsx` | Add `useTranslation`, translate all strings |
+| `src/pages/Dashboard.tsx` | Add `useTranslation`, translate title/welcome |
+| `src/pages/Reports.tsx` | Add `useTranslation`, translate tabs |
+| `src/pages/NotFound.tsx` | Add `useTranslation`, translate messages |
+| `src/components/AppSidebar.tsx` | Add `useTranslation`, translate menu items |
+| `src/components/MobileBottomNav.tsx` | Add `useTranslation`, translate nav items |
+| `src/components/dashboard/DashboardFilters.tsx` | Add `useTranslation`, translate filters |
+| `src/components/dashboard/DataTabs.tsx` | Add `useTranslation`, translate tab labels |
+| `src/components/dashboard/QuickActions.tsx` | Add `useTranslation`, translate actions |
+| `src/components/reports/ExportButtons.tsx` | Add `useTranslation`, translate buttons |
+
+---
+
+## Translation Samples
+
+### Hindi (hi.json) - Key Additions
+```json
+"app": {
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "backToHome": "होम पर वापस जाएं"
+  },
+  "auth": {
+    "signIn": "साइन इन",
+    "username": "उपयोगकर्ता नाम",
+    "password": "पासवर्ड",
+    "forgotPassword": "पासवर्ड भूल गए?"
+  },
+  "dashboard": {
+    "title": "डैशबोर्ड",
+    "welcomeBack": "वापसी पर स्वागत है, {name}",
+    "today": "आज"
+  }
+}
+```
+
+### Marathi (mr.json) - Key Additions
+```json
+"app": {
+  "common": {
+    "loading": "लोड होत आहे...",
+    "backToHome": "मुख्यपृष्ठावर परत जा"
+  },
+  "auth": {
+    "signIn": "साइन इन करा",
+    "username": "वापरकर्तानाव",
+    "password": "पासवर्ड",
+    "forgotPassword": "पासवर्ड विसरलात?"
+  },
+  "dashboard": {
+    "title": "डॅशबोर्ड",
+    "welcomeBack": "पुन्हा स्वागत आहे, {name}",
+    "today": "आज"
+  }
+}
+```
+
+---
+
+## Component Update Pattern
+
+### Before (Hardcoded)
+```tsx
+<span>Dashboard</span>
+<p>Welcome back, {profile.full_name}</p>
+```
+
+### After (Translated)
+```tsx
+const { t } = useTranslation();
+// ...
+<span>{t('app.sidebar.dashboard')}</span>
+<p>{t('app.dashboard.welcomeBack', { name: profile.full_name })}</p>
+```
 
 ---
 
 ## Benefits
 
-1. **Better Navigation** - Users can easily return to the landing page
-2. **Brand Recognition** - Larger, more prominent logo reinforces brand identity
-3. **Mobile UX** - Logo is now readable and professional on small screens
-4. **Visual Consistency** - Matches the glow effect used in the landing page NavHeader
+1. **Consistent UX**: All pages match user's language preference
+2. **Seamless Switching**: Language change reflects across entire app
+3. **Maintainable**: Centralized translation files
+4. **Extensible**: Easy to add more languages later
+
+---
+
+## Estimated Scope
+
+- **~150+ new translation keys** across 3 languages
+- **14 files to modify** (3 JSON + 11 TSX)
+- All user-facing text will be translatable
