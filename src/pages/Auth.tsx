@@ -124,13 +124,17 @@ const Auth = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('app.common.backToHome')}
           </Button>
-          <div className="relative flex justify-center mb-4">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 blur-xl -z-10 rounded-full scale-150" />
-            <img 
-              src="/images/labflow-logo.png" 
-              alt="LabFlow" 
-              className="h-16 sm:h-20 md:h-16 w-auto object-contain relative z-10" 
-            />
+          <div className="relative flex flex-col items-center mb-6">
+            {/* Glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-primary/20 to-primary/30 blur-3xl -z-10 rounded-full scale-150" />
+            
+            {/* Large Brand Name */}
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent tracking-tight">
+              LabFlow
+            </h1>
+            
+            {/* Decorative accent line */}
+            <div className="h-1 w-20 bg-gradient-to-r from-transparent via-primary to-transparent mt-3 rounded-full" />
           </div>
           <CardDescription>{t('app.auth.accessSystem')}</CardDescription>
         </CardHeader>
