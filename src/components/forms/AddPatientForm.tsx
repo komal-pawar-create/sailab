@@ -129,8 +129,53 @@ export const AddPatientForm = ({ onPatientAdded }: AddPatientFormProps) => {
     generatePreviewPatientId();
   }, [open, profile, selectedOperator, operatorLabId, operatorBranchId, toast]);
 
+  // Validate form data against database constraints
+  const validatePatientData = (): string[] => {
+    const errors: string[] = [];
+    
+    // Phone: must be exactly 10 digits
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      errors.push('Phone number must be exactly 10 digits');
+    }
+    
+    // Name: 2-100 characters
+    const trimmedName = formData.full_name.trim();
+    if (trimmedName.length < 2) {
+      errors.push('Patient name must be at least 2 characters');
+    }
+    if (trimmedName.length > 100) {
+      errors.push('Patient name must be less than 100 characters');
+    }
+    
+    // Age: 0-150
+    const age = parseInt(formData.age);
+    if (isNaN(age) || age < 0 || age > 150) {
+      errors.push('Age must be between 0 and 150');
+    }
+    
+    // Gender: required and valid
+    if (!formData.gender || !['MALE', 'FEMALE', 'OTHER'].includes(formData.gender)) {
+      errors.push('Please select a valid gender');
+    }
+    
+    return errors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Client-side validation
+    const validationErrors = validatePatientData();
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: validationErrors.join('. '),
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
 
     try {
