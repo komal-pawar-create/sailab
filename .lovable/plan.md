@@ -1,54 +1,144 @@
 
-# Fix Pricing Display: Update Database Values
 
-## Problem Identified
-The pricing cards are showing **₹15,000/month** and **₹25,000/month** instead of **₹199/month** and **₹299/month**.
+# Enhance Pricing Card Total Calculation Display
 
-**Root Cause**: The database table `landing_pricing` contains old pricing values that override the defaults set in `Index.tsx`.
+## Current State
+The billing summary is shown as a single line of text:
+- Yearly: `₹2,388/year billed annually`
+- 3-Year: `₹6,444 billed every 3 years`
 
-| Plan | Current DB Value | Expected Value |
-|------|------------------|----------------|
-| Starter | ₹15,000 | ₹199 |
-| Professional | ₹25,000 | ₹299 |
-| Enterprise | Custom | Custom (no change) |
+## Requested Change
+Show the total calculation more prominently below the monthly rate when yearly or 3-year billing is selected.
 
-## Data Flow
-```text
-Index.tsx default state (₹199/₹299)
-         ↓
-useEffect fetches from database
-         ↓
-Database returns old values (₹15,000/₹25,000)
-         ↓
-State gets overwritten with database values
-         ↓
-Wrong prices displayed on screen
+---
+
+## Visual Design
+
+### Current Layout
+```
+₹199  ₹159/month
+₹1,908/year billed annually
 ```
 
-## Solution
-Run a database migration to update the `landing_pricing` table with the correct monthly subscription prices.
-
-### Migration SQL
-```sql
--- Update Starter plan price to ₹199/month
-UPDATE landing_pricing 
-SET price = 199, amc_price = 0 
-WHERE name = 'Starter';
-
--- Update Professional plan price to ₹299/month
-UPDATE landing_pricing 
-SET price = 299, amc_price = 0 
-WHERE name = 'Professional';
+### New Layout
 ```
+₹199  ₹159/month
+
+Total: ₹1,908/year
+Save ₹480 compared to monthly
+```
+
+---
+
+## Implementation Details
+
+### File to Modify
+`src/components/landing/shared.tsx`
+
+### Changes to `getBillingSummary` and Price Display
+
+Update the billing summary section (lines 248-250) to show:
+1. **Total amount** in a more prominent style
+2. **Savings amount** showing how much they save compared to monthly billing
+
+### Updated Code Structure
+
+```tsx
+{/* Price Display - Non-enterprise plans */}
+<div className="mb-2">
+  {showDiscount && (
+    <span className="text-lg text-muted-foreground line-through mr-2">
+      ₹{price.toLocaleString('en-IN')}
+    </span>
+  )}
+  <span className="text-4xl font-bold text-foreground">
+    ₹{discountedPrice.toLocaleString('en-IN')}
+  </span>
+  <span className="text-muted-foreground">/month</span>
+</div>
+
+{/* Total Calculation - Only show for yearly/3-year */}
+{billingPeriod !== 'monthly' ? (
+  <div className="mb-6 pb-6 border-b border-border">
+    <div className="flex items-center justify-between text-sm mb-1">
+      <span className="text-muted-foreground">Total:</span>
+      <span className="font-semibold text-foreground">
+        ₹{totalAmount.toLocaleString('en-IN')}
+        {billingPeriod === 'yearly' ? '/year' : ' for 3 years'}
+      </span>
+    </div>
+    <div className="flex items-center justify-between text-xs">
+      <span className="text-muted-foreground">You save:</span>
+      <span className="text-green-600 dark:text-green-400 font-medium">
+        ₹{savings.toLocaleString('en-IN')}
+      </span>
+    </div>
+  </div>
+) : (
+  <p className="text-sm text-muted-foreground mb-6 pb-6 border-b border-border">
+    Billed monthly, cancel anytime
+  </p>
+)}
+```
+
+### Calculation Logic
+
+Add helper function to calculate total and savings:
+
+```tsx
+const getTotalAndSavings = (
+  basePrice: number, 
+  discountedPrice: number, 
+  billingPeriod: 'monthly' | 'yearly' | '3-year'
+) => {
+  const months = billingPeriod === 'yearly' ? 12 : 36;
+  const totalWithDiscount = discountedPrice * months;
+  const totalWithoutDiscount = basePrice * months;
+  const savings = totalWithoutDiscount - totalWithDiscount;
+  
+  return { total: totalWithDiscount, savings };
+};
+```
+
+---
+
+## Expected Result
+
+### Monthly Selected
+```
+₹199/month
+Billed monthly, cancel anytime
+```
+
+### Yearly Selected (20% off)
+```
+₹199  ₹159/month
+
+Total:     ₹1,908/year
+You save:  ₹480
+```
+
+### 3-Year Selected (40% off)
+```
+₹199  ₹119/month
+
+Total:     ₹4,284 for 3 years
+You save:  ₹2,856
+```
+
+---
 
 ## Files to Modify
-| File | Change |
-|------|--------|
-| New migration file | SQL to update `landing_pricing` table with correct prices |
 
-## Expected Result After Fix
-| Plan | Monthly | Yearly (20% off) | 3-Year (40% off) |
-|------|---------|------------------|------------------|
-| Starter | ₹199 | ₹159 | ₹119 |
-| Professional | ₹299 | ₹239 | ₹179 |
-| Enterprise | Custom | Custom | Custom |
+| File | Changes |
+|------|---------|
+| `src/components/landing/shared.tsx` | Add `getTotalAndSavings` helper, update price display section to show total and savings prominently |
+
+---
+
+## Benefits
+
+1. **Clarity** - Users immediately see the total commitment amount
+2. **Value Proposition** - Highlighting savings encourages longer commitments
+3. **Transparency** - Clear breakdown of what they pay and save
+
