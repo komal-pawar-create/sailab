@@ -210,9 +210,9 @@ export const PricingCard = ({
         </div>
       )}
       
-      {/* Discount Badge */}
+      {/* Discount Badge - adjust position when popular badge is present */}
       {showDiscount && (
-        <div className="absolute top-4 right-4">
+        <div className={`absolute right-4 ${isPopular ? 'top-8' : 'top-4'}`}>
           <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-accent/20 text-accent-foreground text-xs font-medium">
             <BadgePercent className="h-3 w-3" aria-hidden="true" />
             Save {billingPeriod === 'yearly' ? '20' : '40'}%
