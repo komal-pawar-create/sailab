@@ -1,138 +1,226 @@
 
-# Professional Stats Cards Design for Homepage Hero
+# Pricing Section Redesign with Billing Period Toggle
 
-## Current Problem
-The hero stats cards on the homepage appear as plain white boxes with small text:
-- Using basic `glass rounded-2xl p-6` styling
-- Text is too small (`text-3xl md:text-4xl` for value, `text-sm` for label)
-- No visual hierarchy or distinguishing design elements
-- Lacks the premium, professional feel expected for a SaaS landing page
-
-## Solution
-Transform the stats cards into eye-catching, professionally designed components with:
-- **Icons** for each stat to add visual interest
-- **Larger typography** with proper hierarchy
-- **Gradient accents** and subtle shadows
-- **Hover micro-interactions** for engagement
-- **Border gradients** and glass effects for premium look
+## Overview
+Transform the pricing section with a subscription-based model featuring monthly/yearly/3-year billing options with progressive discounts, and fix the "Most Popular" badge visibility.
 
 ---
 
-## Visual Design Specification
+## Issues to Fix
 
-### Before (Current)
+### 1. "Most Popular" Badge Cutoff
+**Current Problem**: Badge positioned at `-top-0 -translate-y-1/2` causes it to be clipped by container
+**Solution**: Add proper padding/margin to the parent container and ensure badge is fully visible
+
+### 2. Pricing Model Change
+**Current**: One-time setup + AMC yearly fee
+**New**: Monthly subscription with billing period toggle
+
+| Plan | Monthly | Yearly (20% off) | 3-Year (40% off) |
+|------|---------|------------------|------------------|
+| Starter | ₹199 | ₹159/mo (₹1,910/yr) | ₹119/mo (₹4,284 total) |
+| Professional | ₹299 | ₹239/mo (₹2,868/yr) | ₹179/mo (₹6,444 total) |
+| Enterprise | Contact Sales | Contact Sales | Contact Sales |
+
+---
+
+## Visual Design
+
+### Billing Period Toggle
 ```
-+------------------+
-| 500+             |  ← Small text
-| Labs Managed     |  ← Very small label
-+------------------+
-   (Plain white box)
++---------------------------------------+
+|  Monthly  |  Yearly     |  3 Years   |
+|           |  Save 20%   |  Save 40%  |
++---------------------------------------+
 ```
 
-### After (New Design)
-```
-+----------------------+
-|   🔬                 |  ← Icon with colored background
-|                      |
-|   500+               |  ← Large bold number
-|   Labs Managed       |  ← Medium label with better contrast
-+----------------------+
-   (Gradient border, shadow, hover lift)
-```
+- Segmented control / toggle group with 3 options
+- Active option highlighted with primary color
+- Discount badges shown on yearly/3-year options
+
+### Card Layout Changes
+- Add `pt-6` to pricing grid to prevent badge clipping
+- Popular card badge positioned with proper overflow handling
+- Dynamic price display based on selected billing period
+- Strike-through original price when discount applied
 
 ---
 
 ## Implementation Details
 
-### File to Modify
-`src/components/landing/HeroSection.tsx`
+### Files to Modify
 
-### New Stats Card Design
+#### 1. `src/components/landing/PricingSection.tsx`
+- Add billing period state (`'monthly' | 'yearly' | '3-year'`)
+- Add toggle component before pricing cards
+- Calculate discounted prices based on selection
+- Pass billing period to PricingCard
 
-Each stat card will feature:
+#### 2. `src/components/landing/shared.tsx` (PricingCard)
+- Update to accept billing period and base monthly price
+- Display price dynamically based on billing
+- Show original vs discounted price with visual indicator
+- Fix "Most Popular" badge overflow issue
 
-1. **Icon Badge** - Colored circular icon at top
-2. **Large Value** - `text-4xl md:text-5xl` with gradient text
-3. **Descriptive Label** - `text-base` with proper contrast
-4. **Card Styling**:
-   - Subtle gradient background overlay
-   - Enhanced glass effect with stronger blur
-   - Primary color accent border on hover
-   - Elevated shadow for depth
-   - Smooth hover animation with scale effect
+#### 3. `src/components/landing/types.ts`
+- Update `PricingPlan` interface to support monthly pricing
+- Add `billingPeriod` type
 
-### Icon Mapping
-| Stat | Icon | Color |
-|------|------|-------|
-| Labs Managed | Building2 | Blue |
-| Reports Generated / Tests | FileText | Green |
-| Uptime | Activity | Purple |
-| Support | HeadphonesIcon | Orange |
+#### 4. `src/pages/Index.tsx`
+- Update default pricing data with new monthly prices:
+  - Starter: ₹199/month
+  - Professional: ₹299/month
+  - Enterprise: Contact Sales
 
-### Code Structure
+---
+
+## Code Structure
+
+### Billing Toggle Component
 ```tsx
-// Enhanced stat card with icon, gradient, and animations
-<div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-primary/5 border border-border/50 p-8 shadow-lg hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
-  {/* Glow effect on hover */}
-  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-  
-  {/* Icon */}
-  <div className="relative mb-4 inline-flex p-3 rounded-xl bg-primary/10 text-primary">
-    <Icon className="h-6 w-6" />
-  </div>
-  
-  {/* Value - Large and prominent */}
-  <div className="relative text-4xl md:text-5xl font-bold gradient-text mb-2">
-    <AnimatedCounter end={stat.value} suffix={stat.suffix} />
-  </div>
-  
-  {/* Label - Better contrast */}
-  <div className="relative text-base font-medium text-muted-foreground">
-    {stat.label}
-  </div>
+type BillingPeriod = 'monthly' | 'yearly' | '3-year';
+
+const billingOptions = [
+  { value: 'monthly', label: 'Monthly', discount: 0 },
+  { value: 'yearly', label: 'Yearly', discount: 20, badge: 'Save 20%' },
+  { value: '3-year', label: '3 Years', discount: 40, badge: 'Save 40%' },
+];
+
+<div className="flex items-center justify-center gap-1 p-1 bg-muted rounded-full mb-12">
+  {billingOptions.map(option => (
+    <button
+      key={option.value}
+      onClick={() => setBillingPeriod(option.value)}
+      className={cn(
+        "px-4 py-2 rounded-full transition-all",
+        billingPeriod === option.value 
+          ? "bg-primary text-primary-foreground" 
+          : "hover:bg-muted-foreground/10"
+      )}
+    >
+      <span>{option.label}</span>
+      {option.badge && (
+        <span className="ml-1.5 text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">
+          {option.badge}
+        </span>
+      )}
+    </button>
+  ))}
 </div>
+```
+
+### Price Calculation
+```tsx
+const calculatePrice = (basePrice: number, billingPeriod: BillingPeriod) => {
+  switch (billingPeriod) {
+    case 'yearly':
+      return Math.round(basePrice * 0.8); // 20% off
+    case '3-year':
+      return Math.round(basePrice * 0.6); // 40% off
+    default:
+      return basePrice;
+  }
+};
+```
+
+### Updated Price Display
+```tsx
+{/* Price with discount indicator */}
+<div className="mb-6">
+  {billingPeriod !== 'monthly' && (
+    <span className="text-lg text-muted-foreground line-through mr-2">
+      ₹{basePrice}
+    </span>
+  )}
+  <span className="text-4xl font-bold text-foreground">
+    ₹{discountedPrice}
+  </span>
+  <span className="text-muted-foreground">/month</span>
+</div>
+
+{/* Billing summary */}
+<p className="text-sm text-muted-foreground mb-6 pb-6 border-b">
+  {billingPeriod === 'yearly' && `₹${discountedPrice * 12}/year billed annually`}
+  {billingPeriod === '3-year' && `₹${discountedPrice * 36} billed every 3 years`}
+  {billingPeriod === 'monthly' && 'Billed monthly, cancel anytime'}
+</p>
+```
+
+### Fixed Popular Badge
+```tsx
+{/* Add overflow-visible and padding to grid */}
+<div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start pt-8">
+
+{/* Badge with proper positioning */}
+{isPopular && (
+  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+    <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-lg whitespace-nowrap">
+      <Star className="h-4 w-4 fill-current" />
+      Most Popular
+    </div>
+  </div>
+)}
 ```
 
 ---
 
-## Styling Changes
+## Updated Pricing Data (Index.tsx)
 
-### Card Container
-| Property | Before | After |
-|----------|--------|-------|
-| Background | `glass` (simple) | Gradient with subtle color tint |
-| Border | Glass border | Colored border on hover |
-| Padding | `p-6` | `p-8` (more spacious) |
-| Shadow | None | `shadow-lg` with `hover:shadow-xl` |
-| Hover | `hover-lift` | Custom scale + shadow + glow |
-
-### Typography
-| Element | Before | After |
-|---------|--------|-------|
-| Value | `text-3xl md:text-4xl` | `text-4xl md:text-5xl` |
-| Label | `text-sm` | `text-base font-medium` |
-
-### New Elements
-- **Icon badge** with colored background
-- **Hover glow overlay** using gradient
-- **Subtle corner accent** line
+```typescript
+const [pricingPlans, setPricingPlans] = useState<PricingItem[]>([
+  { 
+    id: '1', 
+    name: 'Starter', 
+    price: 199, // Monthly base price
+    amc_price: 0, // Not used in new model
+    discount: null, 
+    min_labs: null, 
+    features: ['Single branch', 'Up to 500 patients/month', 'Basic reports', 'Email support', '1 user account'], 
+    is_popular: false, 
+    is_enterprise: false 
+  },
+  { 
+    id: '2', 
+    name: 'Professional', 
+    price: 299, // Monthly base price
+    amc_price: 0, 
+    discount: null, 
+    min_labs: null, 
+    features: ['Up to 3 branches', 'Unlimited patients', 'Advanced analytics', 'Priority support', '5 user accounts', 'Custom branding'], 
+    is_popular: true, 
+    is_enterprise: false 
+  },
+  { 
+    id: '3', 
+    name: 'Enterprise', 
+    price: 0, // Contact for pricing
+    amc_price: 0, 
+    discount: null, 
+    min_labs: 5, 
+    features: ['Unlimited branches', 'Unlimited everything', 'Dedicated support', 'Custom integrations', 'On-premise option', 'SLA guarantee'], 
+    is_popular: false, 
+    is_enterprise: true 
+  }
+]);
+```
 
 ---
 
-## Files to Modify
+## Files to Modify Summary
 
-1. **`src/components/landing/HeroSection.tsx`**
-   - Add icon imports (Building2, FileText, Activity, Headphones)
-   - Create icon mapping for stats
-   - Replace simple stat cards with enhanced design
-   - Add hover effects and animations
+| File | Changes |
+|------|---------|
+| `src/components/landing/PricingSection.tsx` | Add billing toggle, pass billing period to cards, fix grid padding |
+| `src/components/landing/shared.tsx` | Update PricingCard for dynamic pricing, fix badge overflow |
+| `src/components/landing/types.ts` | Add `BillingPeriod` type, update `PricingPlan` interface |
+| `src/pages/Index.tsx` | Update default pricing data with new monthly prices |
 
 ---
 
 ## Benefits
 
-1. **Professional Appearance** - Matches premium SaaS design standards
-2. **Visual Hierarchy** - Icons draw attention, large numbers create impact
-3. **Engagement** - Hover effects encourage interaction
-4. **Brand Consistency** - Uses primary/accent colors from design system
-5. **Accessibility** - Larger text, better contrast, proper focus states
+1. **Modern SaaS Pricing** - Industry-standard subscription model with billing flexibility
+2. **Clear Value Proposition** - Visible discounts incentivize longer commitments
+3. **Better UX** - Toggle makes comparing plans easy
+4. **Fixed Visual Bug** - "Most Popular" badge fully visible
+5. **Scalable** - Easy to adjust prices and discounts in the future
