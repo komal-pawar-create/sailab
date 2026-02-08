@@ -2,9 +2,29 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
+import { Sparkles, ArrowRight, ChevronDown, Building2, FileText, Activity, Headphones } from 'lucide-react';
 import { AnimatedCounter } from './shared';
 import type { HeroContent, StatItem } from './types';
+
+// Icon mapping for stats - matches labels to appropriate icons
+const getStatIcon = (label: string) => {
+  const labelLower = label.toLowerCase();
+  if (labelLower.includes('lab')) return Building2;
+  if (labelLower.includes('patient') || labelLower.includes('report') || labelLower.includes('test')) return FileText;
+  if (labelLower.includes('uptime') || labelLower.includes('active')) return Activity;
+  if (labelLower.includes('support') || labelLower.includes('24')) return Headphones;
+  return Building2; // default
+};
+
+// Color variants for icons based on stat type
+const getIconColorClass = (label: string) => {
+  const labelLower = label.toLowerCase();
+  if (labelLower.includes('lab')) return 'bg-primary/10 text-primary';
+  if (labelLower.includes('patient') || labelLower.includes('report') || labelLower.includes('test')) return 'bg-green-500/10 text-green-600';
+  if (labelLower.includes('uptime') || labelLower.includes('active')) return 'bg-purple-500/10 text-purple-600';
+  if (labelLower.includes('support') || labelLower.includes('24')) return 'bg-orange-500/10 text-orange-600';
+  return 'bg-primary/10 text-primary';
+};
 
 interface HeroSectionProps {
   heroContent: HeroContent | null;
@@ -68,25 +88,46 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
           </Button>
         </div>
 
-        {/* Hero stats */}
+        {/* Hero stats - Professional cards with icons */}
         <div 
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-slide-up opacity-0 delay-400" 
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-slide-up opacity-0 delay-400" 
           style={{ animationFillMode: 'forwards' }}
           role="list"
           aria-label="Key statistics"
         >
-          {stats.map((stat, index) => (
-            <div 
-              key={stat.id || index} 
-              className="glass rounded-2xl p-6 hover-lift"
-              role="listitem"
-            >
-              <div className="text-3xl md:text-4xl font-bold gradient-text mb-1">
-                <AnimatedCounter end={stat.value} suffix={stat.suffix || ''} />
+          {stats.map((stat, index) => {
+            const Icon = getStatIcon(stat.label);
+            const iconColorClass = getIconColorClass(stat.label);
+            
+            return (
+              <div 
+                key={stat.id || index} 
+                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-primary/5 border border-border/50 p-6 md:p-8 shadow-lg hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
+                role="listitem"
+              >
+                {/* Glow effect on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                
+                {/* Corner accent line */}
+                <div className="absolute top-0 left-0 w-16 h-1 bg-gradient-to-r from-primary to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
+                
+                {/* Icon badge */}
+                <div className={`relative mb-4 inline-flex p-3 rounded-xl ${iconColorClass}`}>
+                  <Icon className="h-5 w-5 md:h-6 md:w-6" aria-hidden="true" />
+                </div>
+                
+                {/* Value - Large and prominent */}
+                <div className="relative text-3xl md:text-4xl lg:text-5xl font-bold gradient-text mb-2">
+                  <AnimatedCounter end={stat.value} suffix={stat.suffix || ''} />
+                </div>
+                
+                {/* Label - Better contrast */}
+                <div className="relative text-sm md:text-base font-medium text-muted-foreground">
+                  {stat.label}
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
