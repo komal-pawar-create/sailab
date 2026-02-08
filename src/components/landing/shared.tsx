@@ -158,16 +158,18 @@ const calculatePrice = (basePrice: number, billingPeriod: 'monthly' | 'yearly' |
   }
 };
 
-// Get billing summary text
-const getBillingSummary = (discountedPrice: number, billingPeriod: 'monthly' | 'yearly' | '3-year'): string => {
-  switch (billingPeriod) {
-    case 'yearly':
-      return `₹${(discountedPrice * 12).toLocaleString('en-IN')}/year billed annually`;
-    case '3-year':
-      return `₹${(discountedPrice * 36).toLocaleString('en-IN')} billed every 3 years`;
-    default:
-      return 'Billed monthly, cancel anytime';
-  }
+// Calculate total amount and savings for yearly/3-year billing
+const getTotalAndSavings = (
+  basePrice: number, 
+  discountedPrice: number, 
+  billingPeriod: 'monthly' | 'yearly' | '3-year'
+): { total: number; savings: number } => {
+  const months = billingPeriod === 'yearly' ? 12 : 36;
+  const totalWithDiscount = discountedPrice * months;
+  const totalWithoutDiscount = basePrice * months;
+  const savings = totalWithoutDiscount - totalWithDiscount;
+  
+  return { total: totalWithDiscount, savings };
 };
 
 // Pricing card component
@@ -245,9 +247,34 @@ export const PricingCard = ({
               </span>
               <span className="text-muted-foreground">/month</span>
             </div>
-            <p className="text-sm text-muted-foreground mb-6 pb-6 border-b border-border">
-              {getBillingSummary(discountedPrice, billingPeriod)}
-            </p>
+            
+            {/* Total Calculation - Only show for yearly/3-year */}
+            {billingPeriod !== 'monthly' ? (
+              (() => {
+                const { total, savings } = getTotalAndSavings(price, discountedPrice, billingPeriod);
+                return (
+                  <div className="mb-6 pb-6 border-b border-border">
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="text-muted-foreground">Total:</span>
+                      <span className="font-semibold text-foreground">
+                        ₹{total.toLocaleString('en-IN')}
+                        {billingPeriod === 'yearly' ? '/year' : ' for 3 years'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">You save:</span>
+                      <span className="text-accent font-medium">
+                        ₹{savings.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              <p className="text-sm text-muted-foreground mb-6 pb-6 border-b border-border">
+                Billed monthly, cancel anytime
+              </p>
+            )}
           </>
         )}
         
