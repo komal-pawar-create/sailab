@@ -82,9 +82,9 @@ const Index = () => {
     { id: '4', step_number: 4, title: 'Go Live', description: 'Start managing patients, tests, and billing seamlessly.' }
   ]);
   const [pricingPlans, setPricingPlans] = useState<PricingItem[]>([
-    { id: '1', name: 'Starter', price: 5000, amc_price: 1500, discount: null, min_labs: null, features: ['Single lab', 'Up to 3 users', 'Core features', 'Email support'], is_popular: false, is_enterprise: false },
-    { id: '2', name: 'Professional', price: 4500, amc_price: 1350, discount: 10, min_labs: 3, features: ['3+ labs', 'Unlimited users', 'All features', 'Priority support', 'Centralized reports'], is_popular: true, is_enterprise: false },
-    { id: '3', name: 'Enterprise', price: 4000, amc_price: 1200, discount: 20, min_labs: 10, features: ['10+ labs', 'Unlimited users', 'All features', 'Dedicated support', 'Custom integrations'], is_popular: false, is_enterprise: true }
+    { id: '1', name: 'Starter', price: 199, amc_price: 0, discount: null, min_labs: null, features: ['Single branch', 'Up to 500 patients/month', 'Basic reports', 'Email support', '1 user account'], is_popular: false, is_enterprise: false },
+    { id: '2', name: 'Professional', price: 299, amc_price: 0, discount: null, min_labs: null, features: ['Up to 3 branches', 'Unlimited patients', 'Advanced analytics', 'Priority support', '5 user accounts', 'Custom branding'], is_popular: true, is_enterprise: false },
+    { id: '3', name: 'Enterprise', price: 0, amc_price: 0, discount: null, min_labs: 5, features: ['Unlimited branches', 'Unlimited everything', 'Dedicated support', 'Custom integrations', 'On-premise option', 'SLA guarantee'], is_popular: false, is_enterprise: true }
   ]);
   const [faqs, setFaqs] = useState<FaqItem[]>([
     { id: '1', category: 'pricing', question: 'What is included in the AMC?', answer: 'AMC includes updates, bug fixes, security patches, and technical support.' },

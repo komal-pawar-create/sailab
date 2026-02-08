@@ -146,17 +146,46 @@ export const Step = ({ number, title, description, isLast, delay }: {
   </div>
 );
 
+// Helper function to calculate discounted price
+const calculatePrice = (basePrice: number, billingPeriod: 'monthly' | 'yearly' | '3-year'): number => {
+  switch (billingPeriod) {
+    case 'yearly':
+      return Math.round(basePrice * 0.8); // 20% off
+    case '3-year':
+      return Math.round(basePrice * 0.6); // 40% off
+    default:
+      return basePrice;
+  }
+};
+
+// Get billing summary text
+const getBillingSummary = (discountedPrice: number, billingPeriod: 'monthly' | 'yearly' | '3-year'): string => {
+  switch (billingPeriod) {
+    case 'yearly':
+      return `₹${(discountedPrice * 12).toLocaleString('en-IN')}/year billed annually`;
+    case '3-year':
+      return `₹${(discountedPrice * 36).toLocaleString('en-IN')} billed every 3 years`;
+    default:
+      return 'Billed monthly, cancel anytime';
+  }
+};
+
 // Pricing card component
 export const PricingCard = ({ 
   plan, 
+  billingPeriod = 'monthly',
   delay,
   onEnterpriseClick,
 }: { 
   plan: PricingPlan;
+  billingPeriod?: 'monthly' | 'yearly' | '3-year';
   delay: string;
   onEnterpriseClick?: () => void;
 }) => {
-  const { name, price, amcPrice, discount, minLabs, features, isPopular, isEnterprise } = plan;
+  const { name, price, features, isPopular, isEnterprise, minLabs } = plan;
+  
+  const discountedPrice = calculatePrice(price, billingPeriod);
+  const showDiscount = billingPeriod !== 'monthly' && !isEnterprise;
   
   return (
     <Card 
@@ -169,27 +198,27 @@ export const PricingCard = ({
       role="article"
       aria-label={`${name} pricing plan`}
     >
-      {/* Popular Badge */}
+      {/* Popular Badge - Fixed positioning */}
       {isPopular && (
-        <div className="absolute -top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-lg">
-            <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+          <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-lg whitespace-nowrap">
+            <Star className="h-4 w-4 fill-current" aria-hidden="true" />
             Most Popular
           </div>
         </div>
       )}
       
       {/* Discount Badge */}
-      {discount && (
+      {showDiscount && (
         <div className="absolute top-4 right-4">
-          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-accent/20 text-accent-foreground text-xs font-medium">
             <BadgePercent className="h-3 w-3" aria-hidden="true" />
-            Save {discount}%
+            Save {billingPeriod === 'yearly' ? '20' : '40'}%
           </div>
         </div>
       )}
 
-      <div className={`${isPopular ? 'pt-4' : ''}`}>
+      <div className={`${isPopular ? 'pt-6' : ''}`}>
         {/* Plan Name */}
         <h3 className="text-xl font-bold text-foreground mb-2">{name}</h3>
         {minLabs && (
@@ -197,18 +226,30 @@ export const PricingCard = ({
         )}
         {!minLabs && <div className="h-6 mb-4" />}
         
-        {/* Price */}
-        <div className="mb-2">
-          <span className="text-4xl font-bold text-foreground">₹{price.toLocaleString('en-IN')}</span>
-          <span className="text-muted-foreground">{minLabs ? '/lab' : ''}</span>
-        </div>
-        <p className="text-sm text-muted-foreground mb-1">One-time setup</p>
-        
-        {/* AMC Price */}
-        <div className="flex items-baseline gap-2 mb-6 pb-6 border-b border-border">
-          <span className="text-lg font-semibold text-foreground">+ ₹{amcPrice.toLocaleString('en-IN')}</span>
-          <span className="text-sm text-muted-foreground">{minLabs ? '/lab/year' : '/year'} AMC</span>
-        </div>
+        {/* Price Display */}
+        {isEnterprise ? (
+          <div className="mb-6 pb-6 border-b border-border">
+            <span className="text-3xl font-bold text-foreground">Custom</span>
+            <p className="text-sm text-muted-foreground mt-2">Contact us for pricing</p>
+          </div>
+        ) : (
+          <>
+            <div className="mb-2">
+              {showDiscount && (
+                <span className="text-lg text-muted-foreground line-through mr-2">
+                  ₹{price.toLocaleString('en-IN')}
+                </span>
+              )}
+              <span className="text-4xl font-bold text-foreground">
+                ₹{discountedPrice.toLocaleString('en-IN')}
+              </span>
+              <span className="text-muted-foreground">/month</span>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6 pb-6 border-b border-border">
+              {getBillingSummary(discountedPrice, billingPeriod)}
+            </p>
+          </>
+        )}
         
         {/* Features */}
         <ul className="space-y-3 mb-8" aria-label={`${name} plan features`}>
@@ -224,7 +265,7 @@ export const PricingCard = ({
         {isEnterprise && onEnterpriseClick ? (
           <Button 
             onClick={onEnterpriseClick}
-            className={`w-full active:scale-95 transition-transform`}
+            className="w-full active:scale-95 transition-transform"
             variant="outline"
             size="lg"
           >
