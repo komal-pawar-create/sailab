@@ -89,9 +89,12 @@ export interface FooterContent {
   nav_links: Array<{ label: string; href: string }>;
 }
 
+// Billing period type for subscription pricing
+export type BillingPeriod = 'monthly' | 'yearly' | '3-year';
+
 export interface PricingPlan {
   name: string;
-  price: number;
+  price: number; // Base monthly price
   amcPrice: number;
   discount?: number;
   minLabs?: number;
