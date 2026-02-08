@@ -88,9 +88,9 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
           </Button>
         </div>
 
-        {/* Hero stats - Professional cards with icons */}
+        {/* Hero stats - Compact professional cards */}
         <div 
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 animate-slide-up opacity-0 delay-400" 
+          className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto animate-slide-up opacity-0 delay-400" 
           style={{ animationFillMode: 'forwards' }}
           role="list"
           aria-label="Key statistics"
@@ -102,27 +102,26 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
             return (
               <div 
                 key={stat.id || index} 
-                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-background via-background to-primary/5 border border-border/50 p-6 md:p-8 shadow-lg hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
+                className="group relative overflow-hidden rounded-xl bg-background/80 backdrop-blur-sm border border-border/40 p-4 md:p-5 shadow-md hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5"
                 role="listitem"
               >
                 {/* Glow effect on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
                 
-                {/* Corner accent line */}
-                <div className="absolute top-0 left-0 w-16 h-1 bg-gradient-to-r from-primary to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
-                
-                {/* Icon badge */}
-                <div className={`relative mb-4 inline-flex p-3 rounded-xl ${iconColorClass}`}>
-                  <Icon className="h-5 w-5 md:h-6 md:w-6" aria-hidden="true" />
+                {/* Icon badge - centered */}
+                <div className="flex justify-center mb-3">
+                  <div className={`relative inline-flex p-2.5 rounded-lg ${iconColorClass}`}>
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </div>
                 </div>
                 
-                {/* Value - Large and prominent */}
-                <div className="relative text-3xl md:text-4xl lg:text-5xl font-bold gradient-text mb-2">
+                {/* Value - Centered and proportional */}
+                <div className="relative text-2xl md:text-3xl font-bold gradient-text text-center mb-1">
                   <AnimatedCounter end={stat.value} suffix={stat.suffix || ''} />
                 </div>
                 
-                {/* Label - Better contrast */}
-                <div className="relative text-sm md:text-base font-medium text-muted-foreground">
+                {/* Label - Centered */}
+                <div className="relative text-xs md:text-sm font-medium text-muted-foreground text-center">
                   {stat.label}
                 </div>
               </div>
