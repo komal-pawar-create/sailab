@@ -1161,6 +1161,8 @@ export type Database = {
       landing_faqs: {
         Row: {
           answer: string
+          answer_hi: string | null
+          answer_mr: string | null
           category: string
           created_at: string | null
           created_by: string | null
@@ -1168,9 +1170,13 @@ export type Database = {
           id: string
           is_active: boolean | null
           question: string
+          question_hi: string | null
+          question_mr: string | null
         }
         Insert: {
           answer: string
+          answer_hi?: string | null
+          answer_mr?: string | null
           category: string
           created_at?: string | null
           created_by?: string | null
@@ -1178,9 +1184,13 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           question: string
+          question_hi?: string | null
+          question_mr?: string | null
         }
         Update: {
           answer?: string
+          answer_hi?: string | null
+          answer_mr?: string | null
           category?: string
           created_at?: string | null
           created_by?: string | null
@@ -1188,6 +1198,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           question?: string
+          question_hi?: string | null
+          question_mr?: string | null
         }
         Relationships: []
       }

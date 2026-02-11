@@ -45,6 +45,10 @@ export interface FaqItem {
   category: string;
   question: string;
   answer: string;
+  question_hi?: string;
+  answer_hi?: string;
+  question_mr?: string;
+  answer_mr?: string;
 }
 
 export interface TestimonialItem {

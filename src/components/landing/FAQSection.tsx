@@ -12,8 +12,19 @@ interface FAQSectionProps {
 }
 
 const FAQSection = ({ faqs }: FAQSectionProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [inquiryDialogOpen, setInquiryDialogOpen] = useState(false);
+
+  const getLocalizedFaq = (faq: FaqItem) => {
+    const lang = i18n.language;
+    if (lang === 'hi') {
+      return { question: faq.question_hi || faq.question, answer: faq.answer_hi || faq.answer };
+    }
+    if (lang === 'mr') {
+      return { question: faq.question_mr || faq.question, answer: faq.answer_mr || faq.answer };
+    }
+    return { question: faq.question, answer: faq.answer };
+  };
   
   return (
     <section id="faq" className="relative py-10 md:py-20 px-4">
@@ -51,11 +62,11 @@ const FAQSection = ({ faqs }: FAQSectionProps) => {
                     }`}>
                       {faq.category === 'pricing' ? '💰' : faq.category === 'features' ? '🔧' : '🛠️'}
                     </span>
-                    <span className="font-medium text-foreground">{faq.question}</span>
+                    <span className="font-medium text-foreground">{getLocalizedFaq(faq).question}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5 pl-9">
-                  {faq.answer}
+                  {getLocalizedFaq(faq).answer}
                 </AccordionContent>
               </AccordionItem>
             ))}
