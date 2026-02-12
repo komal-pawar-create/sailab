@@ -763,7 +763,7 @@ export default function LabProfile() {
                       type="tel"
                       value={labProfile.admin_mobile_number || ''}
                       onChange={(e) => setLabProfile({ ...labProfile, admin_mobile_number: e.target.value })}
-                      placeholder="+91 9876543210"
+                      placeholder="+91 8888567870"
                     />
                     <p className="text-xs text-muted-foreground">
                       This mobile number will receive OTP codes when any user in your organization needs to reset their password.

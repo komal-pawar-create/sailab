@@ -142,7 +142,7 @@ export const BillPreviewSample = ({ branchData, logoPreview, signaturePreview }:
                   <p><span className="font-medium">Patient ID:</span> SAMPLE-001</p>
                   <p><span className="font-medium">Name:</span> John Doe</p>
                   <p><span className="font-medium">Age/Gender:</span> 35 / Male</p>
-                  <p><span className="font-medium">Phone:</span> +91 98765 43210</p>
+                  <p><span className="font-medium">Phone:</span> +91 88885 67870</p>
                 </div>
               </div>
               <div className="bg-muted/30 p-3 rounded-lg">

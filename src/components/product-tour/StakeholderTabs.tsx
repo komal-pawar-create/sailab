@@ -333,7 +333,7 @@ const PatientRegMockup = ({ highlight }: { highlight?: string }) => (
         )}>
           <div className="text-[10px] text-muted-foreground mb-1">Phone</div>
           <div className="h-5 bg-muted rounded flex items-center px-2">
-            <span className="text-xs">{highlight === 'details' ? '9876543210' : ''}</span>
+            <span className="text-xs">{highlight === 'details' ? '8888567870' : ''}</span>
           </div>
         </div>
         <div className={cn(

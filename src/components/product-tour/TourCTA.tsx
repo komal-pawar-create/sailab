@@ -156,11 +156,11 @@ const TourCTA = () => {
           <p className="text-muted-foreground mb-4">{t('productTour.tourCta.haveQuestions')}</p>
           <div className="flex flex-wrap justify-center gap-6">
             <a
-              href="tel:+919876543210"
+              href="tel:+918888567870"
               className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
             >
               <Phone className="h-4 w-4" />
-              +91 98765 43210
+              +91 88885 67870
             </a>
             <a
               href="mailto:support@labflow.mywebz.in"
