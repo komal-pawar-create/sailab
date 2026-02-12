@@ -104,7 +104,7 @@ const InquiryForm = ({ onSuccess, context }: InquiryFormProps) => {
                   type="tel"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  placeholder="9876543210"
+                  placeholder="8888567870"
                   {...field}
                   onChange={handlePhoneInput}
                   disabled={isSubmitting}

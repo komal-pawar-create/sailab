@@ -133,11 +133,11 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
                 <span>support@labflow.mywebz.in</span>
               </a>
               <a 
-                href="tel:+919876543210" 
+                href="tel:+918888567870" 
                 className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Phone className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-                <span>+91 98765 43210</span>
+                <span>+91 88885 67870</span>
               </a>
               <div className="flex items-start gap-3 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
