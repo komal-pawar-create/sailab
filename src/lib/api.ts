@@ -1,10 +1,7 @@
 import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
 
-// External Inquiry API Configuration
-const INQUIRY_API_URL = 'https://gcyrapukltxjohjfxgza.supabase.co/functions/v1/submit-inquiry';
-const PROJECT_SOURCE = 'labflow_lims'; // snake_case project identifier for cross-platform tracking
-
-// Zod validation schema matching API requirements
+// Zod validation schema matching BizFlow CRM API requirements
 export const inquirySchema = z.object({
   contact_person: z
     .string()
@@ -27,12 +24,6 @@ export const inquirySchema = z.object({
 
 export type InquiryFormData = z.infer<typeof inquirySchema>;
 
-// API payload type (includes auto-set fields)
-interface InquiryPayload extends InquiryFormData {
-  source: string;
-  priority: string;
-}
-
 // API response types
 interface InquirySuccessResponse {
   success: true;
@@ -50,52 +41,47 @@ interface InquiryErrorResponse {
 export type InquiryResponse = InquirySuccessResponse | InquiryErrorResponse;
 
 /**
- * Submit an inquiry to the external API
- * Automatically sets source to project identifier and priority to "medium"
+ * Submit an inquiry to the BizFlow CRM via edge function proxy.
+ * The edge function adds the x-public-api-key header securely.
+ * company_name is merged into message since the CRM API rejects it as a standalone field.
  */
 export async function submitInquiry(
   formData: InquiryFormData
 ): Promise<InquiryResponse> {
-  const payload: InquiryPayload = {
-    ...formData,
-    source: PROJECT_SOURCE,
-    priority: 'medium',
-    // Clean up empty optional fields
+  const payload = {
+    contact_person: formData.contact_person,
+    phone: formData.phone,
+    source: 'labflow_lims',
     email: formData.email || undefined,
     company_name: formData.company_name || undefined,
     message: formData.message || undefined,
   };
 
   try {
-    const response = await fetch(INQUIRY_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
+    const { data, error } = await supabase.functions.invoke('submit-crm-inquiry', {
+      body: payload,
     });
 
-    const data = await response.json();
-
-    if (response.status === 201) {
-      return { success: true, data };
-    }
-
-    if (response.status === 400) {
+    if (error) {
+      console.error('Edge function error:', error);
       return {
         success: false,
         error: {
-          message: data.message || 'Validation failed',
-          details: data.details || [],
+          message: error.message || 'Something went wrong. Please try again.',
         },
       };
     }
 
-    // Handle other error statuses
+    if (data?.success) {
+      return { success: true, data };
+    }
+
+    // Handle CRM API validation errors
     return {
       success: false,
       error: {
-        message: data.message || 'Something went wrong. Please try again.',
+        message: data?.error || data?.message || 'Submission failed',
+        details: data?.details || [],
       },
     };
   } catch (error) {
