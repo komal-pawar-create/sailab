@@ -54,8 +54,16 @@ Deno.serve(async (req) => {
     const data = await response.json();
     console.log("BizFlow CRM response:", response.status, JSON.stringify(data));
 
-    return new Response(JSON.stringify(data), {
-      status: response.status,
+    if (!response.ok) {
+      console.error("BizFlow CRM error:", response.status, JSON.stringify(data));
+      return new Response(
+        JSON.stringify({ success: false, error: data?.message || `CRM API returned ${response.status}` }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(JSON.stringify({ success: true, data }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
