@@ -1,34 +1,61 @@
 
-# Change Mobile Number to 8888567870
 
-## Overview
-Replace all instances of the placeholder phone number `9876543210` with `8888567870` across the codebase. This includes displayed numbers, tel: links, and placeholder text.
+## Fix: BizFlow CRM "Function Not Found" Error
 
----
+### Root Cause
 
-## Files to Modify
+When calling a Supabase Edge Function hosted on a **different Supabase project**, the request must include that project's **anon key** in the `apikey` header. Without it, Supabase's API gateway cannot route the request and returns a generic `404 NOT_FOUND` response -- even if the function exists and is deployed.
 
-### 1. `src/components/landing/FooterSection.tsx` (line 136, 140)
-- `href="tel:+919876543210"` -> `href="tel:+918888567870"`
-- `+91 98765 43210` -> `+91 88885 67870`
+Our current code only sends `Content-Type` and `x-public-api-key`, but is missing the BizFlow project's `apikey` header.
 
-### 2. `src/components/product-tour/TourCTA.tsx` (line 159, 163)
-- `href="tel:+919876543210"` -> `href="tel:+918888567870"`
-- `+91 98765 43210` -> `+91 88885 67870`
+### Solution
 
-### 3. `src/components/product-tour/StakeholderTabs.tsx` (line 336)
-- `'9876543210'` -> `'8888567870'`
+1. **Add a new secret** `BIZFLOW_SUPABASE_ANON_KEY` containing the BizFlow project's Supabase anon/publishable key (this is the public key for project `gcyrapukltxjohjfxgza`).
 
-### 4. `src/components/forms/InquiryForm.tsx` (line 107)
-- `placeholder="9876543210"` -> `placeholder="8888567870"`
+2. **Update the edge function** `supabase/functions/submit-crm-inquiry/index.ts` to include the `apikey` header when calling the remote endpoint:
 
-### 5. `src/components/bills/BillPreviewSample.tsx` (line 145)
-- `+91 98765 43210` -> `+91 88885 67870`
+```text
+Current headers sent:
+  - Content-Type: application/json
+  - x-public-api-key: <BIZFLOW_API_KEY>
 
-### 6. `src/pages/LabProfile.tsx` (line 766)
-- `placeholder="+91 9876543210"` -> `placeholder="+91 8888567870"`
+Updated headers:
+  - Content-Type: application/json
+  - x-public-api-key: <BIZFLOW_API_KEY>
+  - apikey: <BIZFLOW_SUPABASE_ANON_KEY>
+  - Authorization: Bearer <BIZFLOW_SUPABASE_ANON_KEY>
+```
 
----
+### Technical Details
 
-## Summary
-6 files, all straightforward find-and-replace of the old number with `8888567870`. No logic changes required.
+**File: `supabase/functions/submit-crm-inquiry/index.ts`**
+
+Update the `fetch` call (around line 45-52) to read the new secret and include it in the outgoing request headers:
+
+```typescript
+const bizflowAnonKey = Deno.env.get("BIZFLOW_SUPABASE_ANON_KEY");
+
+const response = await fetch(BIZFLOW_API_URL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-public-api-key": apiKey,
+    "apikey": bizflowAnonKey,
+    "Authorization": `Bearer ${bizflowAnonKey}`,
+  },
+  body: JSON.stringify(payload),
+});
+```
+
+### Steps
+
+1. Add the `BIZFLOW_SUPABASE_ANON_KEY` secret (you will need to provide the anon key from the BizFlow Supabase project)
+2. Update the edge function to include the `apikey` and `Authorization` headers
+3. Deploy and test the updated function
+
+### What You Need
+
+The **Supabase anon/publishable key** for the BizFlow project (`gcyrapukltxjohjfxgza`). This is typically found in:
+- BizFlow Supabase Dashboard -> Settings -> API -> `anon` `public` key
+- It usually starts with `eyJhbGciOi...`
+
