@@ -14,8 +14,9 @@ Deno.serve(async (req) => {
 
   try {
     const apiKey = Deno.env.get("BIZFLOW_API_KEY");
-    if (!apiKey) {
-      console.error("BIZFLOW_API_KEY is not configured");
+    const bizflowAnonKey = Deno.env.get("BIZFLOW_SUPABASE_ANON_KEY");
+    if (!apiKey || !bizflowAnonKey) {
+      console.error("BIZFLOW_API_KEY or BIZFLOW_SUPABASE_ANON_KEY is not configured");
       return new Response(
         JSON.stringify({ success: false, error: "Server configuration error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -47,6 +48,8 @@ Deno.serve(async (req) => {
       headers: {
         "Content-Type": "application/json",
         "x-public-api-key": apiKey,
+        "apikey": bizflowAnonKey,
+        "Authorization": `Bearer ${bizflowAnonKey}`,
       },
       body: JSON.stringify(payload),
     });
