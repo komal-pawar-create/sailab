@@ -273,6 +273,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
         open={inquiryDialogOpen}
         onOpenChange={setInquiryDialogOpen}
         title={t('inquiry.bookDemoTitle')}
+        source="navbar_book_demo"
       />
     </>
   );

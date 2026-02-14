@@ -20,9 +20,10 @@ import { inquirySchema, submitInquiry, type InquiryFormData } from '@/lib/api';
 interface InquiryFormProps {
   onSuccess?: () => void;
   context?: string; // e.g., "Demo Request", "Enterprise Inquiry"
+  source?: string; // Lead source for attribution (e.g., "navbar_book_demo")
 }
 
-const InquiryForm = ({ onSuccess, context }: InquiryFormProps) => {
+const InquiryForm = ({ onSuccess, context, source }: InquiryFormProps) => {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -46,7 +47,7 @@ const InquiryForm = ({ onSuccess, context }: InquiryFormProps) => {
   const onSubmit = async (data: InquiryFormData) => {
     setIsSubmitting(true);
 
-    const result = await submitInquiry(data);
+    const result = await submitInquiry(data, source);
 
     if (result.success) {
       toast.success(t('inquiry.success'));

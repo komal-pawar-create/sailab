@@ -100,6 +100,7 @@ const FAQSection = ({ faqs }: FAQSectionProps) => {
         open={inquiryDialogOpen}
         onOpenChange={setInquiryDialogOpen}
         title={t('inquiry.title')}
+        source="faq_contact_support"
       />
     </section>
   );

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import InquiryDialog from '@/components/InquiryDialog';
 import type { CtaContent } from './types';
 
 interface CTASectionProps {
@@ -11,6 +12,7 @@ interface CTASectionProps {
 
 const CTASection = ({ ctaContent }: CTASectionProps) => {
   const { t } = useTranslation();
+  const [inquiryDialogOpen, setInquiryDialogOpen] = useState(false);
   
   return (
     <section className="relative py-10 md:py-20 px-4 bg-muted/30">
@@ -34,6 +36,15 @@ const CTASection = ({ ctaContent }: CTASectionProps) => {
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="text-lg px-10 py-6"
+                onClick={() => setInquiryDialogOpen(true)}
+              >
+                <Calendar className="h-5 w-5 mr-2" />
+                {t('nav.bookDemo', 'Book a Demo')}
+              </Button>
             </div>
             
             <p className="mt-6 text-sm text-muted-foreground">
@@ -42,6 +53,13 @@ const CTASection = ({ ctaContent }: CTASectionProps) => {
           </div>
         </div>
       </div>
+
+      <InquiryDialog
+        open={inquiryDialogOpen}
+        onOpenChange={setInquiryDialogOpen}
+        title={t('inquiry.bookDemoTitle', 'Book a Demo')}
+        source="cta_book_demo"
+      />
     </section>
   );
 };

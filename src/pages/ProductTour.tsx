@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import FloatingContactButton from '@/components/FloatingContactButton';
 import InquiryDialog from '@/components/InquiryDialog';
+import ExitIntentPopup from '@/components/landing/ExitIntentPopup';
 
 // Lazy load components for performance
 const NavHeader = React.lazy(() => import('@/components/landing/NavHeader'));
@@ -290,7 +291,11 @@ const ProductTour = () => {
       <InquiryDialog
         open={inquiryDialogOpen}
         onOpenChange={setInquiryDialogOpen}
+        source="fab_button"
       />
+
+      {/* Exit Intent Lead Magnet */}
+      <ExitIntentPopup />
     </div>
   );
 };
