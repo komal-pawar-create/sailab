@@ -47,9 +47,8 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-public-api-key": apiKey,
         "apikey": bizflowAnonKey,
-        "Authorization": `Bearer ${bizflowAnonKey}`,
+        "x-public-api-key": apiKey,
       },
       body: JSON.stringify(payload),
     });
