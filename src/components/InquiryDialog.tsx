@@ -15,6 +15,7 @@ interface InquiryDialogProps {
   title?: string;
   description?: string;
   context?: string; // Passed to form for pre-filled context
+  source?: string; // Lead source tracking (e.g., "navbar_book_demo", "exit_intent")
 }
 
 const InquiryDialog = ({
@@ -23,6 +24,7 @@ const InquiryDialog = ({
   title,
   description,
   context,
+  source,
 }: InquiryDialogProps) => {
   const { t } = useTranslation();
 
@@ -40,7 +42,7 @@ const InquiryDialog = ({
             <DialogDescription>{description}</DialogDescription>
           )}
         </DialogHeader>
-        <InquiryForm onSuccess={handleSuccess} context={context} />
+        <InquiryForm onSuccess={handleSuccess} context={context} source={source} />
       </DialogContent>
     </Dialog>
   );

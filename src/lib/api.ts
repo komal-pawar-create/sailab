@@ -46,12 +46,13 @@ export type InquiryResponse = InquirySuccessResponse | InquiryErrorResponse;
  * company_name is merged into message since the CRM API rejects it as a standalone field.
  */
 export async function submitInquiry(
-  formData: InquiryFormData
+  formData: InquiryFormData,
+  source?: string
 ): Promise<InquiryResponse> {
   const payload = {
     contact_person: formData.contact_person,
     phone: formData.phone,
-    source: 'labflow_lims',
+    source: source || 'labflow_lims',
     email: formData.email || undefined,
     company_name: formData.company_name || undefined,
     message: formData.message || undefined,

@@ -111,6 +111,7 @@ const PricingSection = ({ pricingPlans }: PricingSectionProps) => {
         onOpenChange={setInquiryDialogOpen}
         title={t('pricing.customQuote')}
         context="Custom Quote - Multi-Lab Inquiry"
+        source="pricing_enterprise"
       />
     </section>
   );
