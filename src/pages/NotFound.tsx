@@ -7,10 +7,25 @@ const NotFound = () => {
   const { t } = useTranslation();
 
   useEffect(() => {
+    document.title = 'Page Not Found — LabFlow';
+    // Add noindex meta tag
+    let metaRobots = document.querySelector('meta[name="robots"]');
+    if (!metaRobots) {
+      metaRobots = document.createElement('meta');
+      metaRobots.setAttribute('name', 'robots');
+      document.head.appendChild(metaRobots);
+    }
+    metaRobots.setAttribute('content', 'noindex, nofollow');
+
     console.error(
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
+
+    return () => {
+      // Restore robots meta on unmount
+      if (metaRobots) metaRobots.setAttribute('content', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+    };
   }, [location.pathname]);
 
   return (

@@ -29,6 +29,20 @@ export default function PublicFeedback() {
     message: "",
   });
 
+  // SEO meta tags
+  useEffect(() => {
+    document.title = 'Patient Feedback — LabFlow LIMS';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', 'Share your feedback about your lab experience. LabFlow helps pathology labs collect and improve patient satisfaction.');
+  }, []);
+
+  // SEO meta tags
+  useEffect(() => {
+    document.title = 'Patient Feedback — LabFlow LIMS';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', 'Share your feedback about your lab experience. LabFlow helps pathology labs collect and improve patient satisfaction.');
+  }, []);
+
   useEffect(() => {
     const fetchLabInfo = async () => {
       const urlParams = new URLSearchParams(window.location.search);

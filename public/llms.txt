@@ -1,0 +1,60 @@
+# LabFlow LIMS — Laboratory Information Management System
+
+> LabFlow is a cloud-based Laboratory Information Management System (LIMS) built for pathology labs, diagnostic centers, and medical laboratories across India.
+
+## What is LabFlow?
+
+LabFlow is a modern, web-based LIMS platform that helps pathology and diagnostic laboratories manage their entire workflow — from patient registration and sample tracking to test reporting, billing, and analytics. It is trusted by 500+ labs across India.
+
+## Website
+
+https://labflow.mywebz.in
+
+## Key Features
+
+- Patient Management: Complete patient profiles, history tracking, auto-generated IDs
+- Test & Report Management: Manage test types, generate professional PDF reports, track sample status
+- Billing & Invoicing: Automated invoicing, GST support, partial payments, ledger management
+- Multi-Branch Support: Centralized management for labs with multiple branches
+- Role-Based Access Control: Secure multi-role system (Super Admin, Lab Admin, Operator, Doctor)
+- Analytics Dashboard: Real-time dashboards, revenue insights, collection reports
+- Document Storage: Upload and manage patient documents with letterhead support
+- Follow-up Reminders: Automated patient follow-up tracking
+- WhatsApp Integration: Send reports and notifications via WhatsApp
+- Barcode/QR Support: Generate and scan barcodes for samples
+- PWA Support: Works offline as a Progressive Web App
+- Multi-Language: Available in English, Hindi, and Marathi
+
+## Target Audience
+
+- Pathology laboratories in India
+- Diagnostic centers and medical labs
+- Multi-branch laboratory chains
+- Hospital laboratory departments
+- Clinical reference laboratories
+
+## Pricing
+
+- Starter: ₹199/month — Single branch, up to 500 patients/month
+- Professional: ₹299/month — Up to 3 branches, unlimited patients, advanced analytics
+- Enterprise: Custom pricing — Unlimited branches, dedicated support, custom integrations
+
+## Compliance
+
+- NABL compliant workflows
+- ISO 15189 compatible
+- GST-ready billing
+- HIPAA-aware data handling
+
+## Contact
+
+- Website: https://labflow.mywebz.in
+- Product Tour: https://labflow.mywebz.in/product-tour
+
+## Technical Details
+
+- Platform: Cloud-based web application (SaaS)
+- Stack: React, TypeScript, Supabase, Tailwind CSS
+- Deployment: Available as cloud-hosted or on-premise
+- Mobile: Responsive design + PWA for mobile access
+- API: RESTful API for integrations

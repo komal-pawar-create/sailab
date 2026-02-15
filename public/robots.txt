@@ -1,3 +1,7 @@
+# LabFlow LIMS — robots.txt
+# https://labflow.mywebz.in
+
+# Standard search engine crawlers
 User-agent: Googlebot
 Allow: /
 
@@ -10,11 +14,59 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+# AI/LLM Crawlers — explicitly allowed
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# All other bots
 User-agent: *
 Allow: /
 
+# Disallow internal app routes from indexing
+Disallow: /dashboard
+Disallow: /super-admin
+Disallow: /analytics
+Disallow: /reports
+Disallow: /followups
+Disallow: /patient-history
+Disallow: /branch-settings
+Disallow: /lab-profile
+Disallow: /api-settings
+Disallow: /audit-logs
+Disallow: /data-management
+Disallow: /outstanding-report
+Disallow: /sales-leads
+
 # Sitemap location
 Sitemap: https://labflow.mywebz.in/sitemap.xml
+
+# LLM context files
+# llms.txt: https://labflow.mywebz.in/llms.txt
+# llms-full.txt: https://labflow.mywebz.in/llms-full.txt
 
 # Crawl delay
 Crawl-delay: 1
