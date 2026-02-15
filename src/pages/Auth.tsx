@@ -19,6 +19,13 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [rateLimitState, setRateLimitState] = useState<RateLimitState | null>(null);
   const [lockoutCountdown, setLockoutCountdown] = useState<string | null>(null);
+
+  // SEO meta tags
+  useEffect(() => {
+    document.title = 'Login — LabFlow LIMS | Pathology Lab Software India';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', 'Sign in to your LabFlow LIMS account. Access your pathology lab dashboard, manage patients, test reports, and billing.');
+  }, []);
   
   const { signIn, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();

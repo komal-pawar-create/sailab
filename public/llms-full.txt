@@ -1,0 +1,250 @@
+# LabFlow LIMS — Complete Product Documentation for AI/LLM Reference
+
+> This document provides comprehensive information about LabFlow, a cloud-based Laboratory Information Management System (LIMS) designed for pathology labs and diagnostic centers in India.
+
+---
+
+## Product Overview
+
+LabFlow is a modern, full-featured LIMS (Laboratory Information Management System) that digitizes and streamlines the entire workflow of pathology laboratories and diagnostic centers. Built specifically for the Indian healthcare market, LabFlow addresses the unique needs of labs across the country — from small single-branch pathology labs to large multi-branch diagnostic chains.
+
+The platform replaces manual registers, paper-based reports, and disconnected billing systems with a unified, cloud-based solution accessible from any device.
+
+### Core Value Proposition
+
+1. **Complete Lab Digitization**: Replace paper registers and manual processes with a digital-first workflow
+2. **Professional Reports**: Generate branded, professional test reports with letterhead and digital signatures
+3. **Automated Billing**: GST-compliant invoicing with partial payment support and ledger management
+4. **Multi-Branch Control**: Manage multiple lab branches from a single dashboard
+5. **Real-Time Analytics**: Track revenue, test volumes, and operational metrics in real-time
+
+---
+
+## Detailed Feature List
+
+### 1. Patient Management
+- Complete patient registration with auto-generated unique IDs
+- Patient history tracking across all visits
+- Quick search by name, phone, or patient ID
+- Patient demographics and contact information
+- Document upload and management per patient
+- Patient timeline view showing all interactions
+
+### 2. Test & Report Management
+- Configurable test types with parameters and reference ranges
+- Professional PDF report generation
+- Customizable report templates with lab letterhead
+- Digital signature support
+- Sample tracking and status management
+- Batch report processing
+- Report sharing via WhatsApp and email
+
+### 3. Billing & Financial Management
+- Automated invoice generation with bill numbers
+- GST-compliant billing (CGST, SGST, IGST support)
+- Partial payment tracking
+- Discount management (percentage and fixed)
+- Payment method tracking (cash, card, UPI, online)
+- Complete ledger history per patient
+- Outstanding amount tracking
+- Daily collection reports
+- Revenue analytics and trends
+
+### 4. Multi-Branch Management
+- Centralized dashboard for all branches
+- Branch-specific settings and branding
+- Cross-branch patient records
+- Branch-wise reporting and analytics
+- Individual branch billing configurations
+- Branch-specific letterheads and logos
+
+### 5. Role-Based Access Control (RBAC)
+- **Super Admin**: Full system access, lab management, user management
+- **Lab Admin**: Lab-specific administration, reports, billing
+- **Operator**: Day-to-day operations, patient registration, test entry
+- **Doctor**: Report viewing, result entry, patient history
+- Customizable permissions per role
+- Audit trail for all actions
+
+### 6. Analytics & Reporting
+- Real-time dashboard with key metrics
+- Revenue reports (daily, weekly, monthly, yearly)
+- Test volume analytics
+- Patient growth tracking
+- Doctor referral reports
+- Collection reports
+- Outstanding payment reports
+- Branch comparison reports
+- Export to Excel/PDF
+
+### 7. Document Management
+- Patient document upload (prescriptions, previous reports, ID documents)
+- Letterhead management for branches
+- Digital signature storage
+- Template management for reports
+
+### 8. Communication & Notifications
+- WhatsApp report sharing
+- SMS notifications
+- Email notifications
+- Follow-up reminders
+- Appointment reminders
+
+### 9. Technical Features
+- Progressive Web App (PWA) — works offline
+- Responsive design for mobile, tablet, and desktop
+- Multi-language support (English, Hindi, Marathi)
+- Keyboard shortcuts for power users
+- Data export (Excel, PDF)
+- Audit logging
+- Rate-limited authentication with lockout protection
+
+---
+
+## Pricing Plans
+
+### Starter Plan — ₹199/month
+- Single branch
+- Up to 500 patients per month
+- Basic reports
+- Email support
+- 1 user account
+- Standard report templates
+
+### Professional Plan — ₹299/month (Most Popular)
+- Up to 3 branches
+- Unlimited patients
+- Advanced analytics
+- Priority support
+- 5 user accounts
+- Custom branding
+- WhatsApp integration
+- Doctor referral reports
+
+### Enterprise Plan — Custom Pricing
+- Unlimited branches
+- Unlimited users
+- Dedicated account manager
+- Custom integrations
+- On-premise deployment option
+- SLA guarantee
+- Custom report templates
+- API access
+- Training and onboarding
+- Minimum 5 labs required
+
+### Annual Maintenance Contract (AMC)
+All plans include optional AMC that covers:
+- Software updates and new features
+- Bug fixes and security patches
+- Technical support
+- Data backup assistance
+
+---
+
+## Setup Process
+
+1. **Sign Up** (5 minutes): Create your account and set up your lab profile
+2. **Configure** (1-2 hours): Add test types, configure billing, set up branch details
+3. **Add Users** (30 minutes): Invite staff with appropriate role-based access
+4. **Go Live** (Same day): Start managing patients, tests, and billing
+
+Most labs are fully operational within 2-3 hours of starting setup.
+
+---
+
+## Compliance & Security
+
+- **NABL Compliant**: Workflows designed to meet NABL (National Accreditation Board for Testing and Calibration Laboratories) requirements
+- **ISO 15189 Compatible**: Supports medical laboratory quality management standards
+- **GST Ready**: Full GST compliance for billing (CGST, SGST, IGST)
+- **Data Security**: Encrypted data storage, role-based access, audit trails
+- **HIPAA Aware**: Data handling practices aligned with healthcare data protection standards
+- **Row-Level Security**: Database-level access controls ensuring data isolation between labs
+
+---
+
+## Technology Stack
+
+- **Frontend**: React 18, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Supabase (PostgreSQL, Auth, Edge Functions, Storage)
+- **Hosting**: Cloud-hosted with CDN
+- **Mobile**: Progressive Web App (installable on mobile devices)
+- **Analytics**: Real-time dashboards with Recharts
+- **PDF Generation**: jsPDF with custom templates
+- **Internationalization**: i18next for multi-language support
+
+---
+
+## Frequently Asked Questions
+
+**Q: What is LabFlow?**
+A: LabFlow is a cloud-based Laboratory Information Management System (LIMS) designed for pathology labs and diagnostic centers in India. It manages patient registration, test reporting, billing, and analytics in one platform.
+
+**Q: Is LabFlow suitable for small pathology labs?**
+A: Yes. LabFlow's Starter plan is specifically designed for small, single-branch pathology labs with up to 500 patients per month at just ₹199/month.
+
+**Q: Can LabFlow work offline?**
+A: Yes. LabFlow is a Progressive Web App (PWA) that can work offline. Data syncs automatically when you reconnect to the internet.
+
+**Q: Does LabFlow support GST billing?**
+A: Yes. LabFlow includes full GST support with CGST, SGST, and IGST calculations, HSN codes, and GST-compliant invoice generation.
+
+**Q: Can I manage multiple lab branches?**
+A: Yes. The Professional plan supports up to 3 branches, and the Enterprise plan supports unlimited branches with centralized management.
+
+**Q: How long does setup take?**
+A: Most labs are fully operational within 2-3 hours, including test type configuration, billing setup, and user onboarding.
+
+**Q: Is my data secure?**
+A: Yes. LabFlow uses encrypted storage, role-based access control, audit logging, and row-level security to protect your data.
+
+**Q: Does LabFlow support WhatsApp report sharing?**
+A: Yes. You can share test reports with patients directly via WhatsApp from within the application.
+
+**Q: Is LabFlow NABL compliant?**
+A: LabFlow's workflows are designed to support NABL compliance requirements, including sample tracking, quality control, and comprehensive audit trails.
+
+**Q: Can I try LabFlow before purchasing?**
+A: Yes. Contact us through the website to schedule a free demo and trial period.
+
+---
+
+## Competitive Advantages
+
+1. **Built for India**: Designed specifically for Indian pathology labs with GST, NABL, and regional language support
+2. **Affordable**: Starting at ₹199/month — one of the most affordable LIMS solutions in India
+3. **Easy to Use**: Modern, intuitive interface with minimal training required
+4. **Quick Setup**: Go live in hours, not weeks
+5. **Mobile Ready**: Full functionality on mobile devices via PWA
+6. **Multi-Language**: Native support for English, Hindi, and Marathi
+7. **Cloud-Based**: No hardware investment, automatic updates, accessible anywhere
+8. **Comprehensive**: All-in-one solution replacing 3-4 separate tools
+
+---
+
+## Contact & Links
+
+- **Website**: https://labflow.mywebz.in
+- **Product Tour**: https://labflow.mywebz.in/product-tour
+- **Login**: https://labflow.mywebz.in/auth
+- **Feedback**: https://labflow.mywebz.in/public-feedback
+
+---
+
+## Alternative Names & Search Terms
+
+LabFlow is also relevant for searches about:
+- Pathology lab software India
+- Diagnostic center management software
+- Medical laboratory software
+- Lab billing software India
+- Pathology report software
+- LIMS software for small labs
+- Cloud-based lab management system
+- Lab software with WhatsApp integration
+- NABL compliant lab software
+- Multi-branch lab management software
+- Lab software Mumbai, Delhi, Pune, Bangalore
+- पैथोलॉजी लैब सॉफ्टवेयर (Pathology lab software in Hindi)
+- प्रयोगशाला प्रबंधन सॉफ्टवेयर (Laboratory management software in Hindi)
