@@ -33,6 +33,15 @@ const ForgotPassword = React.lazy(() => import("./pages/ForgotPassword"));
 const PublicFeedback = React.lazy(() => import("./pages/PublicFeedback"));
 const SalesLeads = React.lazy(() => import("./pages/SalesLeads"));
 const ProductTour = React.lazy(() => import("./pages/ProductTour"));
+const Blog = React.lazy(() => import("./pages/Blog"));
+const WhatIsLims = React.lazy(() => import("./pages/blog/WhatIsLims"));
+const DigitizePathologyLab = React.lazy(() => import("./pages/blog/DigitizePathologyLab"));
+const GstBillingLabs = React.lazy(() => import("./pages/blog/GstBillingLabs"));
+const BillingFeatures = React.lazy(() => import("./pages/blog/BillingFeatures"));
+const DigitalLabReports = React.lazy(() => import("./pages/blog/DigitalLabReports"));
+const NablAccreditation = React.lazy(() => import("./pages/blog/NablAccreditation"));
+const MultiBranchManagement = React.lazy(() => import("./pages/blog/MultiBranchManagement"));
+const BestLimsIndia = React.lazy(() => import("./pages/blog/BestLimsIndia"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -93,8 +102,8 @@ const AppContent = () => {
   const location = useLocation();
   
   // Pages that should not have sidebar
-  const noSidebarPages = ['/auth', '/forgot-password', '/', '/feedback', '/product-tour'];
-  const showSidebar = !noSidebarPages.includes(location.pathname) && !location.pathname.startsWith('/feedback');
+  const noSidebarPages = ['/auth', '/forgot-password', '/', '/feedback', '/product-tour', '/blog'];
+  const showSidebar = !noSidebarPages.includes(location.pathname) && !location.pathname.startsWith('/feedback') && !location.pathname.startsWith('/blog');
 
   useEffect(() => {
     // Register service worker
@@ -118,6 +127,15 @@ const AppContent = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/product-tour" element={<ProductTour />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/what-is-lims-software" element={<WhatIsLims />} />
+          <Route path="/blog/how-to-digitize-pathology-lab" element={<DigitizePathologyLab />} />
+          <Route path="/blog/gst-billing-for-pathology-labs" element={<GstBillingLabs />} />
+          <Route path="/blog/lab-billing-software-features" element={<BillingFeatures />} />
+          <Route path="/blog/digital-lab-reports-guide" element={<DigitalLabReports />} />
+          <Route path="/blog/nabl-accreditation-guide" element={<NablAccreditation />} />
+          <Route path="/blog/multi-branch-lab-management" element={<MultiBranchManagement />} />
+          <Route path="/blog/best-lims-software-india" element={<BestLimsIndia />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/feedback" element={<PublicFeedback />} />
