@@ -47,6 +47,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
     { href: '/product-tour', labelKey: 'nav.productTour', isRoute: true },
     { href: '#pricing', labelKey: 'nav.pricing' },
     { href: '#faq', labelKey: 'nav.faq' },
+    { href: '/blog', labelKey: 'Blog', isRoute: true },
   ];
 
   const toggleTheme = useCallback(() => {

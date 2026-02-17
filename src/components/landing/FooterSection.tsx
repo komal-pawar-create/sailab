@@ -16,6 +16,7 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
     { labelKey: 'footer.pricing', href: '#pricing' },
     { labelKey: 'footer.demo', href: '#demo' },
     { labelKey: 'footer.productTour', href: '/product-tour' },
+    { labelKey: 'Blog', href: '/blog' },
   ];
 
   const legalLinks = [
