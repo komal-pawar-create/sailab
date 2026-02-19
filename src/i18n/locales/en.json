@@ -70,7 +70,7 @@
     "badge": "Customer Stories",
     "title": "Trusted by",
     "titleHighlight": "500+ Labs",
-    "subtitle": "Hear what lab owners across India have to say about Lab Master."
+    "subtitle": "Hear what lab owners across India have to say about LabFlow."
   },
   "pricing": {
     "badge": "Transparent Pricing",
@@ -90,14 +90,14 @@
     "badge": "FAQ",
     "title": "Frequently Asked",
     "titleHighlight": "Questions",
-    "subtitle": "Got questions? We've got answers. Find everything you need to know about Lab Master.",
+    "subtitle": "Got questions? We've got answers. Find everything you need to know about LabFlow.",
     "stillHaveQuestions": "Still have questions?",
     "ourTeamHelp": "Our team is here to help you",
     "contactSupport": "Contact Support"
   },
   "cta": {
     "title": "Ready to Transform Your Lab?",
-    "subtitle": "Join hundreds of laboratories already using Lab Master to streamline their operations.",
+    "subtitle": "Join hundreds of laboratories already using LabFlow to streamline their operations.",
     "button": "Start Free Trial",
     "footer": "No credit card required • Free 14-day trial • Cancel anytime"
   },

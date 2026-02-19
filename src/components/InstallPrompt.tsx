@@ -96,7 +96,7 @@ export function InstallPrompt() {
       <div className="flex items-start gap-3">
         <Download className="h-5 w-5 text-primary mt-0.5" />
         <div className="flex-1">
-          <h3 className="font-semibold text-sm mb-1">Install Lab Master</h3>
+          <h3 className="font-semibold text-sm mb-1">Install LabFlow</h3>
           <p className="text-xs text-muted-foreground mb-3">
             Install our app for quick access and offline functionality
           </p>

@@ -91,11 +91,11 @@ const Index = () => {
   ]);
   const [faqs, setFaqs] = useState<FaqItem[]>([
     { id: '1', category: 'pricing', question: 'What is included in the AMC?', answer: 'AMC includes updates, bug fixes, security patches, and technical support.' },
-    { id: '2', category: 'features', question: 'Can I use Lab Master offline?', answer: 'Yes! Lab Master is a PWA and works offline. Data syncs when you reconnect.' },
+    { id: '2', category: 'features', question: 'Can I use LabFlow offline?', answer: 'Yes! LabFlow is a PWA and works offline. Data syncs when you reconnect.' },
     { id: '3', category: 'setup', question: 'How long does setup take?', answer: 'Most labs are up and running within 2-3 hours including configuration.' }
   ]);
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([
-    { id: '1', name: 'Dr. Rajesh Kumar', role: 'Lab Director', location: 'Mumbai', rating: 5, testimonial_text: 'Lab Master transformed our operations. Highly recommended!', avatar_initials: 'RK', avatar_url: null },
+    { id: '1', name: 'Dr. Rajesh Kumar', role: 'Lab Director', location: 'Mumbai', rating: 5, testimonial_text: 'LabFlow transformed our operations. Highly recommended!', avatar_initials: 'RK', avatar_url: null },
     { id: '2', name: 'Priya Sharma', role: 'Lab Manager', location: 'Delhi', rating: 5, testimonial_text: 'Easy to use and excellent support. Best LIMS we have used.', avatar_initials: 'PS', avatar_url: null },
     { id: '3', name: 'Amit Patel', role: 'Pathologist', location: 'Ahmedabad', rating: 5, testimonial_text: 'The billing and reporting features save us hours every day.', avatar_initials: 'AP', avatar_url: null }
   ]);
