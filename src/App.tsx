@@ -81,7 +81,7 @@ const AppHeader = () => {
       <SidebarTrigger className="mr-4" />
       <div className="flex items-center space-x-4">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent tracking-tight">
-          Lab Master
+          LabFlow
         </h1>
         {profile && (
           <Badge className={`${getRoleColor(profile.role)} text-white`}>

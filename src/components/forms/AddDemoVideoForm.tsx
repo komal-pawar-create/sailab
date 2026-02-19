@@ -105,7 +105,7 @@ export function AddDemoVideoForm({ onSuccess }: AddDemoVideoFormProps) {
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Getting Started with Lab Master"
+                placeholder="Getting Started with LabFlow"
                 required
               />
             </div>
