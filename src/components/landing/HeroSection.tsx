@@ -37,7 +37,7 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
   
   return (
     <section 
-      className="relative min-h-screen flex items-center justify-center px-4 py-10 md:py-20"
+      className="relative min-h-screen flex items-center justify-center px-4 pt-24 pb-10 md:py-20"
       aria-label="Hero"
     >
       {/* Parallax background pattern */}
