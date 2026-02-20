@@ -33,7 +33,7 @@ const LanguageSelector = ({ isScrolled = false }: LanguageSelectorProps) => {
         <span className="text-sm font-medium text-foreground hidden sm:inline">
           {currentLang.nativeName}
         </span>
-        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 hidden sm:block ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
