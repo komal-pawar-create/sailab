@@ -22,15 +22,35 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd }: Blo
 
   useEffect(() => {
     document.title = `${title} | LabFlow Blog`;
-    
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) metaDesc.setAttribute('content', description);
-    else {
-      const meta = document.createElement('meta');
-      meta.name = 'description';
-      meta.content = description;
-      document.head.appendChild(meta);
-    }
+    const fullUrl = `https://labflow.mywebz.in/blog/${canonicalSlug}`;
+    const imageUrl = 'https://labflow.mywebz.in/images/labflow-logo.png';
+
+    const setMeta = (attr: string, key: string, content: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement;
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    // Standard meta
+    setMeta('name', 'description', description);
+
+    // Open Graph
+    setMeta('property', 'og:title', `${title} | LabFlow Blog`);
+    setMeta('property', 'og:description', description);
+    setMeta('property', 'og:url', fullUrl);
+    setMeta('property', 'og:type', 'article');
+    setMeta('property', 'og:image', imageUrl);
+    setMeta('property', 'og:site_name', 'LabFlow');
+
+    // Twitter Card
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', `${title} | LabFlow Blog`);
+    setMeta('name', 'twitter:description', description);
+    setMeta('name', 'twitter:image', imageUrl);
 
     // Canonical
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
@@ -39,7 +59,7 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd }: Blo
       canonical.rel = 'canonical';
       document.head.appendChild(canonical);
     }
-    canonical.href = `https://labflow.mywebz.in/blog/${canonicalSlug}`;
+    canonical.href = fullUrl;
 
     // JSON-LD
     if (jsonLd) {
