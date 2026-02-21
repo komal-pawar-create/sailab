@@ -20,11 +20,23 @@ const Auth = () => {
   const [rateLimitState, setRateLimitState] = useState<RateLimitState | null>(null);
   const [lockoutCountdown, setLockoutCountdown] = useState<string | null>(null);
 
-  // SEO meta tags
+  // SEO meta tags + noindex
   useEffect(() => {
     document.title = 'Login — LabFlow LIMS | Pathology Lab Software India';
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) metaDesc.setAttribute('content', 'Sign in to your LabFlow LIMS account. Access your pathology lab dashboard, manage patients, test reports, and billing.');
+    
+    let robotsMeta = document.querySelector('meta[name="robots"]') as HTMLMetaElement;
+    if (!robotsMeta) {
+      robotsMeta = document.createElement('meta');
+      robotsMeta.setAttribute('name', 'robots');
+      document.head.appendChild(robotsMeta);
+    }
+    robotsMeta.setAttribute('content', 'noindex, nofollow');
+    
+    return () => {
+      robotsMeta?.remove();
+    };
   }, []);
   
   const { signIn, user, profile, loading: authLoading } = useAuth();

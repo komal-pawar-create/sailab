@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import NavHeader from '@/components/landing/NavHeader';
 import FooterSection from '@/components/landing/FooterSection';
 import BackToTop from '@/components/landing/BackToTop';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 interface BlogLayoutProps {
   children: React.ReactNode;
@@ -9,9 +18,11 @@ interface BlogLayoutProps {
   description: string;
   canonicalSlug: string;
   jsonLd?: object;
+  datePublished?: string;
+  dateModified?: string;
 }
 
-const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd }: BlogLayoutProps) => {
+const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, datePublished, dateModified }: BlogLayoutProps) => {
   const [scrollY, setScrollY] = useState(0);
   const [readProgress, setReadProgress] = useState(0);
 
@@ -51,6 +62,14 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd }: Blo
     setMeta('property', 'og:image', imageUrl);
     setMeta('property', 'og:site_name', 'LabFlow');
 
+    // Article time meta tags
+    if (datePublished) {
+      setMeta('property', 'article:published_time', datePublished);
+    }
+    if (dateModified) {
+      setMeta('property', 'article:modified_time', dateModified);
+    }
+
     // Twitter Card
     setMeta('name', 'twitter:card', 'summary_large_image');
     setMeta('name', 'twitter:title', `${title} | LabFlow Blog`);
@@ -66,19 +85,41 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd }: Blo
     }
     canonical.href = fullUrl;
 
-    // JSON-LD
+    // JSON-LD: article schema + breadcrumb schema
+    const scripts: HTMLScriptElement[] = [];
+
     if (jsonLd) {
       const script = document.createElement('script');
       script.type = 'application/ld+json';
       script.id = 'blog-jsonld';
       script.textContent = JSON.stringify(jsonLd);
       document.head.appendChild(script);
-      return () => {
-        const el = document.getElementById('blog-jsonld');
-        if (el) el.remove();
-      };
+      scripts.push(script);
     }
-  }, [title, description, canonicalSlug, jsonLd]);
+
+    // BreadcrumbList structured data
+    if (canonicalSlug) {
+      const breadcrumbLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://labflow.mywebz.in/' },
+          { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://labflow.mywebz.in/blog' },
+          { '@type': 'ListItem', position: 3, name: title, item: fullUrl },
+        ],
+      };
+      const bcScript = document.createElement('script');
+      bcScript.type = 'application/ld+json';
+      bcScript.id = 'blog-breadcrumb-jsonld';
+      bcScript.textContent = JSON.stringify(breadcrumbLd);
+      document.head.appendChild(bcScript);
+      scripts.push(bcScript);
+    }
+
+    return () => {
+      scripts.forEach(s => s.remove());
+    };
+  }, [title, description, canonicalSlug, jsonLd, datePublished, dateModified]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,6 +135,30 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd }: Blo
       />
       <NavHeader scrollY={scrollY} />
       <main className="pt-24 pb-16">
+        {/* Visible breadcrumb navigation */}
+        {canonicalSlug && (
+          <div className="max-w-6xl mx-auto px-4 mb-4">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/blog">Blog</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{title}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        )}
         {children}
       </main>
       <FooterSection footerContent={null} />

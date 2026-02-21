@@ -23,6 +23,8 @@ const WhatIsLims = () => {
       title={post.title}
       description={post.excerpt}
       canonicalSlug={SLUG}
+      datePublished={post.datePublished}
+      dateModified={post.dateModified}
       jsonLd={{
         '@context': 'https://schema.org',
         '@type': 'Article',

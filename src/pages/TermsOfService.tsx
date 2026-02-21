@@ -20,6 +20,11 @@ const TermsOfService = () => {
       el.setAttribute('content', content);
     };
     setMeta('name', 'description', 'LabFlow Terms of Service — rules and conditions governing the use of our LIMS platform.');
+    setMeta('property', 'og:title', 'Terms of Service | LabFlow');
+    setMeta('property', 'og:description', 'LabFlow Terms of Service — rules and conditions governing the use of our LIMS platform.');
+    setMeta('property', 'og:url', 'https://labflow.mywebz.in/terms-of-service');
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:site_name', 'LabFlow');
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
     if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
     canonical.href = 'https://labflow.mywebz.in/terms-of-service';
