@@ -422,7 +422,7 @@ export function DoctorReferralReport() {
                                 <TableCell colSpan={columns.length + 2} className="bg-muted/30 p-0">
                                   <div className="p-3">
                                     <h5 className="text-xs font-semibold mb-2 text-muted-foreground">Settlement History</h5>
-                                    <DoctorSettlementHistory doctorId={doctor.doctor_id!} refreshKey={refreshKey} />
+                                    <DoctorSettlementHistory doctorId={doctor.doctor_id!} doctorName={doctor.doctor_name} doctorPhone={doctor.doctor_phone} refreshKey={refreshKey} />
                                   </div>
                                 </TableCell>
                               </TableRow>
