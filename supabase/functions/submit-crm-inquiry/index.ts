@@ -56,6 +56,14 @@ Deno.serve(async (req) => {
     const data = await response.json();
     console.log("BizFlow CRM response:", response.status, JSON.stringify(data));
 
+    if (response.status === 409) {
+      console.log("BizFlow CRM: duplicate lead (409), treating as success");
+      return new Response(
+        JSON.stringify({ success: true, duplicate: true, message: "We already have your inquiry! Our team will contact you shortly." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!response.ok) {
       console.error("BizFlow CRM error:", response.status, JSON.stringify(data));
       return new Response(

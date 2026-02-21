@@ -38,9 +38,9 @@ const InquiryDialog = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title || t('inquiry.title')}</DialogTitle>
-          {description && (
-            <DialogDescription>{description}</DialogDescription>
-          )}
+          <DialogDescription className={description ? undefined : 'sr-only'}>
+            {description || t('inquiry.title')}
+          </DialogDescription>
         </DialogHeader>
         <InquiryForm onSuccess={handleSuccess} context={context} source={source} />
       </DialogContent>
