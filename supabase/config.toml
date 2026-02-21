@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.submit-crm-inquiry]
 verify_jwt = false
+
+[functions.submit-indexnow]
+verify_jwt = false
