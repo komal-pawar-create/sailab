@@ -1,116 +1,141 @@
 
 
-# LabFlow LIMS -- World-Class Enhancement Roadmap
+# Sample Tracking Module
 
-Below are the highest-impact features that would elevate LabFlow from a strong LIMS to an industry-leading platform. Pick any combination to implement.
-
----
-
-## 1. Inventory and Reagent Management
-
-Track reagents, consumables, and lab supplies with automatic low-stock alerts.
-
-- New `inventory_items` table (name, category, unit, current_stock, reorder_level, expiry_date, supplier, cost_per_unit, lab_id, branch_id)
-- New `inventory_transactions` table (item_id, transaction_type: in/out/adjustment, quantity, notes, created_by)
-- Dashboard widget showing items below reorder level
-- Sidebar link for admin/lab_admin roles
-- Expiry tracking with color-coded alerts (like license alerts)
-- Monthly consumption reports with Excel export
-
-## 2. Quality Control (QC) Module
-
-Essential for NABL accreditation -- track internal QC results with Levey-Jennings charts.
-
-- New `qc_parameters` table (test_type_id, parameter_name, mean, sd, unit)
-- New `qc_results` table (parameter_id, value, run_date, lot_number, operator_id, status: accepted/rejected/warning)
-- Levey-Jennings chart component using Recharts (plot values against mean +/- 1SD, 2SD, 3SD)
-- Westgard rule violation detection (1-2s, 1-3s, 2-2s, R-4s, 4-1s, 10x)
-- Monthly QC summary report for auditors
-
-## 3. Sample Tracking with Barcode/QR Integration
-
-End-to-end sample lifecycle tracking from collection to result.
-
-- New `samples` table (sample_id, patient_id, bill_id, barcode, collection_time, received_time, processing_time, status: collected/received/processing/completed/rejected, rejection_reason)
-- QR code generation using existing `qrcode.react` dependency
-- Printable barcode labels (patient name, sample ID, test, date)
-- Sample status timeline visualization in Patient History
-- TAT (Turnaround Time) tracking per sample with SLA breach alerts
-
-## 4. Test Rate Card / Price List Management
-
-Centralized test pricing with branch-level overrides and package deals.
-
-- New `test_rate_cards` table (test_type_id, lab_id, branch_id, base_price, discounted_price, effective_from, effective_to)
-- New `test_packages` table (name, included_tests[], package_price, lab_id)
-- Auto-populate bill items from rate card when selecting tests
-- Package discount auto-application during billing
-- Rate revision history for audit compliance
-
-## 5. Patient Portal / Report Delivery
-
-Allow patients to access their reports online via a secure link.
-
-- Public route `/report/:token` with time-limited access tokens
-- SMS/WhatsApp delivery of report links (using existing notification edge functions)
-- PDF report generation with lab letterhead
-- Patient satisfaction survey after report viewing
-- Download tracking for compliance
-
-## 6. Staff Performance and Workload Dashboard
-
-Track operator productivity and workload distribution.
-
-- Reports processed per operator per day/week/month
-- Average report completion time by operator
-- Workload heatmap (busiest hours/days)
-- Operator-wise revenue contribution
-- Built as a new tab in Analytics page using existing Recharts setup
-
-## 7. Automated Report Templates with Normal Range Highlighting
-
-Structured test result entry with automatic abnormal value flagging.
-
-- New `test_parameters` table (test_type_id, parameter_name, unit, normal_range_min, normal_range_max, normal_range_text, display_order)
-- Result entry form with parameter grid
-- Auto-highlight out-of-range values in red/bold on printed reports
-- Historical trend graphs for repeated tests (e.g., HbA1c over 6 months)
-- Template cloning across branches
-
-## 8. WhatsApp/SMS Report Delivery Automation
-
-Automated report dispatch when status changes to "completed".
-
-- Database trigger or polling mechanism on test_reports status change
-- Template-based WhatsApp messages using existing edge function
-- Delivery status tracking (sent, delivered, read)
-- Configurable auto-send toggle per branch in Branch Settings
-- Bulk re-send capability for failed deliveries
+## Overview
+Build a complete sample lifecycle tracking system with barcode/QR generation, status management, and TAT (Turnaround Time) monitoring with SLA breach alerts. This adds a new "Samples" tab to the Dashboard and integrates sample status into Patient History.
 
 ---
 
-## Recommended Priority Order
+## 1. Database Migration
 
-| Priority | Feature | Impact | Effort |
-|----------|---------|--------|--------|
-| 1 | Test Rate Card / Price List | High -- directly impacts billing accuracy | Medium |
-| 2 | Sample Tracking with Barcode | High -- core lab workflow | Medium-High |
-| 3 | Inventory Management | High -- operational efficiency | Medium |
-| 4 | Automated Report Templates | High -- reduces manual errors | Medium |
-| 5 | Patient Portal | High -- patient experience | Medium |
-| 6 | QC Module | High -- accreditation compliance | High |
-| 7 | Staff Performance Dashboard | Medium -- management insights | Low |
-| 8 | WhatsApp Report Automation | Medium -- convenience | Low-Medium |
+Create a `samples` table with full lifecycle tracking:
+
+```text
+samples
+  - id (uuid, PK)
+  - sample_id (text, unique per lab -- auto-generated like "SMP-YYYYMMDD-001")
+  - patient_id (uuid, FK -> patients)
+  - bill_id (uuid, FK -> bills, nullable)
+  - test_report_id (uuid, FK -> test_reports, nullable)
+  - test_type (text) -- test name
+  - barcode (text, unique) -- for barcode/QR scanning
+  - status (text) -- collected, received, processing, completed, rejected
+  - rejection_reason (text, nullable)
+  - collected_at (timestamptz)
+  - collected_by (uuid, FK -> auth.users)
+  - received_at (timestamptz, nullable)
+  - received_by (uuid, nullable)
+  - processing_at (timestamptz, nullable)
+  - completed_at (timestamptz, nullable)
+  - rejected_at (timestamptz, nullable)
+  - sla_hours (integer, default 24) -- expected TAT in hours
+  - sla_breached (boolean, default false)
+  - notes (text, nullable)
+  - lab_id (uuid, FK -> labs)
+  - branch_id (uuid, FK -> branches, nullable)
+  - created_at (timestamptz)
+  - updated_at (timestamptz)
+```
+
+Create a `sample_id_sequences` table for auto-numbering (same pattern as `bill_number_sequences`).
+
+RLS policies will follow the existing pattern:
+- Branch operators see only their branch's samples
+- Lab admins see all samples in their lab
+- Uses existing `get_current_lab_id()` and branch-level isolation
+
+A trigger `ensure_lab_id_matches_branch()` will be attached (matching the existing data integrity pattern).
+
+---
+
+## 2. New Components
+
+### a) `src/components/forms/AddSampleForm.tsx`
+- Dialog form triggered by "+ Collect Sample" button
+- Fields: Patient (reuses `PatientSearchSelect`), Test Type (from `test_types`), SLA Hours (default 24), Notes
+- Auto-generates `sample_id` (SMP-YYYYMMDD-NNN) and `barcode` (unique UUID-based string)
+- Sets initial status to "collected" with `collected_at = now()`
+- Supports OperatorSelect for admin role
+
+### b) `src/components/samples/SampleStatusBadge.tsx`
+- Color-coded badge per status: collected (blue), received (yellow), processing (orange), completed (green), rejected (red)
+- Shows SLA breach indicator (red clock icon) when breached
+
+### c) `src/components/samples/SampleBarcode.tsx`
+- Uses existing `qrcode.react` dependency to render QR code
+- Printable label layout: QR code + patient name + sample ID + test type + date
+- Print button opens a print-optimized dialog
+
+### d) `src/components/samples/SampleTimeline.tsx`
+- Visual vertical timeline showing: Collected -> Received -> Processing -> Completed/Rejected
+- Each step shows timestamp and who performed it
+- Highlights current step, grays out future steps
+
+### e) `src/components/samples/SampleUpdateDialog.tsx`
+- Quick status update dialog with dropdown: advance to next status or reject
+- Rejection requires reason text
+- Auto-records timestamp and user for each transition
+
+### f) `src/components/samples/SampleTrackingTab.tsx`
+- Main samples list view (table) for the Dashboard "Samples" tab
+- Columns: Sample ID, Patient, Test, Status Badge, Collected At, TAT Progress, Actions
+- TAT Progress: shows time elapsed vs SLA with a progress bar (green/yellow/red)
+- Filter by status, search by sample ID or patient name
+- Actions: View QR, Update Status, View Timeline
+
+### g) `src/components/samples/SampleTATReport.tsx`
+- Summary cards: Total Samples, Avg TAT, SLA Breach Count, On-Time %
+- Table of breached samples with details
+- Filterable by date range and branch
+
+---
+
+## 3. Dashboard Integration
+
+- Add "Samples" tab to `DataTabs` component alongside existing tabs (patients, reports, bills, etc.)
+- Add a new stat card "Samples" to `StatsRow` showing today's sample count
+- Add a "SLA Breaches" stat card with red highlight when breaches > 0
+
+---
+
+## 4. Patient History Integration
+
+- Add a "Samples" tab in `PatientHistory` page
+- Shows all samples for the patient with status timeline
+- Integrate sample events into `PatientTimeline.tsx`
+
+---
+
+## 5. Sidebar Navigation
+
+- No new sidebar item needed -- samples live inside Dashboard (Samples tab) and Patient History
+
+---
+
+## 6. SLA Breach Detection
+
+- A computed approach: when loading samples, calculate `sla_breached` client-side by comparing `collected_at + sla_hours` vs current time (for non-completed/rejected samples)
+- Optionally update `sla_breached` flag via a database function that can be called periodically
+- Breached samples show a red pulsing indicator in the table
+
+---
+
+## 7. Barcode/QR Label Printing
+
+- Printable label component using `qrcode.react` (already installed)
+- Layout: 2x3 labels per A4 page for batch printing
+- Each label: QR code encoding sample_id, patient name, test type, collection date
+- Single-label and batch-print modes
 
 ---
 
 ## Technical Notes
 
-- All new tables will follow existing patterns: `lab_id` + `branch_id` columns, RLS policies using the existing role-check functions, and proper foreign keys
-- UI components will use existing shadcn/ui primitives (Card, Table, Tabs, Dialog) and follow the established i18n pattern
-- New sidebar items will be added to `mainItems` or `adminItems` in `AppSidebar.tsx` with appropriate role guards
-- Excel/PDF exports will reuse the existing `ExportButtons` component and `exportUtils.ts`
-- Charts will use the existing Recharts setup already used in Analytics
-
-Let me know which feature(s) you'd like to build first, and I will create the database migration SQL and all UI components.
+- All queries follow the existing PostgREST join hint pattern (e.g., `patients!samples_patient_id_fkey(full_name, patient_id)`)
+- RLS policies use `get_current_lab_id()` and branch isolation matching existing tables
+- The `ensure_lab_id_matches_branch` trigger ensures data integrity
+- TanStack Query hooks follow the `useDashboardQueries.ts` pattern with pagination and search
+- i18n keys will be added to `en.json`, `hi.json`, `mr.json`
+- Export functionality (Excel/PDF) reuses existing `ExportButtons` component
 
