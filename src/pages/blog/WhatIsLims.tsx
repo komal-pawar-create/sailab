@@ -25,6 +25,7 @@ const WhatIsLims = () => {
       canonicalSlug={SLUG}
       datePublished={post.datePublished}
       dateModified={post.dateModified}
+      ogImage={post.ogImage}
       jsonLd={{
         '@context': 'https://schema.org',
         '@type': 'Article',
@@ -35,7 +36,7 @@ const WhatIsLims = () => {
         datePublished: post.datePublished,
         dateModified: post.dateModified,
         mainEntityOfPage: `https://labflow.mywebz.in/blog/${SLUG}`,
-        image: 'https://labflow.mywebz.in/images/labflow-logo.png',
+        image: post.ogImage || 'https://labflow.mywebz.in/images/labflow-logo.png',
       }}
     >
       <div className="max-w-6xl mx-auto px-4">

@@ -20,9 +20,10 @@ interface BlogLayoutProps {
   jsonLd?: object;
   datePublished?: string;
   dateModified?: string;
+  ogImage?: string;
 }
 
-const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, datePublished, dateModified }: BlogLayoutProps) => {
+const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, datePublished, dateModified, ogImage }: BlogLayoutProps) => {
   const [scrollY, setScrollY] = useState(0);
   const [readProgress, setReadProgress] = useState(0);
 
@@ -39,7 +40,7 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, dateP
   useEffect(() => {
     document.title = `${title} | LabFlow Blog`;
     const fullUrl = `https://labflow.mywebz.in/blog/${canonicalSlug}`;
-    const imageUrl = 'https://labflow.mywebz.in/images/labflow-logo.png';
+    const imageUrl = ogImage || 'https://labflow.mywebz.in/images/labflow-logo.png';
 
     const setMeta = (attr: string, key: string, content: string) => {
       let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement;

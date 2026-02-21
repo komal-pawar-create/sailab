@@ -9,7 +9,10 @@ export interface BlogPost {
   dateModified: string;
   readTime: string;
   author: string;
+  ogImage?: string;
 }
+
+const OG_BASE = 'https://labflow.mywebz.in/og';
 
 export const blogPosts: BlogPost[] = [
   {
@@ -23,6 +26,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-17',
     readTime: '8 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-what-is-lims.jpg`,
   },
   {
     slug: 'how-to-digitize-pathology-lab',
@@ -35,6 +39,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-17',
     readTime: '10 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-digitize-pathology-lab.jpg`,
   },
   {
     slug: 'gst-billing-for-pathology-labs',
@@ -47,6 +52,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-17',
     readTime: '7 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-gst-billing-labs.jpg`,
   },
   {
     slug: 'lab-billing-software-features',
@@ -59,6 +65,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-17',
     readTime: '6 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-billing-features.jpg`,
   },
   {
     slug: 'digital-lab-reports-guide',
@@ -71,6 +78,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-17',
     readTime: '7 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-digital-lab-reports.jpg`,
   },
   {
     slug: 'nabl-accreditation-guide',
@@ -83,6 +91,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-17',
     readTime: '9 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-nabl-accreditation.jpg`,
   },
   {
     slug: 'multi-branch-lab-management',
@@ -95,6 +104,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-17',
     readTime: '8 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-multi-branch-management.jpg`,
   },
   {
     slug: 'best-lims-software-india',
@@ -107,6 +117,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-17',
     readTime: '12 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-best-lims-india.jpg`,
   },
   {
     slug: 'reduce-lab-report-turnaround-time',
@@ -119,6 +130,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-21',
     readTime: '9 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-reduce-turnaround-time.jpg`,
   },
   {
     slug: 'lab-staff-management-challenges',
@@ -131,6 +143,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-21',
     readTime: '8 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-reduce-patient-complaints.jpg`,
   },
   {
     slug: 'reduce-patient-complaints-pathology-lab',
@@ -143,6 +156,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-21',
     readTime: '8 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-staff-management.jpg`,
   },
   {
     slug: 'lab-revenue-leakage-prevention',
@@ -155,6 +169,7 @@ export const blogPosts: BlogPost[] = [
     dateModified: '2026-02-21',
     readTime: '10 min read',
     author: 'LabFlow Team',
+    ogImage: `${OG_BASE}/og-revenue-leakage.jpg`,
   },
 ];
 
