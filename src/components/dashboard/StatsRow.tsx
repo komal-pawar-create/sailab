@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { Users, TestTube, FileText, Receipt, FileImage, CreditCard } from "lucide-react";
+import { Users, TestTube, FileText, Receipt, FileImage, CreditCard, Stethoscope } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ interface StatsRowProps {
     bills: number;
     jpegImages: number;
     pending: number;
+    pendingCommissions?: number;
   };
 }
 
@@ -27,12 +28,13 @@ export const StatsRow = memo(function StatsRow({ stats }: StatsRowProps) {
     { label: "Documents", fullLabel: "Documents", value: stats.documents, icon: FileText, color: "text-purple-500" },
     { label: "Bills", fullLabel: "Total Bills", value: stats.bills, icon: Receipt, color: "text-orange-500" },
     { label: "Images", fullLabel: "Total JPG Images", value: stats.jpegImages, icon: FileImage, color: "text-emerald-500" },
-    { label: "Pending", fullLabel: "Pending Amount", value: `₹${stats.pending.toLocaleString()}`, icon: CreditCard, color: "text-destructive", highlight: true, clickable: true },
+    { label: "Pending", fullLabel: "Pending Amount", value: `₹${stats.pending.toLocaleString()}`, icon: CreditCard, color: "text-destructive", highlight: true, clickable: true, route: '/outstanding-report' },
+    { label: "Dr. Comm", fullLabel: "Pending Commissions", value: `₹${(stats.pendingCommissions || 0).toLocaleString()}`, icon: Stethoscope, color: "text-amber-500", highlight: (stats.pendingCommissions || 0) > 0, clickable: true, route: '/reports' },
   ];
 
   const handleCardClick = (item: typeof statItems[0]) => {
-    if (item.clickable && item.fullLabel === "Pending Amount") {
-      navigate('/outstanding-report');
+    if (item.clickable && item.route) {
+      navigate(item.route);
     }
   };
 
@@ -86,7 +88,7 @@ export const StatsRow = memo(function StatsRow({ stats }: StatsRowProps) {
 
   // Desktop: Grid layout
   return (
-    <div data-tour="stats-row" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div data-tour="stats-row" className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
       {statItems.map((item) => (
         <StatCard key={item.label} item={item} />
       ))}
