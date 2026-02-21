@@ -291,6 +291,46 @@ export const AddBillForm = ({ onBillAdded, preSelectedPatientId }: AddBillFormPr
 
       if (error) throw error;
 
+      // Auto-create commission for referred patients with registered doctors
+      try {
+        const { data: patientRaw } = await supabase
+          .from('patients')
+          .select('*')
+          .eq('id', formData.patient_id)
+          .single();
+
+        const patientData = patientRaw as any;
+        if (patientData?.referring_doctor_id && newBill) {
+          const { data: doctor } = await supabase
+            .from('referring_doctors' as any)
+            .select('commission_percentage, commission_type, fixed_commission_amount')
+            .eq('id', patientData.referring_doctor_id)
+            .single();
+
+          if (doctor) {
+            const doc = doctor as any;
+            const commissionAmount = doc.commission_type === 'percentage'
+              ? (totalAmount * doc.commission_percentage) / 100
+              : doc.fixed_commission_amount;
+
+            await supabase.from('doctor_commissions' as any).insert({
+              doctor_id: patientData.referring_doctor_id,
+              bill_id: (newBill as any).id,
+              patient_id: formData.patient_id,
+              bill_amount: totalAmount,
+              commission_rate: doc.commission_type === 'percentage' ? doc.commission_percentage : doc.fixed_commission_amount,
+              commission_amount: commissionAmount,
+              lab_id: labId,
+              branch_id: branchId,
+              status: 'pending',
+            } as any);
+          }
+        }
+      } catch (commErr) {
+        console.error('Commission auto-calculation error:', commErr);
+        // Don't block bill creation for commission errors
+      }
+
       // Set the created bill for print preview
       setCreatedBill({
         ...newBill,
