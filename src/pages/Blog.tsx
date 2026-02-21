@@ -1,16 +1,22 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { Search, X, Send } from 'lucide-react';
 import { blogPosts, blogClusters } from '@/lib/blogData';
 import BlogCard from '@/components/blog/BlogCard';
 import BlogLayout from '@/components/blog/BlogLayout';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useAuth } from '@/hooks/useAuth';
+import { submitToIndexNow } from '@/lib/indexNow';
+import { toast } from '@/hooks/use-toast';
 
 const Blog = () => {
   const [search, setSearch] = useState('');
   const [activeCluster, setActiveCluster] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const { user } = useAuth();
   const debouncedSearch = useDebounce(search, 250);
 
   const filteredPosts = useMemo(() => {
@@ -52,9 +58,32 @@ const Blog = () => {
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Lab Management Insights
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
             Expert guides on LIMS software, lab billing, digital reports, compliance, and multi-branch management for Indian pathology &amp; diagnostic labs.
           </p>
+          {user && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={submitting}
+              onClick={async () => {
+                setSubmitting(true);
+                try {
+                  const slugs = blogPosts.map((p) => p.slug);
+                  const { error } = await submitToIndexNow(slugs);
+                  if (error) throw error;
+                  toast({ title: 'Submitted to IndexNow', description: `${slugs.length} URLs sent to search engines.` });
+                } catch (e: any) {
+                  toast({ title: 'IndexNow failed', description: e?.message || 'Unknown error', variant: 'destructive' });
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
+            >
+              <Send className="h-3.5 w-3.5 mr-1.5" />
+              {submitting ? 'Submitting…' : 'Notify Search Engines'}
+            </Button>
+          )}
         </div>
 
         {/* Search bar */}
