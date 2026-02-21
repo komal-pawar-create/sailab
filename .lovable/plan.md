@@ -1,87 +1,116 @@
 
 
-## Professional Doctor Referral and Commission Settlement System
+# LabFlow LIMS -- World-Class Enhancement Roadmap
 
-Currently, doctor referrals are tracked as free-text fields on the patient record with a basic aggregation report. This plan upgrades it into a full professional system with a doctor master list, configurable commission rates, automatic commission calculation, and payment settlement tracking.
-
----
-
-### What You Get
-
-1. **Doctor Master List** -- A dedicated table to register referring doctors with their details and commission percentage (e.g., 10% of bill amount)
-2. **Auto-suggest on Patient Form** -- When adding a patient, the doctor name field becomes a searchable dropdown from the master list (with option to type new)
-3. **Automatic Commission Calculation** -- Commissions are auto-calculated from bills linked to referred patients
-4. **Settlement Tracking** -- Record payments made to doctors, track pending vs settled amounts
-5. **Enhanced Referral Report** -- Shows commission earned, commission paid, and balance due per doctor with settlement history
+Below are the highest-impact features that would elevate LabFlow from a strong LIMS to an industry-leading platform. Pick any combination to implement.
 
 ---
 
-### Database Changes (3 new tables)
+## 1. Inventory and Reagent Management
 
-**Table 1: `referring_doctors`** (Master list)
-- `id`, `lab_id`, `branch_id`, `doctor_name`, `phone`, `email`, `specialization`, `commission_percentage` (default 10), `commission_type` (percentage/fixed), `is_active`, `created_at`, `created_by`
+Track reagents, consumables, and lab supplies with automatic low-stock alerts.
 
-**Table 2: `doctor_commissions`** (Auto-calculated per bill)
-- `id`, `doctor_id` (FK to referring_doctors), `bill_id` (FK to bills), `patient_id`, `bill_amount`, `commission_rate`, `commission_amount`, `lab_id`, `branch_id`, `status` (pending/settled), `settled_in_settlement_id`, `created_at`
+- New `inventory_items` table (name, category, unit, current_stock, reorder_level, expiry_date, supplier, cost_per_unit, lab_id, branch_id)
+- New `inventory_transactions` table (item_id, transaction_type: in/out/adjustment, quantity, notes, created_by)
+- Dashboard widget showing items below reorder level
+- Sidebar link for admin/lab_admin roles
+- Expiry tracking with color-coded alerts (like license alerts)
+- Monthly consumption reports with Excel export
 
-**Table 3: `doctor_settlements`** (Payment records)
-- `id`, `doctor_id`, `settlement_date`, `total_amount`, `payment_method`, `reference_number`, `notes`, `period_from`, `period_to`, `lab_id`, `branch_id`, `created_by`, `created_at`
+## 2. Quality Control (QC) Module
 
-RLS policies on all three tables filtering by `lab_id`.
+Essential for NABL accreditation -- track internal QC results with Levey-Jennings charts.
+
+- New `qc_parameters` table (test_type_id, parameter_name, mean, sd, unit)
+- New `qc_results` table (parameter_id, value, run_date, lot_number, operator_id, status: accepted/rejected/warning)
+- Levey-Jennings chart component using Recharts (plot values against mean +/- 1SD, 2SD, 3SD)
+- Westgard rule violation detection (1-2s, 1-3s, 2-2s, R-4s, 4-1s, 10x)
+- Monthly QC summary report for auditors
+
+## 3. Sample Tracking with Barcode/QR Integration
+
+End-to-end sample lifecycle tracking from collection to result.
+
+- New `samples` table (sample_id, patient_id, bill_id, barcode, collection_time, received_time, processing_time, status: collected/received/processing/completed/rejected, rejection_reason)
+- QR code generation using existing `qrcode.react` dependency
+- Printable barcode labels (patient name, sample ID, test, date)
+- Sample status timeline visualization in Patient History
+- TAT (Turnaround Time) tracking per sample with SLA breach alerts
+
+## 4. Test Rate Card / Price List Management
+
+Centralized test pricing with branch-level overrides and package deals.
+
+- New `test_rate_cards` table (test_type_id, lab_id, branch_id, base_price, discounted_price, effective_from, effective_to)
+- New `test_packages` table (name, included_tests[], package_price, lab_id)
+- Auto-populate bill items from rate card when selecting tests
+- Package discount auto-application during billing
+- Rate revision history for audit compliance
+
+## 5. Patient Portal / Report Delivery
+
+Allow patients to access their reports online via a secure link.
+
+- Public route `/report/:token` with time-limited access tokens
+- SMS/WhatsApp delivery of report links (using existing notification edge functions)
+- PDF report generation with lab letterhead
+- Patient satisfaction survey after report viewing
+- Download tracking for compliance
+
+## 6. Staff Performance and Workload Dashboard
+
+Track operator productivity and workload distribution.
+
+- Reports processed per operator per day/week/month
+- Average report completion time by operator
+- Workload heatmap (busiest hours/days)
+- Operator-wise revenue contribution
+- Built as a new tab in Analytics page using existing Recharts setup
+
+## 7. Automated Report Templates with Normal Range Highlighting
+
+Structured test result entry with automatic abnormal value flagging.
+
+- New `test_parameters` table (test_type_id, parameter_name, unit, normal_range_min, normal_range_max, normal_range_text, display_order)
+- Result entry form with parameter grid
+- Auto-highlight out-of-range values in red/bold on printed reports
+- Historical trend graphs for repeated tests (e.g., HbA1c over 6 months)
+- Template cloning across branches
+
+## 8. WhatsApp/SMS Report Delivery Automation
+
+Automated report dispatch when status changes to "completed".
+
+- Database trigger or polling mechanism on test_reports status change
+- Template-based WhatsApp messages using existing edge function
+- Delivery status tracking (sent, delivered, read)
+- Configurable auto-send toggle per branch in Branch Settings
+- Bulk re-send capability for failed deliveries
 
 ---
 
-### UI Changes
+## Recommended Priority Order
 
-**1. Add Doctor Management Dialog** (new component)
-- Form to add/edit referring doctors with name, phone, specialization, commission rate
-- Accessible from the Referral Report page via "Manage Doctors" button
-
-**2. Update Patient Form (`AddPatientForm.tsx`)**
-- Replace free-text doctor name field with a searchable Select/Combobox that queries `referring_doctors`
-- Still allows typing a new name (falls back to free-text for unregistered doctors)
-- Auto-fills phone when a registered doctor is selected
-
-**3. Enhanced Referral Report (`DoctorReferralReport.tsx`)**
-- Add columns: Commission Rate, Commission Earned, Commission Paid, Balance Due
-- Add "Record Settlement" button per doctor row
-- Add settlement history expandable section
-- Summary stats: Total Commission Earned, Total Paid, Total Pending
-
-**4. Settlement Form** (new component)
-- Dialog to record a payment to a doctor
-- Fields: Amount, Payment Method (Cash/Online/Cheque), Reference Number, Period (From-To), Notes
-- On submit: creates settlement record and marks related commission entries as "settled"
-
-**5. Reports Page** -- No tab changes needed, the existing "Referrals" tab gets the enhanced version
+| Priority | Feature | Impact | Effort |
+|----------|---------|--------|--------|
+| 1 | Test Rate Card / Price List | High -- directly impacts billing accuracy | Medium |
+| 2 | Sample Tracking with Barcode | High -- core lab workflow | Medium-High |
+| 3 | Inventory Management | High -- operational efficiency | Medium |
+| 4 | Automated Report Templates | High -- reduces manual errors | Medium |
+| 5 | Patient Portal | High -- patient experience | Medium |
+| 6 | QC Module | High -- accreditation compliance | High |
+| 7 | Staff Performance Dashboard | Medium -- management insights | Low |
+| 8 | WhatsApp Report Automation | Medium -- convenience | Low-Medium |
 
 ---
 
-### Auto-Commission Logic
+## Technical Notes
 
-When a bill is created for a patient who has a registered referring doctor:
-- A database trigger or application-level logic creates a `doctor_commissions` record
-- Commission = `bill.total_amount * doctor.commission_percentage / 100`
-- This happens automatically -- no manual entry needed
+- All new tables will follow existing patterns: `lab_id` + `branch_id` columns, RLS policies using the existing role-check functions, and proper foreign keys
+- UI components will use existing shadcn/ui primitives (Card, Table, Tabs, Dialog) and follow the established i18n pattern
+- New sidebar items will be added to `mainItems` or `adminItems` in `AppSidebar.tsx` with appropriate role guards
+- Excel/PDF exports will reuse the existing `ExportButtons` component and `exportUtils.ts`
+- Charts will use the existing Recharts setup already used in Analytics
 
-For existing patients with free-text doctor names, the report still works but commission tracking only applies to registered doctors.
-
----
-
-### Technical Details
-
-**Files to Create:**
-- `src/components/reports/DoctorManagement.tsx` -- Add/Edit/List doctors dialog
-- `src/components/reports/DoctorSettlementForm.tsx` -- Record settlement dialog
-- `src/components/reports/DoctorSettlementHistory.tsx` -- Expandable settlement history
-- Migration file for the 3 new tables + RLS policies
-
-**Files to Modify:**
-- `src/components/reports/DoctorReferralReport.tsx` -- Enhanced with commission columns, settlement actions, manage doctors button
-- `src/components/forms/AddPatientForm.tsx` -- Doctor name field becomes searchable select from master list
-- `src/integrations/supabase/types.ts` -- Will auto-update after migration
-
-**Commission Calculation Approach:**
-- Application-level: When a bill is created in `AddBillForm`, check if the patient has a `referring_doctor_id`, and if so, insert into `doctor_commissions`
-- This avoids needing a database trigger and keeps the logic visible in the codebase
+Let me know which feature(s) you'd like to build first, and I will create the database migration SQL and all UI components.
 
