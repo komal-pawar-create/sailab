@@ -42,6 +42,10 @@ const DigitalLabReports = React.lazy(() => import("./pages/blog/DigitalLabReport
 const NablAccreditation = React.lazy(() => import("./pages/blog/NablAccreditation"));
 const MultiBranchManagement = React.lazy(() => import("./pages/blog/MultiBranchManagement"));
 const BestLimsIndia = React.lazy(() => import("./pages/blog/BestLimsIndia"));
+const ReduceTurnaroundTime = React.lazy(() => import("./pages/blog/ReduceTurnaroundTime"));
+const StaffManagementChallenges = React.lazy(() => import("./pages/blog/StaffManagementChallenges"));
+const ReducePatientComplaints = React.lazy(() => import("./pages/blog/ReducePatientComplaints"));
+const RevenueLeakagePrevention = React.lazy(() => import("./pages/blog/RevenueLeakagePrevention"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -136,6 +140,10 @@ const AppContent = () => {
           <Route path="/blog/nabl-accreditation-guide" element={<NablAccreditation />} />
           <Route path="/blog/multi-branch-lab-management" element={<MultiBranchManagement />} />
           <Route path="/blog/best-lims-software-india" element={<BestLimsIndia />} />
+          <Route path="/blog/reduce-lab-report-turnaround-time" element={<ReduceTurnaroundTime />} />
+          <Route path="/blog/lab-staff-management-challenges" element={<StaffManagementChallenges />} />
+          <Route path="/blog/reduce-patient-complaints-pathology-lab" element={<ReducePatientComplaints />} />
+          <Route path="/blog/lab-revenue-leakage-prevention" element={<RevenueLeakagePrevention />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/feedback" element={<PublicFeedback />} />

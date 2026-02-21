@@ -108,6 +108,54 @@ export const blogPosts: BlogPost[] = [
     readTime: '12 min read',
     author: 'LabFlow Team',
   },
+  {
+    slug: 'reduce-lab-report-turnaround-time',
+    title: 'How to Reduce Report Turnaround Time in Your Pathology Lab',
+    excerpt: 'Delayed reports frustrate patients and hurt your lab\'s reputation. Learn how to identify bottlenecks and cut turnaround time with digital workflows and automation.',
+    category: 'Lab Owner Challenges',
+    cluster: 'lab-owner-challenges',
+    keywords: ['reduce lab TAT', 'report turnaround time pathology', 'faster lab reports', 'lab report delay solutions'],
+    datePublished: '2026-02-18',
+    dateModified: '2026-02-21',
+    readTime: '9 min read',
+    author: 'LabFlow Team',
+  },
+  {
+    slug: 'lab-staff-management-challenges',
+    title: '5 Staff Management Challenges Every Lab Owner Faces (And How to Fix Them)',
+    excerpt: 'From unclear roles to human errors — discover the top staff management problems in pathology labs and practical solutions using modern lab software.',
+    category: 'Lab Owner Challenges',
+    cluster: 'lab-owner-challenges',
+    keywords: ['lab staff management', 'pathology lab HR challenges', 'lab employee errors', 'lab role management software'],
+    datePublished: '2026-02-19',
+    dateModified: '2026-02-21',
+    readTime: '8 min read',
+    author: 'LabFlow Team',
+  },
+  {
+    slug: 'reduce-patient-complaints-pathology-lab',
+    title: 'How to Reduce Patient Complaints in Your Pathology Lab',
+    excerpt: 'Patient complaints can damage your lab\'s reputation. Learn the top complaint types, their root causes, and systematic fixes to improve patient satisfaction.',
+    category: 'Lab Owner Challenges',
+    cluster: 'lab-owner-challenges',
+    keywords: ['reduce patient complaints lab', 'pathology lab patient satisfaction', 'lab complaint management', 'improve lab service quality'],
+    datePublished: '2026-02-20',
+    dateModified: '2026-02-21',
+    readTime: '8 min read',
+    author: 'LabFlow Team',
+  },
+  {
+    slug: 'lab-revenue-leakage-prevention',
+    title: 'Revenue Leakage in Labs: Where You\'re Losing Money Without Knowing',
+    excerpt: 'Unbilled tests, unapproved discounts, and outstanding dues silently drain your lab\'s profits. Learn 6 common leakage points and how software plugs each one.',
+    category: 'Lab Owner Challenges',
+    cluster: 'lab-owner-challenges',
+    keywords: ['lab revenue leakage', 'unbilled tests pathology', 'lab billing losses', 'lab financial management software'],
+    datePublished: '2026-02-21',
+    dateModified: '2026-02-21',
+    readTime: '10 min read',
+    author: 'LabFlow Team',
+  },
 ];
 
 export const blogClusters = [
@@ -117,6 +165,7 @@ export const blogClusters = [
   { id: 'compliance', label: 'Compliance' },
   { id: 'multi-branch', label: 'Multi-Branch' },
   { id: 'comparison', label: 'Buying Guide' },
+  { id: 'lab-owner-challenges', label: 'Lab Owner Challenges' },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {
