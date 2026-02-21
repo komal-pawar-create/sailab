@@ -20,9 +20,9 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
   ];
 
   const legalLinks = [
-    { labelKey: 'footer.privacyPolicy', href: '#' },
-    { labelKey: 'footer.termsOfService', href: '#' },
-    { labelKey: 'footer.refundPolicy', href: '#' },
+    { labelKey: 'footer.privacyPolicy', href: '/privacy-policy' },
+    { labelKey: 'footer.termsOfService', href: '/terms-of-service' },
+    { labelKey: 'footer.refundPolicy', href: '/refund-policy' },
   ];
 
   const socialLinks = [
@@ -111,14 +111,12 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
             <ul className="space-y-3">
               {legalLinks.map((link, index) => (
                 <li key={index}>
-                  <span 
-                    className="text-sm text-muted-foreground/60 cursor-default inline-flex items-center gap-2"
-                    aria-disabled="true"
-                    title="Coming Soon"
+                  <Link
+                    to={link.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {t(link.labelKey)}
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Coming Soon</span>
-                  </span>
+                  </Link>
                 </li>
               ))}
             </ul>

@@ -46,6 +46,9 @@ const ReduceTurnaroundTime = React.lazy(() => import("./pages/blog/ReduceTurnaro
 const StaffManagementChallenges = React.lazy(() => import("./pages/blog/StaffManagementChallenges"));
 const ReducePatientComplaints = React.lazy(() => import("./pages/blog/ReducePatientComplaints"));
 const RevenueLeakagePrevention = React.lazy(() => import("./pages/blog/RevenueLeakagePrevention"));
+const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
+const RefundPolicy = React.lazy(() => import("./pages/RefundPolicy"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -106,7 +109,7 @@ const AppContent = () => {
   const location = useLocation();
   
   // Pages that should not have sidebar
-  const noSidebarPages = ['/auth', '/forgot-password', '/', '/feedback', '/product-tour', '/blog'];
+  const noSidebarPages = ['/auth', '/forgot-password', '/', '/feedback', '/product-tour', '/blog', '/privacy-policy', '/terms-of-service', '/refund-policy'];
   const showSidebar = !noSidebarPages.includes(location.pathname) && !location.pathname.startsWith('/feedback') && !location.pathname.startsWith('/blog');
 
   useEffect(() => {
@@ -144,6 +147,9 @@ const AppContent = () => {
           <Route path="/blog/lab-staff-management-challenges" element={<StaffManagementChallenges />} />
           <Route path="/blog/reduce-patient-complaints-pathology-lab" element={<ReducePatientComplaints />} />
           <Route path="/blog/lab-revenue-leakage-prevention" element={<RevenueLeakagePrevention />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/feedback" element={<PublicFeedback />} />
