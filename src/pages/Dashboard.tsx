@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { RefreshCw, BarChart3, HelpCircle } from 'lucide-react';
+import LanguageSelector from '@/components/landing/LanguageSelector';
 import { useFollowupReminders } from '@/hooks/useFollowupReminders';
 import { DashboardFilters, TimePeriod, Branch } from '@/components/dashboard/DashboardFilters';
 import { StatsRow } from '@/components/dashboard/StatsRow';
@@ -201,7 +202,8 @@ const Dashboard = () => {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('app.dashboard.title')}</h1>
             <p className="text-muted-foreground text-sm">{t('app.dashboard.welcomeBack', { name: profile.full_name })}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            <LanguageSelector isScrolled={true} />
             <Button variant="ghost" size="sm" onClick={resetTour} title="Restart Tour">
               <HelpCircle className="h-4 w-4" />
             </Button>
