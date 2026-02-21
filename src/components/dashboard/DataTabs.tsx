@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, TestTube, FileText, Receipt, Bell, MessageSquare, Wallet } from "lucide-react";
+import { Users, TestTube, FileText, Receipt, Bell, MessageSquare, Wallet, Beaker } from "lucide-react";
 import { PatientsTable } from "./PatientsTable";
 import { ReportsTable } from "./ReportsTable";
 import { DocumentsTable } from "./DocumentsTable";
@@ -9,6 +9,7 @@ import { BillsTable } from "./BillsTable";
 import { FollowupsTable } from "./FollowupsTable";
 import { FeedbackTable } from "./FeedbackTable";
 import { LedgerTable } from "./LedgerTable";
+import { SampleTrackingTab } from "@/components/samples/SampleTrackingTab";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ interface DataTabsProps {
   feedback: any[];
   payments: any[];
   totalCollected: number;
+  samples: any[];
   patientsPagination: PaginationProps;
   reportsPagination: PaginationProps;
   documentsPagination: PaginationProps;
@@ -39,6 +41,7 @@ interface DataTabsProps {
   followupsPagination: PaginationProps;
   feedbackPagination: PaginationProps;
   paymentsPagination: PaginationProps;
+  samplesPagination: PaginationProps;
   onRefresh: () => void;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
@@ -46,9 +49,9 @@ interface DataTabsProps {
 
 export const DataTabs = memo(function DataTabs({ 
   patients, reports, documents, bills, followups, feedback, payments,
-  totalCollected,
+  totalCollected, samples,
   patientsPagination, reportsPagination, documentsPagination, billsPagination,
-  followupsPagination, feedbackPagination, paymentsPagination,
+  followupsPagination, feedbackPagination, paymentsPagination, samplesPagination,
   onRefresh,
   activeTab = 'patients',
   onTabChange
@@ -64,6 +67,7 @@ export const DataTabs = memo(function DataTabs({
     { id: "followups", label: t('app.tabs.followups'), shortLabel: t('app.tabs.followupsShort'), icon: Bell, count: followupsPagination.totalCount },
     { id: "feedback", label: t('app.tabs.feedback'), shortLabel: t('app.tabs.feedbackShort'), icon: MessageSquare, count: feedbackPagination.totalCount },
     { id: "ledger", label: t('app.tabs.ledger'), shortLabel: t('app.tabs.ledgerShort'), icon: Wallet, count: paymentsPagination.totalCount },
+    { id: "samples", label: "Samples", shortLabel: "Samples", icon: Beaker, count: samplesPagination.totalCount },
   ];
 
   const TabsListContent = (
@@ -206,6 +210,20 @@ export const DataTabs = memo(function DataTabs({
           onSearch={paymentsPagination.onSearch}
           onRefresh={onRefresh}
           isLoading={paymentsPagination.isLoading}
+        />
+      </TabsContent>
+
+      <TabsContent value="samples" className="mt-4">
+        <SampleTrackingTab
+          samples={samples}
+          totalCount={samplesPagination.totalCount}
+          currentPage={samplesPagination.currentPage}
+          pageSize={samplesPagination.pageSize}
+          onPageChange={samplesPagination.onPageChange}
+          onPageSizeChange={samplesPagination.onPageSizeChange}
+          onSearch={samplesPagination.onSearch}
+          onRefresh={onRefresh}
+          isLoading={samplesPagination.isLoading}
         />
       </TabsContent>
     </Tabs>

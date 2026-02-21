@@ -25,6 +25,7 @@ import {
   useTotalCollectedQuery,
   useStatsQuery,
   useBranchesQuery,
+  useSamplesQuery,
 } from '@/hooks/queries/useDashboardQueries';
 
 interface PaginationState {
@@ -54,6 +55,7 @@ const Dashboard = () => {
   const [followupsPag, setFollowupsPag] = useState<PaginationState>(defaultPagination);
   const [feedbackPag, setFeedbackPag] = useState<PaginationState>(defaultPagination);
   const [paymentsPag, setPaymentsPag] = useState<PaginationState>(defaultPagination);
+  const [samplesPag, setSamplesPag] = useState<PaginationState>(defaultPagination);
 
   // Debounced search values
   const debouncedPatientsSearch = useDebounce(patientsPag.search, 300);
@@ -63,6 +65,7 @@ const Dashboard = () => {
   const debouncedFollowupsSearch = useDebounce(followupsPag.search, 300);
   const debouncedFeedbackSearch = useDebounce(feedbackPag.search, 300);
   const debouncedPaymentsSearch = useDebounce(paymentsPag.search, 300);
+  const debouncedSamplesSearch = useDebounce(samplesPag.search, 300);
 
   useFollowupReminders();
   const { resetTour } = useOnboardingTour();
@@ -142,10 +145,17 @@ const Dashboard = () => {
   const totalCollectedQuery = useTotalCollectedQuery(baseFilters);
   const statsQuery = useStatsQuery(baseFilters);
 
+  const samplesQuery = useSamplesQuery({
+    ...baseFilters,
+    page: samplesPag.page,
+    pageSize: samplesPag.pageSize,
+    search: debouncedSamplesSearch,
+  });
+
   // Check if any query is refreshing
   const isRefreshing = patientsQuery.isFetching || reportsQuery.isFetching || 
     documentsQuery.isFetching || billsQuery.isFetching || followupsQuery.isFetching || 
-    feedbackQuery.isFetching || paymentsQuery.isFetching || statsQuery.isFetching;
+    feedbackQuery.isFetching || paymentsQuery.isFetching || statsQuery.isFetching || samplesQuery.isFetching;
 
   // Refetch all data
   const refetchAll = useCallback(() => {
@@ -245,6 +255,8 @@ const Dashboard = () => {
           followupsPagination={makePaginationProps(followupsPag, setFollowupsPag, followupsQuery.data?.count || 0, followupsQuery.isFetching)}
           feedbackPagination={makePaginationProps(feedbackPag, setFeedbackPag, feedbackQuery.data?.count || 0, feedbackQuery.isFetching)}
           paymentsPagination={makePaginationProps(paymentsPag, setPaymentsPag, paymentsQuery.data?.count || 0, paymentsQuery.isFetching)}
+          samples={samplesQuery.data?.data || []}
+          samplesPagination={makePaginationProps(samplesPag, setSamplesPag, samplesQuery.data?.count || 0, samplesQuery.isFetching)}
           onRefresh={refetchAll}
           activeTab={activeTab}
           onTabChange={handleTabChange}
