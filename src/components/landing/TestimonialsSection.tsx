@@ -4,6 +4,7 @@ import { Quote, Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { AnimatedSection } from '@/components/AnimatedSection';
+import Autoplay from 'embla-carousel-autoplay';
 import type { TestimonialItem } from './types';
 
 interface TestimonialsSectionProps {
@@ -36,6 +37,9 @@ const TestimonialsSection = ({ testimonials }: TestimonialsSectionProps) => {
               align: "start",
               loop: true,
             }}
+            plugins={[
+              Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true }),
+            ]}
             className="w-full"
             aria-label="Customer testimonials carousel"
           >

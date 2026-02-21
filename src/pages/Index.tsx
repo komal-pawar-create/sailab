@@ -214,7 +214,7 @@ const Index = () => {
       {/* Main content */}
       <main id="main-content" role="main">
         {/* Hero Section */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<div className="min-h-[600px]"><SectionSkeleton /></div>}>
           <HeroSection heroContent={heroContent} stats={stats} scrollY={scrollY} />
         </Suspense>
 
@@ -224,12 +224,12 @@ const Index = () => {
         </Suspense>
 
         {/* Demo Section */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<div className="min-h-[400px]"><SectionSkeleton /></div>}>
           <DemoSection />
         </Suspense>
 
         {/* Features Section */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<div className="min-h-[500px]"><SectionSkeleton /></div>}>
           <FeaturesSection features={features} />
         </Suspense>
 
