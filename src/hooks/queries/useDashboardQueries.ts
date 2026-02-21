@@ -254,6 +254,7 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
       let dQuery = supabase.from('documents').select('id', { count: 'exact', head: true });
       let bQuery = supabase.from('bills').select('due_amount');
       let jpgQuery = supabase.from('documents').select('id', { count: 'exact', head: true }).eq('file_type', 'image/jpeg');
+      let commQuery = supabase.from('doctor_commissions' as any).select('commission_amount').eq('status', 'pending');
 
       if (filters.branchIds) {
         pQuery = pQuery.in('branch_id', filters.branchIds);
@@ -261,6 +262,7 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
         dQuery = dQuery.in('branch_id', filters.branchIds);
         bQuery = bQuery.in('branch_id', filters.branchIds);
         jpgQuery = jpgQuery.in('branch_id', filters.branchIds);
+        commQuery = commQuery.in('branch_id', filters.branchIds);
       }
       if (dateFilter) {
         pQuery = applyDateFilter(pQuery, dateFilter, 'created_at');
@@ -268,9 +270,10 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
         dQuery = applyDateFilter(dQuery, dateFilter, 'created_at');
         bQuery = applyDateFilter(bQuery, dateFilter, 'bill_date');
         jpgQuery = applyDateFilter(jpgQuery, dateFilter, 'created_at');
+        commQuery = applyDateFilter(commQuery, dateFilter, 'created_at');
       }
 
-      const [pResult, rResult, dResult, billsResult, jpgResult] = await Promise.all([pQuery, rQuery, dQuery, bQuery, jpgQuery]);
+      const [pResult, rResult, dResult, billsResult, jpgResult, commResult] = await Promise.all([pQuery, rQuery, dQuery, bQuery, jpgQuery, commQuery]);
       
       return {
         patients: pResult.count || 0,
@@ -279,6 +282,7 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
         bills: billsResult.data?.length || 0,
         jpegImages: jpgResult.count || 0,
         pending: billsResult.data?.reduce((sum, b) => sum + (b.due_amount || 0), 0) || 0,
+        pendingCommissions: (commResult.data as any[])?.reduce((sum: number, c: any) => sum + (c.commission_amount || 0), 0) || 0,
       };
     },
     staleTime: 5 * 60 * 1000, // 5 minutes for stats
