@@ -1,119 +1,114 @@
 
 
-## UX Improvement Plan
+## SEO Improvement Plan
 
-A focused set of high-impact, low-effort UX improvements across the landing page, blog, and dashboard areas.
-
----
-
-### 1. Fix FloatingContactButton ping animation (distracting)
-
-The infinite `animate-ping` ring on the contact FAB is visually noisy and distracting. Replace with a one-time subtle entrance animation.
-
-**File:** `src/components/FloatingContactButton.tsx`
-- Remove the `<span className="animate-ping" />` element
-- The existing `animate-fade-in` on the button itself is sufficient
+A set of targeted SEO enhancements to boost search visibility, fix gaps, and strengthen structured data.
 
 ---
 
-### 2. Fix BackToTop button overlap with mobile bottom nav
+### 1. Update Sitemap with Missing Pages
 
-The BackToTop button sits at `bottom-6 right-6` which can overlap the MobileBottomNav on small screens.
+The sitemap is missing 7 pages: 4 new blog articles and 3 legal pages.
 
-**File:** `src/components/landing/BackToTop.tsx`
-- Change position to `bottom-20` on mobile (`bottom-6 md:bottom-6` but `bottom-20` for small screens) to clear the mobile nav area
-- Add `sr-only` text "Back to top" for screen readers
-
----
-
-### 3. Make entire BlogCard clickable
-
-Currently only the title and "Read more" link are clickable. On mobile, users expect to tap anywhere on the card.
-
-**File:** `src/components/blog/BlogCard.tsx`
-- Wrap the entire `<article>` content in a `<Link>` so the full card is tappable
-- Keep the existing hover effects
+**File:** `public/sitemap.xml`
+- Add entries for:
+  - `/blog/reduce-lab-report-turnaround-time` (priority 0.8)
+  - `/blog/lab-staff-management-challenges` (priority 0.8)
+  - `/blog/reduce-patient-complaints-pathology-lab` (priority 0.8)
+  - `/blog/lab-revenue-leakage-prevention` (priority 0.8)
+  - `/privacy-policy` (priority 0.5)
+  - `/terms-of-service` (priority 0.5)
+  - `/refund-policy` (priority 0.5)
+- Update `lastmod` dates to `2026-02-21`
 
 ---
 
-### 4. Add global smooth scroll CSS
+### 2. Add BreadcrumbList Structured Data to Blog Articles
 
-Smooth scrolling is only applied via JavaScript on the landing page. Add it globally via CSS for consistent behavior on all anchor links.
-
-**File:** `src/index.css`
-- Add `html { scroll-behavior: smooth; }` at the top of the base layer
-
----
-
-### 5. Add reading progress bar to blog articles
-
-Long blog articles lack a visual indicator of reading progress. Add a thin progress bar at the top of the viewport.
+Only the Product Tour page has breadcrumb schema. Adding it to all blog articles improves Google's rich results display.
 
 **File:** `src/components/blog/BlogLayout.tsx`
-- Track scroll progress as a percentage
-- Render a fixed 3px-tall bar at the top with primary color, width proportional to scroll progress
+- Automatically inject a `BreadcrumbList` JSON-LD alongside the article's existing JSON-LD
+- Breadcrumb path: Home > Blog > [Article Title]
+- This is handled centrally so all 12 articles benefit without individual changes
 
 ---
 
-### 6. Footer legal links -- add "Coming Soon" state
+### 3. Add Visible Breadcrumb Navigation to Blog Articles
 
-Privacy Policy, Terms of Service, and Refund Policy links all point to `#`, which is misleading.
+Complement the structured data with a visible breadcrumb UI at the top of every article page.
 
-**File:** `src/components/landing/FooterSection.tsx`
-- Add `aria-disabled="true"` and cursor styling to legal links
-- Show a "Coming Soon" tooltip on hover
-- Add `rel="noopener noreferrer"` and `target="_blank"` to social links proactively
-
----
-
-### 7. Add active nav link indicator
-
-Navigation links in the header don't visually indicate the current page.
-
-**File:** `src/components/landing/NavHeader.tsx`
-- For route-based links (`/product-tour`, `/blog`), check against `location.pathname`
-- Add `text-primary` color and a persistent underline bar for the active link
-- Add `aria-current="page"` attribute
+**File:** `src/components/blog/BlogLayout.tsx`
+- Add a breadcrumb bar (Home / Blog / Article Title) above the content using the existing `Breadcrumb` UI component
+- Only show the breadcrumb when `canonicalSlug` is not empty (skip it on the blog index page)
 
 ---
 
-### 8. Testimonials carousel auto-play
+### 4. Add SEO Meta Tags to Legal Pages
 
-The carousel requires manual interaction which reduces engagement. Add gentle auto-play.
+The three new legal pages are missing dynamic meta tags (description, canonical, OG tags).
 
-**File:** `src/components/landing/TestimonialsSection.tsx`
-- Install `embla-carousel-autoplay` plugin
-- Add auto-play with a 5-second delay that pauses on hover/interaction
+**Files:** `src/pages/PrivacyPolicy.tsx`, `src/pages/TermsOfService.tsx`, `src/pages/RefundPolicy.tsx`
+- Add a `useEffect` to each page that sets:
+  - `document.title`
+  - `meta[name="description"]`
+  - `link[rel="canonical"]`
+  - Open Graph tags (`og:title`, `og:description`, `og:url`)
 
 ---
 
-### 9. Reduce CLS on landing page Suspense fallbacks
+### 5. Update llms.txt and llms-full.txt with New Content
 
-The `SectionSkeleton` has a generic height that doesn't match actual sections, causing layout shift.
+AI crawlers reference these files. They are missing the new blog articles and legal pages.
 
-**File:** `src/pages/Index.tsx`
-- Add `min-height` to the hero Suspense fallback (e.g., `min-h-[600px]`)
-- Add appropriate `min-height` values to other key section fallbacks
+**File:** `public/llms.txt`
+- Add the 4 new blog article titles/URLs under a "Blog Articles" section
+- Add legal page URLs
+
+**File:** `public/llms-full.txt`
+- Add a "Blog Content" section listing all 12 article titles with brief descriptions
+- Add a "Legal" section with links to privacy policy, terms, and refund policy
+
+---
+
+### 6. Add `article:published_time` and `article:modified_time` OG Meta Tags
+
+Blog articles set `og:type` to `article` but are missing the article-specific time properties that search engines and social platforms use.
+
+**File:** `src/components/blog/BlogLayout.tsx`
+- Accept optional `datePublished` and `dateModified` props
+- Set `article:published_time` and `article:modified_time` meta tags when provided
+
+**Files:** All 12 blog article pages
+- Pass `datePublished` and `dateModified` from the post data to `BlogLayout`
+
+---
+
+### 7. Add `noindex` to Auth and Forgot Password Pages
+
+These are already blocked in `robots.txt` but not in the pages themselves. Adding `noindex` meta tags provides defense-in-depth.
+
+**Files:** `src/pages/Auth.tsx`, `src/pages/ForgotPassword.tsx`
+- Add `useEffect` that sets `<meta name="robots" content="noindex, nofollow">` (same pattern as `NotFound.tsx`)
 
 ---
 
 ### Summary
 
-| # | Improvement | File | Type |
-|---|-------------|------|------|
-| 1 | Remove distracting ping animation | `FloatingContactButton.tsx` | UX |
-| 2 | Fix BackToTop mobile overlap | `BackToTop.tsx` | Mobile UX |
-| 3 | Full-card clickable blog cards | `BlogCard.tsx` | Mobile UX |
-| 4 | Global smooth scroll | `index.css` | UX |
-| 5 | Blog reading progress bar | `BlogLayout.tsx` | UX |
-| 6 | Legal links "Coming Soon" + social link security | `FooterSection.tsx` | Trust / Security |
-| 7 | Active nav link highlight | `NavHeader.tsx` | Accessibility |
-| 8 | Testimonials auto-play | `TestimonialsSection.tsx` | Engagement |
-| 9 | Reduce CLS with min-height fallbacks | `Index.tsx` | Performance |
+| # | Improvement | Files | Impact |
+|---|-------------|-------|--------|
+| 1 | Update sitemap with 7 missing pages | `sitemap.xml` | Crawling |
+| 2 | BreadcrumbList schema on blog articles | `BlogLayout.tsx` | Rich results |
+| 3 | Visible breadcrumb navigation | `BlogLayout.tsx` | UX + SEO |
+| 4 | Meta tags on legal pages | 3 legal page files | Indexing |
+| 5 | Update llms.txt / llms-full.txt | 2 files | AI discoverability |
+| 6 | Article time OG meta tags | `BlogLayout.tsx` + 12 blog pages | Social sharing |
+| 7 | noindex on auth pages | `Auth.tsx`, `ForgotPassword.tsx` | Crawl budget |
 
 ### Technical Notes
 
-- New dependency needed: `embla-carousel-autoplay` for item 8
-- All changes are backward-compatible and non-breaking
-- Total: 9 files modified, no new components created
+- No new dependencies required
+- BlogLayout changes benefit all 12 existing + future blog articles automatically
+- The breadcrumb schema and visible breadcrumb are both handled in BlogLayout, keeping individual article files untouched for items 2-3
+- Item 6 requires a small prop addition to BlogLayout and passing dates from each blog page
 
