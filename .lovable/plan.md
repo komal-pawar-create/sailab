@@ -1,39 +1,84 @@
 
-## Fix Console Warnings and CRM 409 Error Handling
 
-### Issues Identified
+## Add Problem-Solving Blog Posts for Lab Owners
 
-1. **CRM API 409 "Conflict" Error** -- When a lead with the same phone number already exists in BizFlow CRM, the API returns HTTP 409. The current edge function treats this as a generic error, showing "CRM API returned 409" in a toast -- confusing and unhelpful for users.
-
-2. **"Missing Description" Warning for DialogContent** -- The `InquiryDialog` only renders `DialogDescription` when the `description` prop is passed. Many callers don't pass it, triggering the Radix UI accessibility warning.
-
-3. **Preloaded Resources Not Used** -- `index.html` preloads 3 resources (2 font files + dots.svg pattern) that may not be consumed quickly enough on all routes, causing browser warnings.
+Add 4 new blog articles focused on real-world problems and daily work challenges that pathology/diagnostic lab owners face in India. These will be organized under a new "Lab Owner Challenges" cluster.
 
 ---
 
-### Changes
+### New Blog Posts
 
-#### 1. Handle 409 gracefully in edge function (`supabase/functions/submit-crm-inquiry/index.ts`)
-- Detect `response.status === 409` specifically
-- Return a friendly message: "We already have your inquiry! Our team will contact you shortly."
-- Mark it as `success: true` from the user's perspective (their info is already captured)
-
-#### 2. Handle 409 on client side (`src/lib/api.ts`)
-- No changes needed if the edge function returns `success: true` for 409
-
-#### 3. Always render DialogDescription (`src/components/InquiryDialog.tsx`)
-- Add a default `DialogDescription` with `sr-only` class when no description prop is provided, satisfying the accessibility requirement without changing the visual layout
-
-#### 4. Remove unnecessary font preloads (`index.html`)
-- Remove the two `<link rel="preload">` tags for specific Google Fonts woff2 files (lines 22-23) -- the browser already loads them via the `<link rel="stylesheet">` on line 29
-- Change the dots.svg preload (line 26) from `preload` to `prefetch` since it's a background decoration, not critical for first paint
+| # | Slug | Title | Focus |
+|---|------|-------|-------|
+| 1 | `reduce-lab-report-turnaround-time` | How to Reduce Report Turnaround Time in Your Pathology Lab | Delayed reports, patient complaints, bottleneck identification |
+| 2 | `lab-staff-management-challenges` | 5 Staff Management Challenges Every Lab Owner Faces (And How to Fix Them) | Attendance, errors, training, role confusion, accountability |
+| 3 | `reduce-patient-complaints-pathology-lab` | How to Reduce Patient Complaints in Your Pathology Lab | Common complaint types, root causes, and systematic fixes |
+| 4 | `lab-revenue-leakage-prevention` | Revenue Leakage in Labs: Where You're Losing Money Without Knowing | Unbilled tests, discount abuse, outstanding dues, cash mismanagement |
 
 ---
 
-### Summary
+### New Cluster
 
-| File | Change |
-|------|--------|
-| `supabase/functions/submit-crm-inquiry/index.ts` | Handle 409 as a friendly "already received" success |
-| `src/components/InquiryDialog.tsx` | Always render a DialogDescription (visually hidden default) |
-| `index.html` | Remove font preloads, change dots.svg to prefetch |
+Add a `lab-owner-challenges` cluster labeled **"Lab Owner Challenges"** to `blogClusters` in `blogData.ts`.
+
+---
+
+### Changes Per File
+
+#### 1. `src/lib/blogData.ts`
+- Add 4 new entries to `blogPosts` array with appropriate slugs, titles, excerpts, keywords, and the new `lab-owner-challenges` cluster
+- Add `{ id: 'lab-owner-challenges', label: 'Lab Owner Challenges' }` to `blogClusters`
+
+#### 2. New files -- 4 article pages
+Each follows the exact same pattern as existing articles (e.g., `MultiBranchManagement.tsx`):
+- Import `BlogLayout`, `BlogCTA`, `TableOfContents`, `BlogCard`, and data helpers
+- Define `SLUG`, `tocItems`, article content with internal links to related existing posts
+- Export default component
+
+| New File | Content Highlights |
+|----------|-------------------|
+| `src/pages/blog/ReduceTurnaroundTime.tsx` | Bottleneck audit, batch processing, digital workflows, automated alerts, benchmarks |
+| `src/pages/blog/StaffManagementChallenges.tsx` | Role-based access, SOPs, digital attendance, error tracking, training checklists |
+| `src/pages/blog/ReducePatientComplaints.tsx` | Report delays, billing disputes, communication gaps, feedback systems, WhatsApp updates |
+| `src/pages/blog/RevenueLeakagePrevention.tsx` | Unbilled tests, discount tracking, outstanding dues, cash reconciliation, analytics dashboards |
+
+#### 3. `src/App.tsx`
+- Add 4 lazy imports for new blog pages
+- Add 4 `<Route>` entries under the existing blog routes
+
+---
+
+### Internal Linking Strategy
+
+Each new article will cross-link to:
+- Existing articles (e.g., link to digital reports guide, billing features, LIMS overview)
+- Other new articles within the same cluster
+- Landing page sections (features, pricing, product tour)
+
+This strengthens topical authority and keeps users engaged across the blog.
+
+---
+
+### Article Content Outlines
+
+**1. Reduce Report Turnaround Time**
+- Sections: Why TAT matters, Common bottlenecks (manual entry, sample tracking, approval delays), 5 fixes (digital workflows, auto-validation, SMS/WhatsApp delivery, batch processing, dashboard monitoring)
+
+**2. Staff Management Challenges**
+- Sections: The 5 challenges (unclear roles, no accountability, manual attendance, human errors, training gaps), Solutions (role-based LIMS access, audit trails, digital SOPs, error flagging, onboarding checklists)
+
+**3. Reduce Patient Complaints**
+- Sections: Top 5 complaint types (delayed reports, wrong reports, billing confusion, rude staff, no updates), Root causes, Systematic fixes (automated TAT alerts, QC checks, transparent billing, feedback forms, WhatsApp status updates)
+
+**4. Revenue Leakage Prevention**
+- Sections: 6 leakage points (unbilled tests, unapproved discounts, outstanding dues, cash handling, referral commission errors, duplicate entries), How software plugs each leak, ROI of fixing leakage
+
+---
+
+### Technical Notes
+
+- All 4 new pages follow the identical component pattern used by existing blog articles -- no new components or dependencies needed
+- The blog index page (`Blog.tsx`) will automatically pick up the new posts via `blogData.ts` -- no changes needed there
+- Open Graph and Twitter Card meta tags are already handled by `BlogLayout.tsx` for all articles
+- Total files: 1 modified (`blogData.ts`, `App.tsx`) + 4 new article pages
+
