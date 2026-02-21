@@ -38,8 +38,6 @@ const FloatingContactButton = ({ onClick }: FloatingContactButtonProps) => {
             aria-label="Contact Us"
           >
             <MessageCircle className="h-6 w-6" />
-            {/* Pulse ring animation */}
-            <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">

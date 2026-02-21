@@ -13,9 +13,14 @@ interface BlogLayoutProps {
 
 const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd }: BlogLayoutProps) => {
   const [scrollY, setScrollY] = useState(0);
+  const [readProgress, setReadProgress] = useState(0);
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setReadProgress(docHeight > 0 ? Math.min((window.scrollY / docHeight) * 100, 100) : 0);
+    };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -77,6 +82,16 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd }: Blo
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Reading progress bar */}
+      <div
+        className="fixed top-0 left-0 h-[3px] bg-primary z-[60] transition-[width] duration-150"
+        style={{ width: `${readProgress}%` }}
+        role="progressbar"
+        aria-valuenow={Math.round(readProgress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Reading progress"
+      />
       <NavHeader scrollY={scrollY} />
       <main className="pt-24 pb-16">
         {children}

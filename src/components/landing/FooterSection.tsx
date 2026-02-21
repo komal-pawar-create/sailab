@@ -111,12 +111,14 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
             <ul className="space-y-3">
               {legalLinks.map((link, index) => (
                 <li key={index}>
-                  <a 
-                    href={link.href} 
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  <span 
+                    className="text-sm text-muted-foreground/60 cursor-default inline-flex items-center gap-2"
+                    aria-disabled="true"
+                    title="Coming Soon"
                   >
                     {t(link.labelKey)}
-                  </a>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Coming Soon</span>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -153,6 +155,8 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
                   key={index}
                   href={social.href}
                   aria-label={social.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <social.icon className="h-4 w-4" aria-hidden="true" />

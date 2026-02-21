@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { t } = useTranslation();
+  const location = useLocation();
   const isScrolled = scrollY > 50;
 
   // Prevent hydration mismatch
@@ -98,32 +99,32 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
-            {navLinks.map((link) => (
-              link.isRoute ? (
+            {navLinks.map((link) => {
+              const isActive = link.isRoute && location.pathname.startsWith(link.href);
+              return link.isRoute ? (
                 <Link
                   key={link.href}
                   to={link.href}
                   className={`text-sm font-medium transition-colors duration-300 hover:text-primary relative group ${
-                    isScrolled ? 'text-foreground' : 'text-foreground'
+                    isActive ? 'text-primary' : 'text-foreground'
                   }`}
+                  {...(isActive ? { 'aria-current': 'page' as const } : {})}
                 >
                   {t(link.labelKey)}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" aria-hidden="true" />
+                  <span className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`} aria-hidden="true" />
                 </Link>
               ) : (
                 <a
                   key={link.href}
                   href={link.href}
                   onClick={(e) => handleSmoothScroll(e, link.href)}
-                  className={`text-sm font-medium transition-colors duration-300 hover:text-primary relative group ${
-                    isScrolled ? 'text-foreground' : 'text-foreground'
-                  }`}
+                  className="text-sm font-medium transition-colors duration-300 hover:text-primary relative group text-foreground"
                 >
                   {t(link.labelKey)}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" aria-hidden="true" />
                 </a>
-              )
-            ))}
+              );
+            })}
           </nav>
 
           {/* Desktop CTA */}
