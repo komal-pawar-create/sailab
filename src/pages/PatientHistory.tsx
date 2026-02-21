@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecentPatients } from "@/hooks/useRecentPatients";
-import { Search, FileText, IndianRupee, Clock, Activity, ArrowLeft, User, ChevronDown } from "lucide-react";
+import { Search, FileText, IndianRupee, Clock, Activity, ArrowLeft, User, ChevronDown, Beaker } from "lucide-react";
 import QuickStatsBar from "@/components/patient-history/QuickStatsBar";
 import PatientBadge from "@/components/patient-history/PatientBadge";
 import PatientReportsTab from "@/components/patient-history/PatientReportsTab";
@@ -16,6 +16,7 @@ import PatientFollowups from "@/components/patient-history/PatientFollowups";
 import PatientTimeline from "@/components/patient-history/PatientTimeline";
 import QuickActions from "@/components/patient-history/QuickActions";
 import PatientHistoryExport from "@/components/patient-history/PatientHistoryExport";
+import PatientSamples from "@/components/patient-history/PatientSamples";
 import PatientHistoryTour from "@/components/patient-history/PatientHistoryTour";
 import {
   Command,
@@ -253,7 +254,7 @@ export default function PatientHistory() {
       {/* Consolidated 4 Tabs */}
       {selectedPatient ? (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:inline-flex">
+          <TabsList className="w-full sm:w-auto grid grid-cols-5 sm:inline-flex">
             <TabsTrigger value="reports" className="gap-1.5 text-xs sm:text-sm" data-tour="ph-reports-tab">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Reports</span>
@@ -269,6 +270,10 @@ export default function PatientHistory() {
             <TabsTrigger value="activity" className="gap-1.5 text-xs sm:text-sm">
               <Activity className="h-4 w-4" />
               <span className="hidden sm:inline">Activity</span>
+            </TabsTrigger>
+            <TabsTrigger value="samples" className="gap-1.5 text-xs sm:text-sm">
+              <Beaker className="h-4 w-4" />
+              <span className="hidden sm:inline">Samples</span>
             </TabsTrigger>
           </TabsList>
 
@@ -292,6 +297,10 @@ export default function PatientHistory() {
 
             <TabsContent value="activity" className="m-0">
               <PatientTimeline patientId={selectedPatient.id} key={`timeline-${refreshKey}`} />
+            </TabsContent>
+
+            <TabsContent value="samples" className="m-0">
+              <PatientSamples patientId={selectedPatient.id} key={`samples-${refreshKey}`} />
             </TabsContent>
           </div>
         </Tabs>

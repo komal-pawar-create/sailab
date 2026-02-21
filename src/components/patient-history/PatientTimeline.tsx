@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, FileText, DollarSign, Star, Clock, Activity } from "lucide-react";
+import { Calendar, FileText, DollarSign, Star, Clock, Activity, Beaker } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
 interface TimelineEvent {
   id: string;
-  type: "test" | "document" | "bill" | "followup" | "feedback" | "payment";
+  type: "test" | "document" | "bill" | "followup" | "feedback" | "payment" | "sample";
   title: string;
   description?: string;
   date: string;
@@ -34,12 +34,13 @@ export default function PatientTimeline({ patientId }: PatientTimelineProps) {
     try {
       const allEvents: TimelineEvent[] = [];
 
-      const [testsRes, docsRes, billsRes, followupsRes, feedbackRes] = await Promise.all([
+      const [testsRes, docsRes, billsRes, followupsRes, feedbackRes, samplesRes] = await Promise.all([
         supabase.from("test_reports").select("*").eq("patient_id", patientId),
         supabase.from("documents").select("*").eq("patient_id", patientId),
         supabase.from("bills").select("*").eq("patient_id", patientId),
         supabase.from("patient_followups").select("*").eq("patient_id", patientId),
         supabase.from("feedback").select("*").eq("patient_id", patientId),
+        (supabase.from("samples" as any) as any).select("*").eq("patient_id", patientId),
       ]);
 
       testsRes.data?.forEach((test) => {
@@ -120,6 +121,19 @@ export default function PatientTimeline({ patientId }: PatientTimelineProps) {
           date: fb.created_at,
           icon: Star,
           color: "text-yellow-500",
+        });
+      });
+
+      (samplesRes.data as any[])?.forEach((s: any) => {
+        allEvents.push({
+          id: `sample-${s.id}`,
+          type: "sample",
+          title: `Sample: ${s.sample_id}`,
+          description: `${s.test_type} — ${s.status}`,
+          date: s.collected_at,
+          status: s.status,
+          icon: Beaker,
+          color: "text-cyan-500",
         });
       });
 

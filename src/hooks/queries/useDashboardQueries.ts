@@ -222,6 +222,29 @@ export function usePaymentsQuery(filters: QueryFilters) {
   });
 }
 
+// Samples query
+export function useSamplesQuery(filters: QueryFilters) {
+  return useQuery({
+    queryKey: ['samples', filters],
+    queryFn: async () => {
+      const dateFilter = getDateFilter(filters.timePeriod);
+      const offset = (filters.page - 1) * filters.pageSize;
+
+      let query = (supabase.from('samples' as any) as any).select('*, patients!samples_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
+      if (filters.branchIds) query = query.in('branch_id', filters.branchIds);
+      query = applyDateFilter(query, dateFilter, 'collected_at');
+      if (filters.search) query = query.or(`sample_id.ilike.%${filters.search}%,test_type.ilike.%${filters.search}%`);
+      query = query.order('collected_at', { ascending: false }).range(offset, offset + filters.pageSize - 1);
+
+      const { data, count, error } = await query;
+      if (error) throw error;
+      return { data: data || [], count: count || 0 };
+    },
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
 // Total collected amount query
 export function useTotalCollectedQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 'search'>) {
   return useQuery({
@@ -255,7 +278,7 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
       let bQuery = supabase.from('bills').select('due_amount');
       let jpgQuery = supabase.from('documents').select('id', { count: 'exact', head: true }).eq('file_type', 'image/jpeg');
       let commQuery = supabase.from('doctor_commissions' as any).select('commission_amount').eq('status', 'pending');
-
+      let sampQuery = (supabase.from('samples' as any) as any).select('id', { count: 'exact', head: true });
       if (filters.branchIds) {
         pQuery = pQuery.in('branch_id', filters.branchIds);
         rQuery = rQuery.in('branch_id', filters.branchIds);
@@ -263,6 +286,7 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
         bQuery = bQuery.in('branch_id', filters.branchIds);
         jpgQuery = jpgQuery.in('branch_id', filters.branchIds);
         commQuery = commQuery.in('branch_id', filters.branchIds);
+        sampQuery = sampQuery.in('branch_id', filters.branchIds);
       }
       if (dateFilter) {
         pQuery = applyDateFilter(pQuery, dateFilter, 'created_at');
@@ -271,9 +295,10 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
         bQuery = applyDateFilter(bQuery, dateFilter, 'bill_date');
         jpgQuery = applyDateFilter(jpgQuery, dateFilter, 'created_at');
         commQuery = applyDateFilter(commQuery, dateFilter, 'created_at');
+        sampQuery = applyDateFilter(sampQuery, dateFilter, 'collected_at');
       }
 
-      const [pResult, rResult, dResult, billsResult, jpgResult, commResult] = await Promise.all([pQuery, rQuery, dQuery, bQuery, jpgQuery, commQuery]);
+      const [pResult, rResult, dResult, billsResult, jpgResult, commResult, sampResult] = await Promise.all([pQuery, rQuery, dQuery, bQuery, jpgQuery, commQuery, sampQuery]);
       
       return {
         patients: pResult.count || 0,
@@ -283,6 +308,7 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
         jpegImages: jpgResult.count || 0,
         pending: billsResult.data?.reduce((sum, b) => sum + (b.due_amount || 0), 0) || 0,
         pendingCommissions: (commResult.data as any[])?.reduce((sum: number, c: any) => sum + (c.commission_amount || 0), 0) || 0,
+        samplesCount: (sampResult as any).count || 0,
       };
     },
     staleTime: 5 * 60 * 1000, // 5 minutes for stats
