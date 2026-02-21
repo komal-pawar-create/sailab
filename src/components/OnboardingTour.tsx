@@ -34,15 +34,16 @@ const FinalStepContent = ({ dontShowAgain, setDontShowAgain }: FinalStepContentP
   </div>
 );
 
-const createTourSteps = (finalStepContent: React.ReactNode): Step[] => [
+const createTourSteps = (finalStepContent: React.ReactNode, dismissCheckbox: React.ReactNode): Step[] => [
   {
     target: 'body',
     content: (
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Welcome to LabFlow! 🎉</h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mb-3">
           Let us show you around the key features to help you get started managing your lab efficiently.
         </p>
+        {dismissCheckbox}
       </div>
     ),
     placement: 'center',
@@ -160,8 +161,22 @@ export const OnboardingTour = ({ onRestart }: OnboardingTourProps) => {
   const { theme } = useTheme();
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
+  const dismissCheckbox = (
+    <div className="flex items-center justify-center gap-2 pt-2 border-t">
+      <Checkbox
+        id="welcome-dont-show"
+        checked={dontShowAgain}
+        onCheckedChange={(checked) => setDontShowAgain(checked === true)}
+      />
+      <label htmlFor="welcome-dont-show" className="text-sm text-muted-foreground cursor-pointer">
+        Don't show this tour again
+      </label>
+    </div>
+  );
+
   const tourSteps = createTourSteps(
-    <FinalStepContent dontShowAgain={dontShowAgain} setDontShowAgain={setDontShowAgain} />
+    <FinalStepContent dontShowAgain={dontShowAgain} setDontShowAgain={setDontShowAgain} />,
+    dismissCheckbox
   );
 
   const handleCallback = (data: CallBackProps) => {
