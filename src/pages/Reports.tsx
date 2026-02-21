@@ -7,7 +7,8 @@ import { RevenueReport } from '@/components/reports/RevenueReport';
 import { CollectionReport } from '@/components/reports/CollectionReport';
 import { DoctorReferralReport } from '@/components/reports/DoctorReferralReport';
 import { DailyActivityReport } from '@/components/reports/DailyActivityReport';
-import { Users, Receipt, FileText, TrendingUp, Wallet, Stethoscope, Calendar } from 'lucide-react';
+import { CommissionSummaryReport } from '@/components/reports/CommissionSummaryReport';
+import { Users, Receipt, FileText, TrendingUp, Wallet, Stethoscope, Calendar, BarChart3 } from 'lucide-react';
 
 export default function Reports() {
   const { t } = useTranslation();
@@ -39,6 +40,9 @@ export default function Reports() {
           <TabsTrigger value="referrals" className="gap-2">
             <Stethoscope className="h-4 w-4" /> {t('app.reports.referrals')}
           </TabsTrigger>
+          <TabsTrigger value="commission" className="gap-2">
+            <BarChart3 className="h-4 w-4" /> Commission
+          </TabsTrigger>
           <TabsTrigger value="daily" className="gap-2">
             <Calendar className="h-4 w-4" /> {t('app.reports.dailyActivity')}
           </TabsTrigger>
@@ -61,6 +65,9 @@ export default function Reports() {
         </TabsContent>
         <TabsContent value="referrals" className="mt-6">
           <DoctorReferralReport />
+        </TabsContent>
+        <TabsContent value="commission" className="mt-6">
+          <CommissionSummaryReport />
         </TabsContent>
         <TabsContent value="daily" className="mt-6">
           <DailyActivityReport />
