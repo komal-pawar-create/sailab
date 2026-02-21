@@ -19,7 +19,7 @@ const tocItems = [
 const BestLimsIndia = () => {
   const related = getRelatedPosts(SLUG);
   return (
-    <BlogLayout title={post.title} description={post.excerpt} canonicalSlug={SLUG} jsonLd={{
+    <BlogLayout title={post.title} description={post.excerpt} canonicalSlug={SLUG} datePublished={post.datePublished} dateModified={post.dateModified} jsonLd={{
       '@context': 'https://schema.org', '@type': 'Article', headline: post.title, description: post.excerpt,
       author: { '@type': 'Organization', name: 'LabFlow' }, publisher: { '@type': 'Organization', name: 'LabFlow', url: 'https://labflow.mywebz.in' },
       datePublished: post.datePublished, dateModified: post.dateModified, mainEntityOfPage: `https://labflow.mywebz.in/blog/${SLUG}`, image: 'https://labflow.mywebz.in/images/labflow-logo.png',

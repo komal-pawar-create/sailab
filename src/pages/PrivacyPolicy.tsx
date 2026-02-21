@@ -20,6 +20,11 @@ const PrivacyPolicy = () => {
       el.setAttribute('content', content);
     };
     setMeta('name', 'description', 'LabFlow Privacy Policy — how we collect, use, and protect your data.');
+    setMeta('property', 'og:title', 'Privacy Policy | LabFlow');
+    setMeta('property', 'og:description', 'LabFlow Privacy Policy — how we collect, use, and protect your data.');
+    setMeta('property', 'og:url', 'https://labflow.mywebz.in/privacy-policy');
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:site_name', 'LabFlow');
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
     if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
     canonical.href = 'https://labflow.mywebz.in/privacy-policy';

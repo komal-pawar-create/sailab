@@ -46,6 +46,27 @@ https://labflow.mywebz.in
 - GST-ready billing
 - HIPAA-aware data handling
 
+## Blog Articles
+
+- What is LIMS Software?: https://labflow.mywebz.in/blog/what-is-lims-software
+- How to Digitize Your Pathology Lab: https://labflow.mywebz.in/blog/how-to-digitize-pathology-lab
+- GST Billing for Pathology Labs: https://labflow.mywebz.in/blog/gst-billing-for-pathology-labs
+- Lab Billing Software Features: https://labflow.mywebz.in/blog/lab-billing-software-features
+- Digital Lab Reports Guide: https://labflow.mywebz.in/blog/digital-lab-reports-guide
+- NABL Accreditation Guide: https://labflow.mywebz.in/blog/nabl-accreditation-guide
+- Multi-Branch Lab Management: https://labflow.mywebz.in/blog/multi-branch-lab-management
+- Best LIMS Software India: https://labflow.mywebz.in/blog/best-lims-software-india
+- Reduce Lab Report Turnaround Time: https://labflow.mywebz.in/blog/reduce-lab-report-turnaround-time
+- Lab Staff Management Challenges: https://labflow.mywebz.in/blog/lab-staff-management-challenges
+- Reduce Patient Complaints in Pathology Lab: https://labflow.mywebz.in/blog/reduce-patient-complaints-pathology-lab
+- Lab Revenue Leakage Prevention: https://labflow.mywebz.in/blog/lab-revenue-leakage-prevention
+
+## Legal
+
+- Privacy Policy: https://labflow.mywebz.in/privacy-policy
+- Terms of Service: https://labflow.mywebz.in/terms-of-service
+- Refund Policy: https://labflow.mywebz.in/refund-policy
+
 ## Contact
 
 - Website: https://labflow.mywebz.in

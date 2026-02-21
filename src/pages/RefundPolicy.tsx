@@ -20,6 +20,11 @@ const RefundPolicy = () => {
       el.setAttribute('content', content);
     };
     setMeta('name', 'description', 'LabFlow Refund Policy — our cancellation, refund, and subscription policies.');
+    setMeta('property', 'og:title', 'Refund Policy | LabFlow');
+    setMeta('property', 'og:description', 'LabFlow Refund Policy — our cancellation, refund, and subscription policies.');
+    setMeta('property', 'og:url', 'https://labflow.mywebz.in/refund-policy');
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:site_name', 'LabFlow');
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
     if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
     canonical.href = 'https://labflow.mywebz.in/refund-policy';

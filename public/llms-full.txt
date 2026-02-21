@@ -176,6 +176,31 @@ Most labs are fully operational within 2-3 hours of starting setup.
 
 ---
 
+## Blog Content
+
+- **What is LIMS Software?** — An introduction to Laboratory Information Management Systems and why Indian labs need them. https://labflow.mywebz.in/blog/what-is-lims-software
+- **How to Digitize Your Pathology Lab** — Step-by-step guide to going paperless in your pathology lab. https://labflow.mywebz.in/blog/how-to-digitize-pathology-lab
+- **GST Billing for Pathology Labs** — Complete guide to GST-compliant billing for diagnostic labs. https://labflow.mywebz.in/blog/gst-billing-for-pathology-labs
+- **Lab Billing Software Features** — Essential features to look for in pathology lab billing software. https://labflow.mywebz.in/blog/lab-billing-software-features
+- **Digital Lab Reports Guide** — How to create and manage digital lab reports professionally. https://labflow.mywebz.in/blog/digital-lab-reports-guide
+- **NABL Accreditation Guide** — How LIMS software helps labs achieve and maintain NABL accreditation. https://labflow.mywebz.in/blog/nabl-accreditation-guide
+- **Multi-Branch Lab Management** — Managing multiple lab branches with centralized software. https://labflow.mywebz.in/blog/multi-branch-lab-management
+- **Best LIMS Software India** — Comparison of top LIMS solutions available in India in 2026. https://labflow.mywebz.in/blog/best-lims-software-india
+- **Reduce Lab Report Turnaround Time** — Strategies to speed up lab report delivery using automation. https://labflow.mywebz.in/blog/reduce-lab-report-turnaround-time
+- **Lab Staff Management Challenges** — Common HR and staff management issues in pathology labs and how to solve them. https://labflow.mywebz.in/blog/lab-staff-management-challenges
+- **Reduce Patient Complaints in Pathology Lab** — Improve patient satisfaction with better lab workflows. https://labflow.mywebz.in/blog/reduce-patient-complaints-pathology-lab
+- **Lab Revenue Leakage Prevention** — Identify and prevent unbilled tests and financial losses in your lab. https://labflow.mywebz.in/blog/lab-revenue-leakage-prevention
+
+---
+
+## Legal
+
+- **Privacy Policy**: https://labflow.mywebz.in/privacy-policy
+- **Terms of Service**: https://labflow.mywebz.in/terms-of-service
+- **Refund Policy**: https://labflow.mywebz.in/refund-policy
+
+---
+
 ## Frequently Asked Questions
 
 **Q: What is LabFlow?**
