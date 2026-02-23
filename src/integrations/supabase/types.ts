@@ -640,6 +640,164 @@ export type Database = {
         }
         Relationships: []
       }
+      doctor_commissions: {
+        Row: {
+          bill_amount: number
+          bill_id: string
+          branch_id: string | null
+          commission_amount: number
+          commission_rate: number
+          created_at: string | null
+          doctor_id: string
+          id: string
+          lab_id: string
+          patient_id: string
+          settled_in_settlement_id: string | null
+          status: string | null
+        }
+        Insert: {
+          bill_amount?: number
+          bill_id: string
+          branch_id?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string | null
+          doctor_id: string
+          id?: string
+          lab_id: string
+          patient_id: string
+          settled_in_settlement_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          bill_amount?: number
+          bill_id?: string
+          branch_id?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string | null
+          doctor_id?: string
+          id?: string
+          lab_id?: string
+          patient_id?: string
+          settled_in_settlement_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_commissions_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_commissions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_commissions_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "referring_doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_commissions_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_commissions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_commissions_settlement_fkey"
+            columns: ["settled_in_settlement_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_settlements: {
+        Row: {
+          branch_id: string | null
+          created_at: string | null
+          created_by: string | null
+          doctor_id: string
+          id: string
+          lab_id: string
+          notes: string | null
+          payment_method: string | null
+          period_from: string | null
+          period_to: string | null
+          reference_number: string | null
+          settlement_date: string
+          total_amount: number
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          doctor_id: string
+          id?: string
+          lab_id: string
+          notes?: string | null
+          payment_method?: string | null
+          period_from?: string | null
+          period_to?: string | null
+          reference_number?: string | null
+          settlement_date?: string
+          total_amount?: number
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          doctor_id?: string
+          id?: string
+          lab_id?: string
+          notes?: string | null
+          payment_method?: string | null
+          period_from?: string | null
+          period_to?: string | null
+          reference_number?: string | null
+          settlement_date?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_settlements_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_settlements_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "referring_doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_settlements_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_templates: {
         Row: {
           branch_id: string | null
@@ -1867,6 +2025,7 @@ export type Database = {
           phone: string
           referred_by_doctor_name: string | null
           referred_by_doctor_phone: string | null
+          referring_doctor_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1884,6 +2043,7 @@ export type Database = {
           phone: string
           referred_by_doctor_name?: string | null
           referred_by_doctor_phone?: string | null
+          referring_doctor_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1901,6 +2061,7 @@ export type Database = {
           phone?: string
           referred_by_doctor_name?: string | null
           referred_by_doctor_phone?: string | null
+          referring_doctor_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1916,6 +2077,13 @@ export type Database = {
             columns: ["lab_id"]
             isOneToOne: false
             referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patients_referring_doctor_id_fkey"
+            columns: ["referring_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "referring_doctors"
             referencedColumns: ["id"]
           },
         ]
@@ -1979,6 +2147,212 @@ export type Database = {
             columns: ["lab_id"]
             isOneToOne: false
             referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referring_doctors: {
+        Row: {
+          branch_id: string | null
+          commission_percentage: number | null
+          commission_type: string | null
+          created_at: string | null
+          created_by: string | null
+          doctor_name: string
+          email: string | null
+          fixed_commission_amount: number | null
+          id: string
+          is_active: boolean | null
+          lab_id: string
+          phone: string | null
+          specialization: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          commission_percentage?: number | null
+          commission_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          doctor_name: string
+          email?: string | null
+          fixed_commission_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          lab_id: string
+          phone?: string | null
+          specialization?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          commission_percentage?: number | null
+          commission_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          doctor_name?: string
+          email?: string | null
+          fixed_commission_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          lab_id?: string
+          phone?: string | null
+          specialization?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referring_doctors_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referring_doctors_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sample_id_sequences: {
+        Row: {
+          date_key: string
+          id: string
+          lab_id: string
+          last_number: number
+        }
+        Insert: {
+          date_key: string
+          id?: string
+          lab_id: string
+          last_number?: number
+        }
+        Update: {
+          date_key?: string
+          id?: string
+          lab_id?: string
+          last_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sample_id_sequences_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      samples: {
+        Row: {
+          barcode: string
+          bill_id: string | null
+          branch_id: string | null
+          collected_at: string
+          collected_by: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          lab_id: string
+          notes: string | null
+          patient_id: string
+          processing_at: string | null
+          received_at: string | null
+          received_by: string | null
+          rejected_at: string | null
+          rejection_reason: string | null
+          sample_id: string
+          sla_breached: boolean
+          sla_hours: number
+          status: string
+          test_report_id: string | null
+          test_type: string
+          updated_at: string
+        }
+        Insert: {
+          barcode: string
+          bill_id?: string | null
+          branch_id?: string | null
+          collected_at?: string
+          collected_by: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          lab_id: string
+          notes?: string | null
+          patient_id: string
+          processing_at?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sample_id: string
+          sla_breached?: boolean
+          sla_hours?: number
+          status?: string
+          test_report_id?: string | null
+          test_type: string
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string
+          bill_id?: string | null
+          branch_id?: string | null
+          collected_at?: string
+          collected_by?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          lab_id?: string
+          notes?: string | null
+          patient_id?: string
+          processing_at?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sample_id?: string
+          sla_breached?: boolean
+          sla_hours?: number
+          status?: string
+          test_report_id?: string | null
+          test_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "samples_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "samples_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "samples_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "samples_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "samples_test_report_id_fkey"
+            columns: ["test_report_id"]
+            isOneToOne: false
+            referencedRelation: "test_reports"
             referencedColumns: ["id"]
           },
         ]
@@ -2348,6 +2722,7 @@ export type Database = {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
       }
+      get_current_lab_id: { Args: never; Returns: string }
       get_dashboard_stats: {
         Args: {
           p_branch_ids?: string[]
@@ -2369,6 +2744,7 @@ export type Database = {
         Args: { p_branch_id: string; p_lab_id: string }
         Returns: string
       }
+      get_next_sample_id: { Args: { p_lab_id: string }; Returns: string }
       get_next_token_number: {
         Args: { p_branch_id: string; p_token_date: string }
         Returns: number
