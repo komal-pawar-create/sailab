@@ -40,7 +40,7 @@ export default function PatientTimeline({ patientId }: PatientTimelineProps) {
         supabase.from("bills").select("*").eq("patient_id", patientId),
         supabase.from("patient_followups").select("*").eq("patient_id", patientId),
         supabase.from("feedback").select("*").eq("patient_id", patientId),
-        (supabase.from("samples" as any) as any).select("*").eq("patient_id", patientId),
+        samplesTable().select("*").eq("patient_id", patientId),
       ]);
 
       testsRes.data?.forEach((test) => {
