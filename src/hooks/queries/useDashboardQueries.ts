@@ -231,7 +231,7 @@ export function useSamplesQuery(filters: QueryFilters) {
       const dateFilter = getDateFilter(filters.timePeriod);
       const offset = (filters.page - 1) * filters.pageSize;
 
-      let query = (supabase.from('samples' as any) as any).select('*, patients!samples_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
+      let query = samplesTable().select('*, patients!samples_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
       if (filters.branchIds) query = query.in('branch_id', filters.branchIds);
       query = applyDateFilter(query, dateFilter, 'collected_at');
       if (filters.search) query = query.or(`sample_id.ilike.%${filters.search}%,test_type.ilike.%${filters.search}%`);
