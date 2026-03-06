@@ -81,8 +81,9 @@ export function usePatientsQuery(filters: QueryFilters) {
       if (error) throw error;
       return { data: data || [], count: count || 0 };
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes cache
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    enabled: filters.enabled !== false,
   });
 }
 
