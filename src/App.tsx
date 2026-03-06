@@ -1,4 +1,5 @@
 import React, { Suspense, useEffect } from "react";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
