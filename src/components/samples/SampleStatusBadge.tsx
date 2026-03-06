@@ -19,7 +19,7 @@ const statusConfig: Record<SampleStatus, { label: string; variant: "default" | "
 };
 
 export function SampleStatusBadge({ status, slaBreached, className }: SampleStatusBadgeProps) {
-  const config = statusConfig[status] || statusConfig.collected;
+  const config = statusConfig[status as SampleStatus] || statusConfig.collected;
 
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
