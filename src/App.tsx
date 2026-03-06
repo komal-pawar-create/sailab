@@ -200,16 +200,18 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <QueryClientProvider client={queryClient}>
-        <Toaster />
-        <Sonner />
-        <InstallPrompt />
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <QueryClientProvider client={queryClient}>
+          <Toaster />
+          <Sonner />
+          <InstallPrompt />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 
