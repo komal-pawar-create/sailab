@@ -239,7 +239,7 @@ export function useSamplesQuery(filters: QueryFilters) {
 
       const { data, count, error } = await query;
       if (error) throw error;
-      return { data: data || [], count: count || 0 };
+      return { data: (data || []) as SampleWithPatient[], count: count || 0 };
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
