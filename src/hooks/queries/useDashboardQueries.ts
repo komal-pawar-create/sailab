@@ -16,6 +16,7 @@ interface QueryFilters {
   page: number;
   pageSize: number;
   search: string;
+  enabled?: boolean;
 }
 
 // Utility: Get date filter from period
