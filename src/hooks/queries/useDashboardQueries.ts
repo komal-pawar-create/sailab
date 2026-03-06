@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { samplesTable, SampleWithPatient } from '@/types/samples';
 import { format, startOfWeek, startOfMonth, subMonths, startOfQuarter, subQuarters, startOfYear, subYears, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
 
 export type TimePeriod = 'today' | 'week' | 'month' | 'lastMonth' | 'lastQuarter' | 'lastYear' | 'all';
