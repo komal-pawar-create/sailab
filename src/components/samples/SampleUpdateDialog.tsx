@@ -64,7 +64,7 @@ export function SampleUpdateDialog({ sampleId, currentStatus, onUpdated }: Sampl
           break;
       }
 
-      const { error } = await (supabase.from("samples" as any) as any)
+      const { error } = await samplesTable()
         .update(updateData)
         .eq("id", sampleId);
 

@@ -124,7 +124,7 @@ export default function PatientTimeline({ patientId }: PatientTimelineProps) {
         });
       });
 
-      (samplesRes.data as any[])?.forEach((s: any) => {
+      (samplesRes.data as Sample[])?.forEach((s) => {
         allEvents.push({
           id: `sample-${s.id}`,
           type: "sample",

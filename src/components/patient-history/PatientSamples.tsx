@@ -1,36 +1,37 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SampleStatusBadge } from "@/components/samples/SampleStatusBadge";
 import { SampleBarcode } from "@/components/samples/SampleBarcode";
 import { SampleUpdateDialog } from "@/components/samples/SampleUpdateDialog";
 import { SampleTimelineView } from "@/components/samples/SampleTimeline";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Beaker, Clock } from "lucide-react";
 import { format, differenceInHours, differenceInMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
+import type { Sample } from "@/types/samples";
+import { samplesTable } from "@/types/samples";
 
 interface PatientSamplesProps {
   patientId: string;
 }
 
 export default function PatientSamples({ patientId }: PatientSamplesProps) {
-  const [samples, setSamples] = useState<any[]>([]);
+  const [samples, setSamples] = useState<Sample[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchSamples = async () => {
     setLoading(true);
     try {
-      const { data, error } = await (supabase.from("samples" as any) as any)
+      const { data, error } = await samplesTable()
         .select("*")
         .eq("patient_id", patientId)
         .order("collected_at", { ascending: false });
 
       if (error) throw error;
-      setSamples(data || []);
-    } catch (error: any) {
+      setSamples((data || []) as Sample[]);
+    } catch (error: unknown) {
       toast({ title: "Error", description: "Failed to fetch samples", variant: "destructive" });
     } finally {
       setLoading(false);

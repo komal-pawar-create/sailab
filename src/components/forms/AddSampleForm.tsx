@@ -64,7 +64,7 @@ export function AddSampleForm({ onAdded }: AddSampleFormProps) {
 
       const barcode = crypto.randomUUID();
 
-      const { error } = await (supabase.from("samples" as any) as any).insert({
+      const { error } = await samplesTable().insert({
         sample_id: sampleIdData,
         patient_id: patientId,
         test_type: testType,
