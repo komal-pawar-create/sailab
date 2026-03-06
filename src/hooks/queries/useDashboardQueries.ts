@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { samplesTable, SampleWithPatient } from '@/types/samples';
 import { format, startOfWeek, startOfMonth, subMonths, startOfQuarter, subQuarters, startOfYear, subYears, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
 
 export type TimePeriod = 'today' | 'week' | 'month' | 'lastMonth' | 'lastQuarter' | 'lastYear' | 'all';
@@ -230,7 +231,7 @@ export function useSamplesQuery(filters: QueryFilters) {
       const dateFilter = getDateFilter(filters.timePeriod);
       const offset = (filters.page - 1) * filters.pageSize;
 
-      let query = (supabase.from('samples' as any) as any).select('*, patients!samples_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
+      let query = samplesTable().select('*, patients!samples_patient_id_fkey(id, full_name, patient_id)', { count: 'exact' });
       if (filters.branchIds) query = query.in('branch_id', filters.branchIds);
       query = applyDateFilter(query, dateFilter, 'collected_at');
       if (filters.search) query = query.or(`sample_id.ilike.%${filters.search}%,test_type.ilike.%${filters.search}%`);
@@ -238,7 +239,7 @@ export function useSamplesQuery(filters: QueryFilters) {
 
       const { data, count, error } = await query;
       if (error) throw error;
-      return { data: data || [], count: count || 0 };
+      return { data: (data || []) as SampleWithPatient[], count: count || 0 };
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -278,7 +279,7 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
       let bQuery = supabase.from('bills').select('due_amount');
       let jpgQuery = supabase.from('documents').select('id', { count: 'exact', head: true }).eq('file_type', 'image/jpeg');
       let commQuery = supabase.from('doctor_commissions' as any).select('commission_amount').eq('status', 'pending');
-      let sampQuery = (supabase.from('samples' as any) as any).select('id', { count: 'exact', head: true });
+      let sampQuery = samplesTable().select('id', { count: 'exact', head: true });
       if (filters.branchIds) {
         pQuery = pQuery.in('branch_id', filters.branchIds);
         rQuery = rQuery.in('branch_id', filters.branchIds);
@@ -307,8 +308,8 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
         bills: billsResult.data?.length || 0,
         jpegImages: jpgResult.count || 0,
         pending: billsResult.data?.reduce((sum, b) => sum + (b.due_amount || 0), 0) || 0,
-        pendingCommissions: (commResult.data as any[])?.reduce((sum: number, c: any) => sum + (c.commission_amount || 0), 0) || 0,
-        samplesCount: (sampResult as any).count || 0,
+        pendingCommissions: ((commResult.data ?? []) as unknown as { commission_amount: number }[]).reduce((sum, c) => sum + (c.commission_amount || 0), 0),
+        samplesCount: (sampResult as { count: number }).count || 0,
       };
     },
     staleTime: 5 * 60 * 1000, // 5 minutes for stats

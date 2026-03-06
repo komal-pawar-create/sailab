@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { samplesTable, SampleUpdate } from "@/types/samples";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -45,7 +45,7 @@ export function SampleUpdateDialog({ sampleId, currentStatus, onUpdated }: Sampl
     setSaving(true);
     try {
       const now = new Date().toISOString();
-      const updateData: Record<string, any> = { status: newStatus };
+      const updateData: SampleUpdate = { status: newStatus };
 
       switch (newStatus) {
         case "received":
@@ -64,7 +64,7 @@ export function SampleUpdateDialog({ sampleId, currentStatus, onUpdated }: Sampl
           break;
       }
 
-      const { error } = await (supabase.from("samples" as any) as any)
+      const { error } = await samplesTable()
         .update(updateData)
         .eq("id", sampleId);
 

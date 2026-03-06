@@ -2,10 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type SampleStatus = "collected" | "received" | "processing" | "completed" | "rejected";
+export type SampleStatus = "collected" | "received" | "processing" | "completed" | "rejected";
 
 interface SampleStatusBadgeProps {
-  status: SampleStatus;
+  status: string;
   slaBreached?: boolean;
   className?: string;
 }
@@ -19,7 +19,7 @@ const statusConfig: Record<SampleStatus, { label: string; variant: "default" | "
 };
 
 export function SampleStatusBadge({ status, slaBreached, className }: SampleStatusBadgeProps) {
-  const config = statusConfig[status] || statusConfig.collected;
+  const config = statusConfig[status as SampleStatus] || statusConfig.collected;
 
   return (
     <div className={cn("flex items-center gap-1.5", className)}>

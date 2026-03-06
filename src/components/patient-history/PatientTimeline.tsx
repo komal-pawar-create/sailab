@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { samplesTable, type Sample } from "@/types/samples";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, FileText, DollarSign, Star, Clock, Activity, Beaker } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
@@ -40,7 +41,7 @@ export default function PatientTimeline({ patientId }: PatientTimelineProps) {
         supabase.from("bills").select("*").eq("patient_id", patientId),
         supabase.from("patient_followups").select("*").eq("patient_id", patientId),
         supabase.from("feedback").select("*").eq("patient_id", patientId),
-        (supabase.from("samples" as any) as any).select("*").eq("patient_id", patientId),
+        samplesTable().select("*").eq("patient_id", patientId),
       ]);
 
       testsRes.data?.forEach((test) => {
@@ -124,7 +125,7 @@ export default function PatientTimeline({ patientId }: PatientTimelineProps) {
         });
       });
 
-      (samplesRes.data as any[])?.forEach((s: any) => {
+      (samplesRes.data as Sample[])?.forEach((s) => {
         allEvents.push({
           id: `sample-${s.id}`,
           type: "sample",

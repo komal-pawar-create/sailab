@@ -10,15 +10,16 @@ import { TablePagination } from "@/components/dashboard/TablePagination";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Clock, Eye } from "lucide-react";
 import { format, differenceInHours, differenceInMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
+import type { SampleWithPatient } from "@/types/samples";
+import type { SampleStatus } from "./SampleStatusBadge";
 
 interface SampleTrackingTabProps {
-  samples: any[];
+  samples: SampleWithPatient[];
   totalCount: number;
   currentPage: number;
   pageSize: number;
@@ -29,7 +30,7 @@ interface SampleTrackingTabProps {
   isLoading?: boolean;
 }
 
-function computeTAT(sample: any) {
+function computeTAT(sample: SampleWithPatient) {
   const start = new Date(sample.collected_at);
   const end = sample.completed_at ? new Date(sample.completed_at) :
     sample.rejected_at ? new Date(sample.rejected_at) : new Date();
@@ -48,7 +49,7 @@ export const SampleTrackingTab = memo(function SampleTrackingTab({
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [timelineOpen, setTimelineOpen] = useState(false);
-  const [selectedSample, setSelectedSample] = useState<any>(null);
+  const [selectedSample, setSelectedSample] = useState<SampleWithPatient | null>(null);
   const isMobile = useIsMobile();
 
   const handleSearch = (val: string) => {
@@ -56,7 +57,7 @@ export const SampleTrackingTab = memo(function SampleTrackingTab({
     onSearch(val);
   };
 
-  const showTimeline = (sample: any) => {
+  const showTimeline = (sample: SampleWithPatient) => {
     setSelectedSample(sample);
     setTimelineOpen(true);
   };
@@ -86,7 +87,7 @@ export const SampleTrackingTab = memo(function SampleTrackingTab({
                   <span className="font-mono font-bold text-sm">{sample.sample_id}</span>
                   <SampleStatusBadge status={sample.status} slaBreached={tat.breached} />
                 </div>
-                <p className="text-sm">{(sample as any).patients?.full_name || "Unknown"}</p>
+                <p className="text-sm">{sample.patients?.full_name || "Unknown"}</p>
                 <p className="text-xs text-muted-foreground">{sample.test_type}</p>
                 <div className="flex items-center gap-2">
                   <Progress
@@ -101,7 +102,7 @@ export const SampleTrackingTab = memo(function SampleTrackingTab({
                   <SampleBarcode
                     sampleId={sample.sample_id}
                     barcode={sample.barcode}
-                    patientName={(sample as any).patients?.full_name || ""}
+                    patientName={sample.patients?.full_name || ""}
                     testType={sample.test_type}
                     collectedAt={sample.collected_at}
                   />
@@ -170,7 +171,7 @@ export const SampleTrackingTab = memo(function SampleTrackingTab({
                 return (
                   <TableRow key={sample.id}>
                     <TableCell className="font-mono font-medium">{sample.sample_id}</TableCell>
-                    <TableCell>{(sample as any).patients?.full_name || "—"}</TableCell>
+                    <TableCell>{sample.patients?.full_name || "—"}</TableCell>
                     <TableCell>{sample.test_type}</TableCell>
                     <TableCell>
                       <SampleStatusBadge status={sample.status} slaBreached={tat.breached} />
@@ -194,7 +195,7 @@ export const SampleTrackingTab = memo(function SampleTrackingTab({
                         <SampleBarcode
                           sampleId={sample.sample_id}
                           barcode={sample.barcode}
-                          patientName={(sample as any).patients?.full_name || ""}
+                          patientName={sample.patients?.full_name || ""}
                           testType={sample.test_type}
                           collectedAt={sample.collected_at}
                         />
@@ -228,7 +229,7 @@ export const SampleTrackingTab = memo(function SampleTrackingTab({
   );
 });
 
-function TimelineDialog({ open, onOpenChange, sample }: { open: boolean; onOpenChange: (v: boolean) => void; sample: any }) {
+function TimelineDialog({ open, onOpenChange, sample }: { open: boolean; onOpenChange: (v: boolean) => void; sample: SampleWithPatient | null }) {
   if (!sample) return null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

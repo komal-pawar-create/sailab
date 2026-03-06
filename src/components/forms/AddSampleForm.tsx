@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { samplesTable } from "@/types/samples";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -63,7 +64,7 @@ export function AddSampleForm({ onAdded }: AddSampleFormProps) {
 
       const barcode = crypto.randomUUID();
 
-      const { error } = await (supabase.from("samples" as any) as any).insert({
+      const { error } = await samplesTable().insert({
         sample_id: sampleIdData,
         patient_id: patientId,
         test_type: testType,
