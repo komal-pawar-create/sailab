@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export type SampleStatus = "collected" | "received" | "processing" | "completed" | "rejected";
 
 interface SampleStatusBadgeProps {
-  status: SampleStatus;
+  status: string;
   slaBreached?: boolean;
   className?: string;
 }
