@@ -98,6 +98,7 @@ const Dashboard = () => {
     page: patientsPag.page,
     pageSize: patientsPag.pageSize,
     search: debouncedPatientsSearch,
+    enabled: activeTab === 'patients',
   });
 
   const reportsQuery = useReportsQuery({
@@ -105,6 +106,7 @@ const Dashboard = () => {
     page: reportsPag.page,
     pageSize: reportsPag.pageSize,
     search: debouncedReportsSearch,
+    enabled: activeTab === 'reports',
   });
 
   const documentsQuery = useDocumentsQuery({
@@ -112,6 +114,7 @@ const Dashboard = () => {
     page: documentsPag.page,
     pageSize: documentsPag.pageSize,
     search: debouncedDocumentsSearch,
+    enabled: activeTab === 'documents',
   });
 
   const billsQuery = useBillsQuery({
@@ -119,6 +122,7 @@ const Dashboard = () => {
     page: billsPag.page,
     pageSize: billsPag.pageSize,
     search: debouncedBillsSearch,
+    enabled: activeTab === 'bills',
   });
 
   const followupsQuery = useFollowupsQuery({
@@ -126,6 +130,7 @@ const Dashboard = () => {
     page: followupsPag.page,
     pageSize: followupsPag.pageSize,
     search: debouncedFollowupsSearch,
+    enabled: activeTab === 'followups',
   });
 
   const feedbackQuery = useFeedbackQuery({
@@ -133,6 +138,7 @@ const Dashboard = () => {
     page: feedbackPag.page,
     pageSize: feedbackPag.pageSize,
     search: debouncedFeedbackSearch,
+    enabled: activeTab === 'feedback',
   });
 
   const paymentsQuery = usePaymentsQuery({
@@ -140,6 +146,7 @@ const Dashboard = () => {
     page: paymentsPag.page,
     pageSize: paymentsPag.pageSize,
     search: debouncedPaymentsSearch,
+    enabled: activeTab === 'ledger',
   });
 
   const totalCollectedQuery = useTotalCollectedQuery(baseFilters);
@@ -150,6 +157,7 @@ const Dashboard = () => {
     page: samplesPag.page,
     pageSize: samplesPag.pageSize,
     search: debouncedSamplesSearch,
+    enabled: activeTab === 'samples',
   });
 
   // Check if any query is refreshing
