@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
 import type { SampleWithPatient } from "@/types/samples";
+import type { SampleStatus } from "./SampleStatusBadge";
 
 interface SampleTrackingTabProps {
   samples: SampleWithPatient[];

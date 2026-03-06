@@ -308,7 +308,7 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
         bills: billsResult.data?.length || 0,
         jpegImages: jpgResult.count || 0,
         pending: billsResult.data?.reduce((sum, b) => sum + (b.due_amount || 0), 0) || 0,
-        pendingCommissions: (commResult.data as { commission_amount: number }[])?.reduce((sum, c) => sum + (c.commission_amount || 0), 0) || 0,
+        pendingCommissions: ((commResult.data ?? []) as unknown as { commission_amount: number }[]).reduce((sum, c) => sum + (c.commission_amount || 0), 0),
         samplesCount: (sampResult as { count: number }).count || 0,
       };
     },

@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type SampleStatus = "collected" | "received" | "processing" | "completed" | "rejected";
+export type SampleStatus = "collected" | "received" | "processing" | "completed" | "rejected";
 
 interface SampleStatusBadgeProps {
   status: SampleStatus;

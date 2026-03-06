@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { samplesTable, type Sample } from "@/types/samples";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, FileText, DollarSign, Star, Clock, Activity, Beaker } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
