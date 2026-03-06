@@ -71,8 +71,19 @@ export function useAuth() {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (!mounted) return;
+
+        // Handle token refresh errors gracefully
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          console.warn('Token refresh failed, clearing stale session');
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          await supabase.auth.signOut();
+          return;
+        }
         
         setSession(session);
         setUser(session?.user ?? null);

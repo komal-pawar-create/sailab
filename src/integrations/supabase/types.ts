@@ -2737,7 +2737,7 @@ export type Database = {
         Returns: string
       }
       get_monitoring_metrics: {
-        Args: { p_lab_id?: string; p_time_range?: unknown }
+        Args: { p_lab_id?: string; p_time_range?: string }
         Returns: Json
       }
       get_next_patient_id: {
