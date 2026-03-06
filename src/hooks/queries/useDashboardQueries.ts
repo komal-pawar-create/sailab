@@ -16,6 +16,7 @@ interface QueryFilters {
   page: number;
   pageSize: number;
   search: string;
+  enabled?: boolean;
 }
 
 // Utility: Get date filter from period
@@ -80,8 +81,9 @@ export function usePatientsQuery(filters: QueryFilters) {
       if (error) throw error;
       return { data: data || [], count: count || 0 };
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes cache
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    enabled: filters.enabled !== false,
   });
 }
 
@@ -105,6 +107,7 @@ export function useReportsQuery(filters: QueryFilters) {
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: filters.enabled !== false,
   });
 }
 
@@ -128,6 +131,7 @@ export function useDocumentsQuery(filters: QueryFilters) {
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: filters.enabled !== false,
   });
 }
 
@@ -151,6 +155,7 @@ export function useBillsQuery(filters: QueryFilters) {
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: filters.enabled !== false,
   });
 }
 
@@ -174,6 +179,7 @@ export function useFollowupsQuery(filters: QueryFilters) {
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: filters.enabled !== false,
   });
 }
 
@@ -197,6 +203,7 @@ export function useFeedbackQuery(filters: QueryFilters) {
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: filters.enabled !== false,
   });
 }
 
@@ -220,6 +227,7 @@ export function usePaymentsQuery(filters: QueryFilters) {
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: filters.enabled !== false,
   });
 }
 
@@ -243,6 +251,7 @@ export function useSamplesQuery(filters: QueryFilters) {
     },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: filters.enabled !== false,
   });
 }
 
