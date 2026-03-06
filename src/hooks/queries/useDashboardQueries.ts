@@ -279,7 +279,7 @@ export function useStatsQuery(filters: Omit<QueryFilters, 'page' | 'pageSize' | 
       let bQuery = supabase.from('bills').select('due_amount');
       let jpgQuery = supabase.from('documents').select('id', { count: 'exact', head: true }).eq('file_type', 'image/jpeg');
       let commQuery = supabase.from('doctor_commissions' as any).select('commission_amount').eq('status', 'pending');
-      let sampQuery = (supabase.from('samples' as any) as any).select('id', { count: 'exact', head: true });
+      let sampQuery = samplesTable().select('id', { count: 'exact', head: true });
       if (filters.branchIds) {
         pQuery = pQuery.in('branch_id', filters.branchIds);
         rQuery = rQuery.in('branch_id', filters.branchIds);
