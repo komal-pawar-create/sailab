@@ -45,7 +45,7 @@ export function SampleUpdateDialog({ sampleId, currentStatus, onUpdated }: Sampl
     setSaving(true);
     try {
       const now = new Date().toISOString();
-      const updateData: Record<string, any> = { status: newStatus };
+      const updateData: SampleUpdate = { status: newStatus };
 
       switch (newStatus) {
         case "received":
