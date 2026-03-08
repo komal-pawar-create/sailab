@@ -28,17 +28,16 @@ const WhatIsLims = () => {
       dateModified={post.dateModified}
       ogImage={post.ogImage}
       jsonLd={getArticleJsonLd(post)}
+      author={post.author}
+      readTime={post.readTime}
     >
       <div className="max-w-6xl mx-auto px-4">
+        {/* Mobile TOC */}
+        <TableOfContents items={tocItems} />
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
           <article className="prose prose-neutral dark:prose-invert max-w-none">
             <h1>{post.title}</h1>
             <p className="lead text-muted-foreground">{post.excerpt}</p>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8">
-              <time dateTime={post.datePublished}>{new Date(post.datePublished).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
-              <span>•</span>
-              <span>{post.readTime}</span>
-            </div>
 
             <h2 id="what-is-lims">What is LIMS Software?</h2>
             <p>
@@ -97,7 +96,7 @@ const WhatIsLims = () => {
               {related.map((r) => <BlogCard key={r.slug} {...r} />)}
             </div>
           </article>
-          <aside className="hidden lg:block">
+          <aside>
             <TableOfContents items={tocItems} />
           </aside>
         </div>

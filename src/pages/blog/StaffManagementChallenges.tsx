@@ -21,7 +21,7 @@ const tocItems = [
 const StaffManagementChallenges = () => {
   const related = getRelatedPosts(SLUG);
   return (
-    <BlogLayout title={post.title} description={post.excerpt} canonicalSlug={SLUG} datePublished={post.datePublished} dateModified={post.dateModified} ogImage={post.ogImage} jsonLd={getArticleJsonLd(post)}>
+    <BlogLayout title={post.title} description={post.excerpt} canonicalSlug={SLUG} datePublished={post.datePublished} dateModified={post.dateModified} ogImage={post.ogImage} jsonLd={getArticleJsonLd(post)} author={post.author} readTime={post.readTime}>
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
           <article className="prose prose-neutral dark:prose-invert max-w-none">

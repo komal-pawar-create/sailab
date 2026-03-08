@@ -35,8 +35,11 @@ const PricingSection = ({ pricingPlans }: PricingSectionProps) => {
             {t('pricing.title')}
             <span className="gradient-text"> {t('pricing.titleHighlight')}</span>
           </h2>
-          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-2">
             {t('pricing.subtitle')}
+          </p>
+          <p className="text-sm text-primary font-medium">
+            🎉 Limited offer — Free onboarding & data migration for new sign-ups
           </p>
         </AnimatedSection>
 

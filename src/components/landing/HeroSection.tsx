@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, ChevronDown, Building2, FileText, Activity, Headphones } from 'lucide-react';
+import { Sparkles, ArrowRight, ChevronDown, Building2, FileText, Activity, Headphones, ShieldCheck, CreditCard, Clock } from 'lucide-react';
 import { AnimatedCounter } from './shared';
 import type { HeroContent, StatItem } from './types';
 import dashboardScreenshot from '@/assets/screenshots/dashboard-overview.png';
@@ -71,7 +71,7 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-slide-up" style={{ animationFillMode: 'forwards', animationDelay: '150ms' }}>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6 animate-slide-up" style={{ animationFillMode: 'forwards', animationDelay: '150ms' }}>
           <Button asChild size="lg" className="text-lg px-8 py-6 animate-pulse-glow active:scale-95 transition-transform">
             <Link to="/auth" className="flex items-center gap-2">
               {heroContent?.cta_primary_text || t('hero.cta')}
@@ -84,6 +84,13 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
               <ChevronDown className="h-5 w-5" aria-hidden="true" />
             </Link>
           </Button>
+        </div>
+
+        {/* Trust signals */}
+        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mb-12 text-xs md:text-sm text-muted-foreground animate-slide-up" style={{ animationFillMode: 'forwards', animationDelay: '175ms' }}>
+          <span className="flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> No credit card required</span>
+          <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> Setup in 10 minutes</span>
+          <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> NABL-ready compliance</span>
         </div>
 
         {/* Compact inline stats bar */}

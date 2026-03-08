@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import NavHeader from '@/components/landing/NavHeader';
 import FooterSection from '@/components/landing/FooterSection';
 import BackToTop from '@/components/landing/BackToTop';
+import AuthorCard from '@/components/blog/AuthorCard';
+import SocialShare from '@/components/blog/SocialShare';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -21,9 +23,11 @@ interface BlogLayoutProps {
   datePublished?: string;
   dateModified?: string;
   ogImage?: string;
+  author?: string;
+  readTime?: string;
 }
 
-const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, datePublished, dateModified, ogImage }: BlogLayoutProps) => {
+const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, datePublished, dateModified, ogImage, author, readTime }: BlogLayoutProps) => {
   const [scrollY, setScrollY] = useState(0);
   const [readProgress, setReadProgress] = useState(0);
 
@@ -189,6 +193,20 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, dateP
             </Breadcrumb>
           </div>
         )}
+
+        {/* Author + Social Share bar */}
+        {(author || readTime) && (
+          <div className="max-w-6xl mx-auto px-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {author && datePublished && readTime && (
+              <AuthorCard author={author} datePublished={datePublished} readTime={readTime} />
+            )}
+            <SocialShare
+              url={`https://labflow.mywebz.in/blog/${canonicalSlug}`}
+              title={title}
+            />
+          </div>
+        )}
+
         {children}
       </main>
       <FooterSection footerContent={null} />
