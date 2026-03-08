@@ -47,6 +47,12 @@ const ReduceTurnaroundTime = React.lazy(() => import("./pages/blog/ReduceTurnaro
 const StaffManagementChallenges = React.lazy(() => import("./pages/blog/StaffManagementChallenges"));
 const ReducePatientComplaints = React.lazy(() => import("./pages/blog/ReducePatientComplaints"));
 const RevenueLeakagePrevention = React.lazy(() => import("./pages/blog/RevenueLeakagePrevention"));
+const SampleTracking = React.lazy(() => import("./pages/blog/SampleTracking"));
+const LabReportFormats = React.lazy(() => import("./pages/blog/LabReportFormats"));
+const DoctorReferralManagement = React.lazy(() => import("./pages/blog/DoctorReferralManagement"));
+const LabDataSecurity = React.lazy(() => import("./pages/blog/LabDataSecurity"));
+const WhatsappReports = React.lazy(() => import("./pages/blog/WhatsappReports"));
+const LabAutomationRoi = React.lazy(() => import("./pages/blog/LabAutomationRoi"));
 const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
 const RefundPolicy = React.lazy(() => import("./pages/RefundPolicy"));
