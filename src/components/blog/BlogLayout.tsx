@@ -54,6 +54,12 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, dateP
 
     // Standard meta
     setMeta('name', 'description', description);
+    
+    // Keywords meta (if jsonLd has keywords)
+    if (jsonLd && (jsonLd as any).keywords) {
+      const kw = (jsonLd as any).keywords;
+      setMeta('name', 'keywords', Array.isArray(kw) ? kw.join(', ') : kw);
+    }
 
     // Open Graph
     setMeta('property', 'og:title', `${title} | LabFlow Blog`);

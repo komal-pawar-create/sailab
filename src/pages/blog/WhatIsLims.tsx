@@ -5,6 +5,7 @@ import BlogCTA from '@/components/blog/BlogCTA';
 import TableOfContents from '@/components/blog/TableOfContents';
 import BlogCard from '@/components/blog/BlogCard';
 import { getRelatedPosts, getBlogPost } from '@/lib/blogData';
+import { getArticleJsonLd } from '@/lib/blogJsonLd';
 
 const SLUG = 'what-is-lims-software';
 const post = getBlogPost(SLUG)!;
@@ -26,18 +27,7 @@ const WhatIsLims = () => {
       datePublished={post.datePublished}
       dateModified={post.dateModified}
       ogImage={post.ogImage}
-      jsonLd={{
-        '@context': 'https://schema.org',
-        '@type': 'Article',
-        headline: post.title,
-        description: post.excerpt,
-        author: { '@type': 'Organization', name: 'LabFlow' },
-        publisher: { '@type': 'Organization', name: 'LabFlow', url: 'https://labflow.mywebz.in' },
-        datePublished: post.datePublished,
-        dateModified: post.dateModified,
-        mainEntityOfPage: `https://labflow.mywebz.in/blog/${SLUG}`,
-        image: post.ogImage || 'https://labflow.mywebz.in/images/labflow-logo.png',
-      }}
+      jsonLd={getArticleJsonLd(post)}
     >
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">

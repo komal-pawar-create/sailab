@@ -5,6 +5,7 @@ import BlogCTA from '@/components/blog/BlogCTA';
 import TableOfContents from '@/components/blog/TableOfContents';
 import BlogCard from '@/components/blog/BlogCard';
 import { getRelatedPosts, getBlogPost } from '@/lib/blogData';
+import { getArticleJsonLd } from '@/lib/blogJsonLd';
 
 const SLUG = 'nabl-accreditation-guide';
 const post = getBlogPost(SLUG)!;
@@ -18,11 +19,7 @@ const tocItems = [
 const NablAccreditation = () => {
   const related = getRelatedPosts(SLUG);
   return (
-    <BlogLayout title={post.title} description={post.excerpt} canonicalSlug={SLUG} datePublished={post.datePublished} dateModified={post.dateModified} ogImage={post.ogImage} jsonLd={{
-      '@context': 'https://schema.org', '@type': 'Article', headline: post.title, description: post.excerpt,
-      author: { '@type': 'Organization', name: 'LabFlow' }, publisher: { '@type': 'Organization', name: 'LabFlow', url: 'https://labflow.mywebz.in' },
-      datePublished: post.datePublished, dateModified: post.dateModified, mainEntityOfPage: `https://labflow.mywebz.in/blog/${SLUG}`, image: post.ogImage || 'https://labflow.mywebz.in/images/labflow-logo.png',
-    }}>
+    <BlogLayout title={post.title} description={post.excerpt} canonicalSlug={SLUG} datePublished={post.datePublished} dateModified={post.dateModified} ogImage={post.ogImage} jsonLd={getArticleJsonLd(post)}>
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
           <article className="prose prose-neutral dark:prose-invert max-w-none">
