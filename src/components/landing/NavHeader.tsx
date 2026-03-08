@@ -87,7 +87,7 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
               />
               <img 
                 src="/images/labflow-logo.png" 
-                alt="LabFlow" 
+                alt="LabFlow — Pathology Lab Management Software" 
                 className={`w-auto group-hover:scale-105 transition-all duration-500 ease-out ${
                   isScrolled 
                     ? 'h-8 md:h-12 lg:h-14 drop-shadow-lg' 

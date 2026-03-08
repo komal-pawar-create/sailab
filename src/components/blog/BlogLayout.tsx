@@ -141,6 +141,7 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, dateP
 
     return () => {
       scripts.forEach(s => s.remove());
+      hreflangLinks.forEach(l => l.remove());
     };
   }, [title, description, canonicalSlug, jsonLd, datePublished, dateModified]);
 
