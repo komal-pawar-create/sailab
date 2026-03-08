@@ -4,11 +4,8 @@ import NavHeader from '@/components/landing/NavHeader';
 import { FloatingShape } from '@/components/landing/shared';
 import FloatingContactButton from '@/components/FloatingContactButton';
 import InquiryDialog from '@/components/InquiryDialog';
-import LiveActivityFeed from '@/components/landing/LiveActivityFeed';
 import ExitIntentPopup from '@/components/landing/ExitIntentPopup';
 import ScrollOfferBanner from '@/components/landing/ScrollOfferBanner';
-import TimedSoftCTA from '@/components/landing/TimedSoftCTA';
-import SocialProofBar from '@/components/landing/SocialProofBar';
 import type {
   HeroContent,
   StatItem,
