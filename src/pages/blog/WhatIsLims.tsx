@@ -36,11 +36,8 @@ const WhatIsLims = () => {
           <article className="prose prose-neutral dark:prose-invert max-w-none">
             <h1>{post.title}</h1>
             <p className="lead text-muted-foreground">{post.excerpt}</p>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8">
-              <time dateTime={post.datePublished}>{new Date(post.datePublished).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
-              <span>•</span>
-              <span>{post.readTime}</span>
-            </div>
+
+
 
             <h2 id="what-is-lims">What is LIMS Software?</h2>
             <p>
