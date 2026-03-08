@@ -1,68 +1,103 @@
 
 
-# Homepage UX Improvement Plan
+# End-to-End Testing Plan for Sample Tracking Module
 
-After reviewing all landing page components, here are the key UX issues and proposed fixes:
+## Critical Bug Found
 
-## Issues Identified
+The `get_current_lab_id()` database function has a bug that will **block all sample operations**:
 
-1. **Too many competing popups/overlays** -- ExitIntentPopup, ScrollOfferBanner, TimedSoftCTA, LiveActivityFeed, FloatingContactButton, and SocialProofBar all fight for attention. This creates popup fatigue and feels spammy.
+```text
+Current (BROKEN):   WHERE profiles.id = auth.uid()
+Should be:          WHERE profiles.user_id = auth.uid()
+```
 
-2. **Hero section is text-heavy with no visual product preview** -- Users land on a wall of text + stats but never see the actual product until they scroll far down to the Demo section.
+The `profiles.id` is a separate UUID, not the auth user ID. All other helper functions (`get_user_lab`, `get_user_branch`) correctly use `profiles.user_id`. This means the RLS policies on the `samples` and `sample_id_sequences` tables will return no rows and block all inserts/selects/updates.
 
-3. **SocialProofBar overlaps navigation** -- Fixed at `top-16` (64px), it sits directly under the navbar and pushes content perception down, creating a cramped feel on scroll.
+## Fix Required (Database Migration)
 
-4. **Redundant CTAs** -- "Get Started" and "Login" both go to `/auth`. The navbar has 3 action buttons (Book Demo, Login, Get Started) which is excessive.
+Run this SQL to fix the function:
 
-5. **Demo section defaults to "video coming soon"** -- If no demo videos exist in the DB, users see a dead play button with "Demo video coming soon" which hurts credibility.
+```text
+CREATE OR REPLACE FUNCTION public.get_current_lab_id()
+RETURNS UUID AS $$
+DECLARE
+  v_lab_id UUID;
+BEGIN
+  SELECT lab_id INTO v_lab_id
+  FROM public.profiles
+  WHERE user_id = auth.uid();
+  RETURN v_lab_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public;
+```
 
-6. **Animations delay content visibility** -- Multiple `opacity-0` with staggered delays mean users see blank space for 400-500ms on first load.
+## Verification Steps (After Fix)
 
-7. **Mobile: No product screenshots anywhere** -- The entire page is text and icons; no visual proof of the product UI.
+Once the function is fixed, the following E2E tests should pass:
 
----
+### 1. Authentication
+- Navigate to `/auth`, log in with valid credentials
+- Verify redirect to `/dashboard`
 
-## Proposed Changes
+### 2. Dashboard - Samples Tab
+- Click the "Samples" tab on the dashboard
+- Verify the table renders (even if empty, it should show "No samples found")
+- Confirm the "Collect Sample" button is visible
 
-### 1. Reduce Popup Clutter
-- Remove `TimedSoftCTA` (45s popup) entirely -- it adds little value and annoys users
-- Increase `ScrollOfferBanner` threshold from 60% to 80% scroll depth
-- Keep ExitIntentPopup (desktop only, already 30s delayed) and FloatingContactButton
-- Remove `LiveActivityFeed` toast notifications -- fake activity feeds erode trust
+### 3. Collect a Sample
+- Click "+ Collect Sample" button
+- Select a patient from the search dropdown
+- Select a test type
+- Set SLA hours (default 24)
+- Add optional notes
+- Click "Collect Sample"
+- Verify success toast appears
+- Verify the new sample appears in the Samples table with status "Collected"
+- Verify the sample ID format is `SMP-YYYYMMDD-001`
 
-### 2. Add Product Screenshot to Hero
-- Add a browser-frame mockup below the CTA buttons showing a dashboard screenshot (use existing `src/assets/screenshots/dashboard-overview.png`)
-- This replaces the stats cards as the primary visual, moving stats into a compact inline bar above the screenshot
+### 4. Update Sample Status (Lifecycle)
+- Click the arrow icon on the new sample row to open Update Status dialog
+- Change status to "Received" and submit
+- Verify status badge updates
+- Repeat: update to "Processing", then "Completed"
+- Verify TAT progress bar reflects elapsed time
 
-### 3. Fix Navigation UX
-- Remove the duplicate "Login" ghost button from navbar -- keep only "Book Demo" (outline) and "Get Started" (primary)
-- Remove `SocialProofBar` entirely -- it duplicates the hero stats and clutters the fixed header area
+### 5. Rejection Flow
+- Collect another sample
+- Click update status, select "Rejected"
+- Verify rejection reason field appears (mandatory)
+- Submit with reason
+- Verify "Rejected" badge and reason displayed in timeline
 
-### 4. Improve Demo Section Fallback
-- When no videos exist, show an interactive tour by default instead of a "coming soon" placeholder
-- Set `activeTab` default to `'tour'` when `demoVideos` is empty
+### 6. QR Code / Barcode
+- Click the barcode icon on a sample row
+- Verify the QR code label dialog opens with sample ID, patient name, test type
 
-### 5. Reduce Animation Delays
-- Cut all stagger delays in half (e.g., `delay-400` to `delay-200`)
-- Remove `opacity-0` initial state from hero stats -- let them render immediately with counter animation only
+### 7. Timeline View
+- Click the eye icon on a sample row
+- Verify the timeline dialog shows status progression with timestamps
 
-### 6. Add Product Screenshot Grid to Features Section
-- Below the feature cards, add a 2-column grid showing actual app screenshots with captions (using existing assets in `src/assets/screenshots/`)
+### 8. Stats Row
+- Verify "Samples" count in the dashboard stats row matches the number of samples
+- Verify "SLA Breaches" stat reflects any breached samples
 
-### 7. Improve Mobile Hero
-- Reduce hero `min-h-screen` to `min-h-[80vh]` on mobile to show more content above the fold
-- Make stat cards 2x2 grid instead of horizontal scroll on mobile for better scannability
+## Technical Details
 
----
+| Component | File | Status |
+|-----------|------|--------|
+| DB Table `samples` | Migration | Deployed with correct schema |
+| DB Table `sample_id_sequences` | Migration | Deployed |
+| RLS Policies | `samples_select/insert/update/delete` | Need `get_current_lab_id()` fix |
+| `get_next_sample_id()` | DB Function | Working (SECURITY DEFINER) |
+| `useSamplesQuery` | `src/hooks/queries/useDashboardQueries.ts` | Implemented |
+| `AddSampleForm` | `src/components/forms/AddSampleForm.tsx` | Implemented |
+| `SampleTrackingTab` | `src/components/samples/SampleTrackingTab.tsx` | Implemented |
+| `SampleUpdateDialog` | `src/components/samples/SampleUpdateDialog.tsx` | Implemented |
+| `SampleStatusBadge` | `src/components/samples/SampleStatusBadge.tsx` | Implemented |
+| `SampleBarcode` | `src/components/samples/SampleBarcode.tsx` | Implemented |
+| `SampleTimeline` | `src/components/samples/SampleTimeline.tsx` | Implemented |
 
-## Files to Modify
+## Summary
 
-| File | Changes |
-|------|---------|
-| `src/pages/Index.tsx` | Remove TimedSoftCTA, LiveActivityFeed, SocialProofBar imports and usage |
-| `src/components/landing/HeroSection.tsx` | Add product screenshot mockup, reduce animation delays, adjust mobile layout |
-| `src/components/landing/NavHeader.tsx` | Remove duplicate Login button |
-| `src/components/landing/DemoSection.tsx` | Default to tour tab when no videos, improve fallback |
-| `src/components/landing/ScrollOfferBanner.tsx` | Increase scroll threshold to 80% |
-| `src/components/landing/FeaturesSection.tsx` | Add screenshot grid below feature cards |
+The code is fully implemented. The **only blocker** is the `get_current_lab_id()` function using the wrong column (`id` instead of `user_id`). Once fixed, the entire sample tracking module should work end-to-end.
 

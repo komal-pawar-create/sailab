@@ -5,24 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight, ChevronDown, Building2, FileText, Activity, Headphones } from 'lucide-react';
 import { AnimatedCounter } from './shared';
 import type { HeroContent, StatItem } from './types';
+import dashboardScreenshot from '@/assets/screenshots/dashboard-overview.png';
 
-// Icon mapping for stats - matches labels to appropriate icons
 const getStatIcon = (label: string) => {
-  const labelLower = label.toLowerCase();
-  if (labelLower.includes('lab')) return Building2;
-  if (labelLower.includes('patient') || labelLower.includes('report') || labelLower.includes('test')) return FileText;
-  if (labelLower.includes('uptime') || labelLower.includes('active')) return Activity;
-  if (labelLower.includes('support') || labelLower.includes('24')) return Headphones;
-  return Building2; // default
+  const l = label.toLowerCase();
+  if (l.includes('lab')) return Building2;
+  if (l.includes('patient') || l.includes('report') || l.includes('test')) return FileText;
+  if (l.includes('uptime') || l.includes('active')) return Activity;
+  if (l.includes('support') || l.includes('24')) return Headphones;
+  return Building2;
 };
 
-// Color variants for icons based on stat type
 const getIconColorClass = (label: string) => {
-  const labelLower = label.toLowerCase();
-  if (labelLower.includes('lab')) return 'bg-primary/10 text-primary';
-  if (labelLower.includes('patient') || labelLower.includes('report') || labelLower.includes('test')) return 'bg-green-500/10 text-green-600';
-  if (labelLower.includes('uptime') || labelLower.includes('active')) return 'bg-purple-500/10 text-purple-600';
-  if (labelLower.includes('support') || labelLower.includes('24')) return 'bg-orange-500/10 text-orange-600';
+  const l = label.toLowerCase();
+  if (l.includes('lab')) return 'bg-primary/10 text-primary';
+  if (l.includes('patient') || l.includes('report') || l.includes('test')) return 'bg-green-500/10 text-green-600';
+  if (l.includes('uptime') || l.includes('active')) return 'bg-purple-500/10 text-purple-600';
+  if (l.includes('support') || l.includes('24')) return 'bg-orange-500/10 text-orange-600';
   return 'bg-primary/10 text-primary';
 };
 
@@ -37,10 +36,9 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
   
   return (
     <section 
-      className="relative min-h-screen flex items-center justify-center px-4 pt-24 pb-10 md:py-20"
+      className="relative min-h-[80vh] md:min-h-screen flex items-center justify-center px-4 pt-24 pb-10 md:py-20"
       aria-label="Hero"
     >
-      {/* Parallax background pattern */}
       <div 
         className="absolute inset-0 bg-[url('/patterns/dots.svg')] opacity-50"
         style={{ transform: `translateY(${scrollY * 0.3}px)` }}
@@ -49,15 +47,15 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
       
       <div className="max-w-6xl mx-auto text-center relative z-10">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-slide-up opacity-0" style={{ animationFillMode: 'forwards' }}>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-slide-up" style={{ animationFillMode: 'forwards' }}>
           <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
           <span className="text-sm font-medium text-foreground">
             {heroContent?.badge_text || t('hero.badge')}
           </span>
         </div>
 
-        {/* Main heading - H1 for SEO */}
-        <h1 className="text-3xl md:text-5xl font-heading font-bold mb-6 animate-slide-up opacity-0 delay-100" style={{ animationFillMode: 'forwards' }}>
+        {/* Main heading */}
+        <h1 className="text-3xl md:text-5xl font-heading font-bold mb-6 animate-slide-up" style={{ animationFillMode: 'forwards', animationDelay: '50ms' }}>
           <span className="text-foreground">
             {heroContent?.main_headline?.split(' ').slice(0, 2).join(' ') || t('hero.headline').split(' ').slice(0, 2).join(' ')}
           </span>
@@ -68,12 +66,12 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
         </h1>
 
         {/* Subheading */}
-        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto animate-slide-up opacity-0 delay-200" style={{ animationFillMode: 'forwards' }}>
+        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto animate-slide-up" style={{ animationFillMode: 'forwards', animationDelay: '100ms' }}>
           {heroContent?.sub_headline || t('hero.subheadline')}
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up opacity-0 delay-300" style={{ animationFillMode: 'forwards' }}>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-slide-up" style={{ animationFillMode: 'forwards', animationDelay: '150ms' }}>
           <Button asChild size="lg" className="text-lg px-8 py-6 animate-pulse-glow active:scale-95 transition-transform">
             <Link to="/auth" className="flex items-center gap-2">
               {heroContent?.cta_primary_text || t('hero.cta')}
@@ -88,45 +86,54 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
           </Button>
         </div>
 
-        {/* Hero stats - Compact professional cards */}
+        {/* Compact inline stats bar */}
         <div 
-          className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto animate-slide-up opacity-0 delay-400" 
-          style={{ animationFillMode: 'forwards' }}
+          className="flex flex-wrap justify-center gap-6 md:gap-10 mb-12 animate-slide-up" 
+          style={{ animationFillMode: 'forwards', animationDelay: '200ms' }}
           role="list"
           aria-label="Key statistics"
         >
           {stats.map((stat, index) => {
             const Icon = getStatIcon(stat.label);
             const iconColorClass = getIconColorClass(stat.label);
-            
             return (
-              <div 
-                key={stat.id || index} 
-                className="group relative overflow-hidden rounded-xl bg-background/80 backdrop-blur-sm border border-border/40 p-4 md:p-5 shadow-md hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5"
-                role="listitem"
-              >
-                {/* Glow effect on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
-                
-                {/* Icon badge - centered */}
-                <div className="flex justify-center mb-3">
-                  <div className={`relative inline-flex p-2.5 rounded-lg ${iconColorClass}`}>
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </div>
+              <div key={stat.id || index} className="flex items-center gap-2" role="listitem">
+                <div className={`p-1.5 rounded-lg ${iconColorClass}`}>
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                 </div>
-                
-                {/* Value - Centered and proportional */}
-                <div className="relative text-2xl md:text-3xl font-bold gradient-text text-center mb-1">
+                <span className="text-lg md:text-xl font-bold gradient-text">
                   <AnimatedCounter end={stat.value} suffix={stat.suffix || ''} />
-                </div>
-                
-                {/* Label - Centered */}
-                <div className="relative text-xs md:text-sm font-medium text-muted-foreground text-center">
-                  {stat.label}
-                </div>
+                </span>
+                <span className="text-xs md:text-sm text-muted-foreground">{stat.label}</span>
               </div>
             );
           })}
+        </div>
+
+        {/* Product screenshot in browser frame */}
+        <div className="relative max-w-5xl mx-auto animate-slide-up" style={{ animationFillMode: 'forwards', animationDelay: '250ms' }}>
+          <div className="rounded-xl overflow-hidden border border-border/50 shadow-2xl bg-background">
+            {/* Browser chrome */}
+            <div className="h-9 md:h-10 bg-muted/80 backdrop-blur flex items-center px-4 gap-2 border-b border-border/30">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-red-500/70" />
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-yellow-500/70" />
+                <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-green-500/70" />
+              </div>
+              <div className="flex-1 mx-3 h-5 md:h-6 rounded bg-background/60 flex items-center px-3">
+                <span className="text-[10px] md:text-xs text-muted-foreground">labflow.mywebz.in/dashboard</span>
+              </div>
+            </div>
+            {/* Screenshot */}
+            <img 
+              src={dashboardScreenshot} 
+              alt="LabFlow Dashboard - Patient management, billing, and analytics overview"
+              className="w-full h-auto"
+              loading="eager"
+            />
+          </div>
+          {/* Glow effect behind frame */}
+          <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-2xl -z-10 blur-2xl" aria-hidden="true" />
         </div>
       </div>
 

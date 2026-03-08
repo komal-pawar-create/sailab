@@ -5,9 +5,21 @@ import { AnimatedSection, AnimatedItems } from '@/components/AnimatedSection';
 import { FeatureCard } from './shared';
 import type { FeatureItem } from './types';
 
+import billingScreenshot from '@/assets/screenshots/billing-interface.png';
+import reportsScreenshot from '@/assets/screenshots/reports-view.png';
+import patientsScreenshot from '@/assets/screenshots/patients-list.png';
+import analyticsScreenshot from '@/assets/screenshots/analytics-dashboard.png';
+
 interface FeaturesSectionProps {
   features: FeatureItem[];
 }
+
+const screenshots = [
+  { src: billingScreenshot, alt: 'LabFlow billing interface with GST support and payment tracking', caption: 'Smart Billing & Invoicing' },
+  { src: reportsScreenshot, alt: 'Professional lab report generation view', caption: 'Professional Lab Reports' },
+  { src: patientsScreenshot, alt: 'Patient management list with search and filters', caption: 'Patient Management' },
+  { src: analyticsScreenshot, alt: 'Analytics dashboard with revenue insights', caption: 'Real-time Analytics' },
+];
 
 const FeaturesSection = ({ features }: FeaturesSectionProps) => {
   const { t } = useTranslation();
@@ -44,6 +56,25 @@ const FeaturesSection = ({ features }: FeaturesSectionProps) => {
             />
           ))}
         </AnimatedItems>
+
+        {/* Screenshot Grid */}
+        <AnimatedSection animation="fade-up" delay={200} className="mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {screenshots.map((shot, i) => (
+              <div key={i} className="group relative rounded-xl overflow-hidden border border-border/40 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <img 
+                  src={shot.src} 
+                  alt={shot.alt} 
+                  className="w-full h-auto group-hover:scale-[1.02] transition-transform duration-500" 
+                  loading="lazy" 
+                />
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-background/90 to-transparent p-4">
+                  <span className="text-sm font-medium text-foreground">{shot.caption}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </AnimatedSection>
       </div>
     </section>
   );
