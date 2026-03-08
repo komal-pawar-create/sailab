@@ -41,7 +41,7 @@ const FooterSection = ({ footerContent }: FooterSectionProps) => {
             <Link to="/" className="flex items-center gap-2 mb-4 group">
               <img 
                 src="/images/labflow-logo.png" 
-                alt="LabFlow" 
+                alt="LabFlow — Pathology Lab Management Software" 
                 loading="lazy"
                 className="h-10 w-auto"
               />
