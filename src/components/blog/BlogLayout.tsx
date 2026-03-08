@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import NavHeader from '@/components/landing/NavHeader';
 import FooterSection from '@/components/landing/FooterSection';
 import BackToTop from '@/components/landing/BackToTop';
+import AuthorCard from '@/components/blog/AuthorCard';
+import SocialShare from '@/components/blog/SocialShare';
+import BackToTop from '@/components/landing/BackToTop';
 import {
   Breadcrumb,
   BreadcrumbList,
