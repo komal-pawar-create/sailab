@@ -195,11 +195,6 @@ const Index = () => {
       {/* Fixed Navigation Header */}
       <NavHeader scrollY={scrollY} />
       
-      {/* Social Proof Bar (appears on scroll) */}
-      <SocialProofBar />
-      
-      {/* Live Activity Feed (bottom left) */}
-      <LiveActivityFeed />
       
       {/* Floating background shapes */}
       <div aria-hidden="true">
