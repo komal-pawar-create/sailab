@@ -5,6 +5,7 @@ import BlogCTA from '@/components/blog/BlogCTA';
 import TableOfContents from '@/components/blog/TableOfContents';
 import BlogCard from '@/components/blog/BlogCard';
 import { getRelatedPosts, getBlogPost } from '@/lib/blogData';
+import { getArticleJsonLd } from '@/lib/blogJsonLd';
 
 const SLUG = 'digital-lab-reports-guide';
 const post = getBlogPost(SLUG)!;
