@@ -25,7 +25,7 @@ interface BlogLayoutProps {
   readTime?: string;
 }
 
-const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, datePublished, dateModified, ogImage }: BlogLayoutProps) => {
+const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, datePublished, dateModified, ogImage, author, readTime }: BlogLayoutProps) => {
   const [scrollY, setScrollY] = useState(0);
   const [readProgress, setReadProgress] = useState(0);
 
