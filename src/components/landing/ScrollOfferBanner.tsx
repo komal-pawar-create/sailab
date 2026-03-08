@@ -17,7 +17,7 @@ const ScrollOfferBanner = () => {
 
     const handleScroll = () => {
       const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
-      if (scrollPercent > 0.6) {
+      if (scrollPercent > 0.8) {
         setVisible(true);
       }
     };

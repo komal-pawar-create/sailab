@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 const DemoSection = () => {
-  const [activeTab, setActiveTab] = useState<'video' | 'tour'>('video');
+  const [activeTab, setActiveTab] = useState<'video' | 'tour'>('tour');
   const [tourStep, setTourStep] = useState(0);
   const [demoVideos, setDemoVideos] = useState<Array<{
     id: string;

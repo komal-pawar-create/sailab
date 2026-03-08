@@ -157,9 +157,6 @@ const NavHeader = ({ scrollY }: NavHeaderProps) => {
               <Calendar className="h-4 w-4" />
               {t('nav.bookDemo')}
             </Button>
-            <Button variant="ghost" asChild className="text-sm">
-              <Link to="/auth">{t('nav.login')}</Link>
-            </Button>
             <Button asChild size="sm" className={`transition-all duration-300 active:scale-95 ${
               isScrolled ? '' : 'shadow-lg'
             }`}>
