@@ -279,7 +279,6 @@ const Index = () => {
       {/* Smart Lead Magnets */}
       <ExitIntentPopup />
       <ScrollOfferBanner />
-      <TimedSoftCTA />
     </div>
   );
 };
