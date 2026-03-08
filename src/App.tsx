@@ -47,6 +47,12 @@ const ReduceTurnaroundTime = React.lazy(() => import("./pages/blog/ReduceTurnaro
 const StaffManagementChallenges = React.lazy(() => import("./pages/blog/StaffManagementChallenges"));
 const ReducePatientComplaints = React.lazy(() => import("./pages/blog/ReducePatientComplaints"));
 const RevenueLeakagePrevention = React.lazy(() => import("./pages/blog/RevenueLeakagePrevention"));
+const SampleTracking = React.lazy(() => import("./pages/blog/SampleTracking"));
+const LabReportFormats = React.lazy(() => import("./pages/blog/LabReportFormats"));
+const DoctorReferralManagement = React.lazy(() => import("./pages/blog/DoctorReferralManagement"));
+const LabDataSecurity = React.lazy(() => import("./pages/blog/LabDataSecurity"));
+const WhatsappReports = React.lazy(() => import("./pages/blog/WhatsappReports"));
+const LabAutomationRoi = React.lazy(() => import("./pages/blog/LabAutomationRoi"));
 const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
 const RefundPolicy = React.lazy(() => import("./pages/RefundPolicy"));
@@ -148,6 +154,12 @@ const AppContent = () => {
           <Route path="/blog/lab-staff-management-challenges" element={<StaffManagementChallenges />} />
           <Route path="/blog/reduce-patient-complaints-pathology-lab" element={<ReducePatientComplaints />} />
           <Route path="/blog/lab-revenue-leakage-prevention" element={<RevenueLeakagePrevention />} />
+          <Route path="/blog/sample-tracking-pathology-lab" element={<SampleTracking />} />
+          <Route path="/blog/lab-report-formats-templates" element={<LabReportFormats />} />
+          <Route path="/blog/doctor-referral-management-labs" element={<DoctorReferralManagement />} />
+          <Route path="/blog/lab-data-security-hipaa-india" element={<LabDataSecurity />} />
+          <Route path="/blog/whatsapp-reports-patient-communication" element={<WhatsappReports />} />
+          <Route path="/blog/lab-automation-roi-calculator" element={<LabAutomationRoi />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
