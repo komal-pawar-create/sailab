@@ -5,7 +5,6 @@ import FooterSection from '@/components/landing/FooterSection';
 import BackToTop from '@/components/landing/BackToTop';
 import AuthorCard from '@/components/blog/AuthorCard';
 import SocialShare from '@/components/blog/SocialShare';
-import BackToTop from '@/components/landing/BackToTop';
 import {
   Breadcrumb,
   BreadcrumbList,
