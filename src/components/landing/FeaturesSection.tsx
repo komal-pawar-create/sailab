@@ -58,7 +58,7 @@ const FeaturesSection = ({ features }: FeaturesSectionProps) => {
         </AnimatedItems>
 
         {/* Screenshot Grid */}
-        <AnimatedSection animation="slide" delay={200} className="mt-16">
+        <AnimatedSection animation="fade-up" delay={200} className="mt-16">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {screenshots.map((shot, i) => (
               <div key={i} className="group relative rounded-xl overflow-hidden border border-border/40 shadow-lg hover:shadow-xl transition-shadow duration-300">
