@@ -27,26 +27,7 @@ const WhatIsLims = () => {
       datePublished={post.datePublished}
       dateModified={post.dateModified}
       ogImage={post.ogImage}
-      jsonLd={{
-        '@context': 'https://schema.org',
-        '@type': 'Article',
-        headline: post.title,
-        description: post.excerpt,
-        keywords: post.keywords,
-        author: { '@type': 'Organization', name: 'LabFlow', url: 'https://labflow.mywebz.in' },
-        publisher: {
-          '@type': 'Organization',
-          name: 'LabFlow',
-          url: 'https://labflow.mywebz.in',
-          logo: { '@type': 'ImageObject', url: 'https://labflow.mywebz.in/images/labflow-logo.png' },
-        },
-        datePublished: post.datePublished,
-        dateModified: post.dateModified,
-        mainEntityOfPage: `https://labflow.mywebz.in/blog/${SLUG}`,
-        image: post.ogImage || 'https://labflow.mywebz.in/images/labflow-logo.png',
-        wordCount: 1200,
-        inLanguage: 'en-IN',
-      }}
+      jsonLd={getArticleJsonLd(post)}
     >
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
