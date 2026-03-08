@@ -194,6 +194,20 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, dateP
             </Breadcrumb>
           </div>
         )}
+
+        {/* Author + Social Share bar */}
+        {(author || readTime) && (
+          <div className="max-w-6xl mx-auto px-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {author && datePublished && readTime && (
+              <AuthorCard author={author} datePublished={datePublished} readTime={readTime} />
+            )}
+            <SocialShare
+              url={`https://labflow.mywebz.in/blog/${canonicalSlug}`}
+              title={title}
+            />
+          </div>
+        )}
+
         {children}
       </main>
       <FooterSection footerContent={null} />
