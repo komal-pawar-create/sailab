@@ -86,6 +86,28 @@ const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, dateP
     }
     canonical.href = fullUrl;
 
+    // Hreflang alternate links for multilingual SEO
+    const hreflangLinks: HTMLLinkElement[] = [];
+    const langs = [
+      { code: 'en-IN', suffix: '' },
+      { code: 'hi-IN', suffix: '?lang=hi' },
+      { code: 'mr-IN', suffix: '?lang=mr' },
+    ];
+    langs.forEach(({ code, suffix }) => {
+      const link = document.createElement('link');
+      link.rel = 'alternate';
+      link.hreflang = code;
+      link.href = `${fullUrl}${suffix}`;
+      document.head.appendChild(link);
+      hreflangLinks.push(link);
+    });
+    const xDefault = document.createElement('link');
+    xDefault.rel = 'alternate';
+    xDefault.hreflang = 'x-default';
+    xDefault.href = fullUrl;
+    document.head.appendChild(xDefault);
+    hreflangLinks.push(xDefault);
+
     // JSON-LD: article schema + breadcrumb schema
     const scripts: HTMLScriptElement[] = [];
 
