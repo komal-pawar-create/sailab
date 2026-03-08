@@ -21,6 +21,8 @@ interface BlogLayoutProps {
   datePublished?: string;
   dateModified?: string;
   ogImage?: string;
+  author?: string;
+  readTime?: string;
 }
 
 const BlogLayout = ({ children, title, description, canonicalSlug, jsonLd, datePublished, dateModified, ogImage }: BlogLayoutProps) => {
