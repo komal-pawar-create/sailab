@@ -66,7 +66,10 @@ const FeaturesSection = ({ features }: FeaturesSectionProps) => {
                   src={shot.src} 
                   alt={shot.alt} 
                   className="w-full h-auto group-hover:scale-[1.02] transition-transform duration-500" 
-                  loading="lazy" 
+                  loading="lazy"
+                  decoding="async"
+                  width={640}
+                  height={360}
                 />
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-background/90 to-transparent p-4">
                   <span className="text-sm font-medium text-foreground">{shot.caption}</span>

@@ -31,12 +31,20 @@ const WhatIsLims = () => {
         '@type': 'Article',
         headline: post.title,
         description: post.excerpt,
-        author: { '@type': 'Organization', name: 'LabFlow' },
-        publisher: { '@type': 'Organization', name: 'LabFlow', url: 'https://labflow.mywebz.in' },
+        keywords: post.keywords,
+        author: { '@type': 'Organization', name: 'LabFlow', url: 'https://labflow.mywebz.in' },
+        publisher: {
+          '@type': 'Organization',
+          name: 'LabFlow',
+          url: 'https://labflow.mywebz.in',
+          logo: { '@type': 'ImageObject', url: 'https://labflow.mywebz.in/images/labflow-logo.png' },
+        },
         datePublished: post.datePublished,
         dateModified: post.dateModified,
         mainEntityOfPage: `https://labflow.mywebz.in/blog/${SLUG}`,
         image: post.ogImage || 'https://labflow.mywebz.in/images/labflow-logo.png',
+        wordCount: 1200,
+        inLanguage: 'en-IN',
       }}
     >
       <div className="max-w-6xl mx-auto px-4">

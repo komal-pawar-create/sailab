@@ -45,11 +45,26 @@ const Blog = () => {
       canonicalSlug=""
       jsonLd={{
         '@context': 'https://schema.org',
-        '@type': 'Blog',
-        name: 'LabFlow Blog',
+        '@type': 'CollectionPage',
+        name: 'LabFlow Blog — Lab Management Insights',
         description: 'Expert articles on LIMS software and lab management for Indian pathology and diagnostic labs.',
         url: 'https://labflow.mywebz.in/blog',
-        publisher: { '@type': 'Organization', name: 'LabFlow', url: 'https://labflow.mywebz.in' },
+        publisher: {
+          '@type': 'Organization',
+          name: 'LabFlow',
+          url: 'https://labflow.mywebz.in',
+          logo: { '@type': 'ImageObject', url: 'https://labflow.mywebz.in/images/labflow-logo.png' },
+        },
+        mainEntity: {
+          '@type': 'ItemList',
+          numberOfItems: blogPosts.length,
+          itemListElement: blogPosts.map((p, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `https://labflow.mywebz.in/blog/${p.slug}`,
+            name: p.title,
+          })),
+        },
       }}
     >
       <div className="max-w-6xl mx-auto px-4">

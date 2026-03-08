@@ -130,6 +130,9 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
               alt="LabFlow Dashboard - Patient management, billing, and analytics overview"
               className="w-full h-auto"
               loading="eager"
+              fetchPriority="high"
+              width={1280}
+              height={720}
             />
           </div>
           {/* Glow effect behind frame */}
