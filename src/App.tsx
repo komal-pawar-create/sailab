@@ -53,6 +53,12 @@ const DoctorReferralManagement = React.lazy(() => import("./pages/blog/DoctorRef
 const LabDataSecurity = React.lazy(() => import("./pages/blog/LabDataSecurity"));
 const WhatsappReports = React.lazy(() => import("./pages/blog/WhatsappReports"));
 const LabAutomationRoi = React.lazy(() => import("./pages/blog/LabAutomationRoi"));
+const PathologyIndustryTrends = React.lazy(() => import("./pages/blog/PathologyIndustryTrends"));
+const AiInPathologyLabs = React.lazy(() => import("./pages/blog/AiInPathologyLabs"));
+const PatientGuideLabReports = React.lazy(() => import("./pages/blog/PatientGuideLabReports"));
+const LabTestPricing = React.lazy(() => import("./pages/blog/LabTestPricing"));
+const PreventiveHealthCheckups = React.lazy(() => import("./pages/blog/PreventiveHealthCheckups"));
+const LabQualityControl = React.lazy(() => import("./pages/blog/LabQualityControl"));
 const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
 const RefundPolicy = React.lazy(() => import("./pages/RefundPolicy"));
@@ -160,6 +166,12 @@ const AppContent = () => {
           <Route path="/blog/lab-data-security-hipaa-india" element={<LabDataSecurity />} />
           <Route path="/blog/whatsapp-reports-patient-communication" element={<WhatsappReports />} />
           <Route path="/blog/lab-automation-roi-calculator" element={<LabAutomationRoi />} />
+          <Route path="/blog/pathology-lab-industry-trends-india-2026" element={<PathologyIndustryTrends />} />
+          <Route path="/blog/ai-machine-learning-pathology-labs" element={<AiInPathologyLabs />} />
+          <Route path="/blog/patient-guide-understanding-lab-reports" element={<PatientGuideLabReports />} />
+          <Route path="/blog/why-lab-tests-cost-different-prices" element={<LabTestPricing />} />
+          <Route path="/blog/preventive-health-checkup-guide-india" element={<PreventiveHealthCheckups />} />
+          <Route path="/blog/lab-quality-control-best-practices" element={<LabQualityControl />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
