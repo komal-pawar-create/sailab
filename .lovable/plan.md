@@ -1,103 +1,43 @@
 
 
-# End-to-End Testing Plan for Sample Tracking Module
+# Plan: Add 6 Research-Oriented & Customer Awareness Blog Posts
 
-## Critical Bug Found
+## Current State
+18 blog posts across 7 clusters, mostly product-focused. Missing: industry research/trends, patient education, and awareness-stage content that attracts top-of-funnel visitors.
 
-The `get_current_lab_id()` database function has a bug that will **block all sample operations**:
+## New Posts (2 new clusters + expanding existing ones)
 
-```text
-Current (BROKEN):   WHERE profiles.id = auth.uid()
-Should be:          WHERE profiles.user_id = auth.uid()
-```
+| # | Slug | Title | Cluster | Type |
+|---|------|-------|---------|------|
+| 1 | `pathology-lab-industry-trends-india-2026` | Pathology Lab Industry in India 2026: Market Size, Trends & Growth Drivers | `industry-research` | Research |
+| 2 | `ai-machine-learning-pathology-labs` | How AI and Machine Learning Are Transforming Pathology Labs in India | `industry-research` | Research |
+| 3 | `patient-guide-understanding-lab-reports` | Understanding Your Lab Reports: A Patient's Complete Guide | `patient-awareness` | Awareness |
+| 4 | `why-lab-tests-cost-different-prices` | Why Lab Tests Cost Different Prices: What Patients Should Know | `patient-awareness` | Awareness |
+| 5 | `preventive-health-checkup-guide-india` | Preventive Health Checkups in India: Which Tests You Actually Need | `patient-awareness` | Awareness |
+| 6 | `lab-quality-control-best-practices` | Lab Quality Control: Best Practices Every Lab Owner Must Follow in 2026 | `compliance` | Research |
 
-The `profiles.id` is a separate UUID, not the auth user ID. All other helper functions (`get_user_lab`, `get_user_branch`) correctly use `profiles.user_id`. This means the RLS policies on the `samples` and `sample_id_sequences` tables will return no rows and block all inserts/selects/updates.
+## New Clusters to Add
+- **`industry-research`** — label: "Industry Research"
+- **`patient-awareness`** — label: "Patient Awareness"
 
-## Fix Required (Database Migration)
+## Files to Create (6)
+- `src/pages/blog/PathologyIndustryTrends.tsx`
+- `src/pages/blog/AiInPathologyLabs.tsx`
+- `src/pages/blog/PatientGuideLabReports.tsx`
+- `src/pages/blog/LabTestPricing.tsx`
+- `src/pages/blog/PreventiveHealthCheckups.tsx`
+- `src/pages/blog/LabQualityControl.tsx`
 
-Run this SQL to fix the function:
+Each follows the existing pattern: SLUG constant, `getBlogPost`, `getArticleJsonLd`, TOC sidebar, prose article (~800 words), internal cross-links, `BlogCTA`, related posts grid.
 
-```text
-CREATE OR REPLACE FUNCTION public.get_current_lab_id()
-RETURNS UUID AS $$
-DECLARE
-  v_lab_id UUID;
-BEGIN
-  SELECT lab_id INTO v_lab_id
-  FROM public.profiles
-  WHERE user_id = auth.uid();
-  RETURN v_lab_id;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public;
-```
+## Files to Modify (3)
+1. **`src/lib/blogData.ts`** — Add 6 new entries to `blogPosts` array + 2 new clusters to `blogClusters`
+2. **`src/App.tsx`** — Add 6 lazy imports + 6 Route entries
+3. **`public/sitemap.xml`** — Add 6 new URL entries
 
-## Verification Steps (After Fix)
-
-Once the function is fixed, the following E2E tests should pass:
-
-### 1. Authentication
-- Navigate to `/auth`, log in with valid credentials
-- Verify redirect to `/dashboard`
-
-### 2. Dashboard - Samples Tab
-- Click the "Samples" tab on the dashboard
-- Verify the table renders (even if empty, it should show "No samples found")
-- Confirm the "Collect Sample" button is visible
-
-### 3. Collect a Sample
-- Click "+ Collect Sample" button
-- Select a patient from the search dropdown
-- Select a test type
-- Set SLA hours (default 24)
-- Add optional notes
-- Click "Collect Sample"
-- Verify success toast appears
-- Verify the new sample appears in the Samples table with status "Collected"
-- Verify the sample ID format is `SMP-YYYYMMDD-001`
-
-### 4. Update Sample Status (Lifecycle)
-- Click the arrow icon on the new sample row to open Update Status dialog
-- Change status to "Received" and submit
-- Verify status badge updates
-- Repeat: update to "Processing", then "Completed"
-- Verify TAT progress bar reflects elapsed time
-
-### 5. Rejection Flow
-- Collect another sample
-- Click update status, select "Rejected"
-- Verify rejection reason field appears (mandatory)
-- Submit with reason
-- Verify "Rejected" badge and reason displayed in timeline
-
-### 6. QR Code / Barcode
-- Click the barcode icon on a sample row
-- Verify the QR code label dialog opens with sample ID, patient name, test type
-
-### 7. Timeline View
-- Click the eye icon on a sample row
-- Verify the timeline dialog shows status progression with timestamps
-
-### 8. Stats Row
-- Verify "Samples" count in the dashboard stats row matches the number of samples
-- Verify "SLA Breaches" stat reflects any breached samples
-
-## Technical Details
-
-| Component | File | Status |
-|-----------|------|--------|
-| DB Table `samples` | Migration | Deployed with correct schema |
-| DB Table `sample_id_sequences` | Migration | Deployed |
-| RLS Policies | `samples_select/insert/update/delete` | Need `get_current_lab_id()` fix |
-| `get_next_sample_id()` | DB Function | Working (SECURITY DEFINER) |
-| `useSamplesQuery` | `src/hooks/queries/useDashboardQueries.ts` | Implemented |
-| `AddSampleForm` | `src/components/forms/AddSampleForm.tsx` | Implemented |
-| `SampleTrackingTab` | `src/components/samples/SampleTrackingTab.tsx` | Implemented |
-| `SampleUpdateDialog` | `src/components/samples/SampleUpdateDialog.tsx` | Implemented |
-| `SampleStatusBadge` | `src/components/samples/SampleStatusBadge.tsx` | Implemented |
-| `SampleBarcode` | `src/components/samples/SampleBarcode.tsx` | Implemented |
-| `SampleTimeline` | `src/components/samples/SampleTimeline.tsx` | Implemented |
-
-## Summary
-
-The code is fully implemented. The **only blocker** is the `get_current_lab_id()` function using the wrong column (`id` instead of `user_id`). Once fixed, the entire sample tracking module should work end-to-end.
+## Content Strategy
+- Research posts use statistics, market data, and trend analysis to attract lab owners researching industry direction
+- Patient awareness posts target end-consumers searching health queries — drives massive organic traffic and brand recognition
+- All posts cross-link to existing product-focused articles (funnel from awareness to consideration)
+- Dated `2026-03-28` for freshness
 
