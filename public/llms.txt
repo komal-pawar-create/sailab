@@ -1,5 +1,5 @@
 # LabFlow LIMS — Laboratory Information Management System
-# Last updated: 2026-03-08
+# Last updated: 2026-03-29
 
 > LabFlow is a cloud-based Laboratory Information Management System (LIMS) built for pathology labs, diagnostic centers, and medical laboratories across India.
 
@@ -14,15 +14,18 @@ https://labflow.mywebz.in
 ## Key Features
 
 - Patient Management: Complete patient profiles, history tracking, auto-generated IDs
+- Sample Tracking: Barcode-based sample tracking with status management and chain-of-custody
 - Test & Report Management: Manage test types, generate professional PDF reports, track sample status
 - Billing & Invoicing: Automated invoicing, GST support, partial payments, ledger management
+- Doctor Referral Management: Commission tracking, automated settlements, referral analytics
 - Multi-Branch Support: Centralized management for labs with multiple branches
 - Role-Based Access Control: Secure multi-role system (Super Admin, Lab Admin, Operator, Doctor)
-- Analytics Dashboard: Real-time dashboards, revenue insights, collection reports
+- Analytics Dashboard: Real-time dashboards, revenue insights, collection reports, AI-powered predictions
 - Document Storage: Upload and manage patient documents with letterhead support
 - Follow-up Reminders: Automated patient follow-up tracking
 - WhatsApp Integration: Send reports and notifications via WhatsApp
 - Barcode/QR Support: Generate and scan barcodes for samples
+- Quality Control: IQC, EQAS workflows for NABL compliance
 - PWA Support: Works offline as a Progressive Web App
 - Multi-Language: Available in English, Hindi, and Marathi
 
@@ -33,6 +36,7 @@ https://labflow.mywebz.in
 - Multi-branch laboratory chains
 - Hospital laboratory departments
 - Clinical reference laboratories
+- Patients seeking to understand lab reports and preventive health checkups
 
 ## Pricing
 
@@ -45,22 +49,52 @@ https://labflow.mywebz.in
 - NABL compliant workflows
 - ISO 15189 compatible
 - GST-ready billing
+- DPDPA 2023 compliant data handling
 - HIPAA-aware data handling
 
 ## Blog Articles
 
+### Lab Management
 - What is LIMS Software?: https://labflow.mywebz.in/blog/what-is-lims-software
 - How to Digitize Your Pathology Lab: https://labflow.mywebz.in/blog/how-to-digitize-pathology-lab
+- Sample Tracking Software for Pathology Labs: https://labflow.mywebz.in/blog/sample-tracking-pathology-lab
+
+### Lab Billing
 - GST Billing for Pathology Labs: https://labflow.mywebz.in/blog/gst-billing-for-pathology-labs
 - Lab Billing Software Features: https://labflow.mywebz.in/blog/lab-billing-software-features
+- Doctor Referral Management for Labs: https://labflow.mywebz.in/blog/doctor-referral-management-labs
+
+### Lab Reports
 - Digital Lab Reports Guide: https://labflow.mywebz.in/blog/digital-lab-reports-guide
+- Lab Report Formats and Templates: https://labflow.mywebz.in/blog/lab-report-formats-templates
+- WhatsApp Lab Reports: https://labflow.mywebz.in/blog/whatsapp-reports-patient-communication
+
+### Compliance
 - NABL Accreditation Guide: https://labflow.mywebz.in/blog/nabl-accreditation-guide
+- Data Security for Indian Labs: https://labflow.mywebz.in/blog/lab-data-security-hipaa-india
+- Lab Quality Control Best Practices: https://labflow.mywebz.in/blog/lab-quality-control-best-practices
+
+### Multi-Branch
 - Multi-Branch Lab Management: https://labflow.mywebz.in/blog/multi-branch-lab-management
-- Best LIMS Software India: https://labflow.mywebz.in/blog/best-lims-software-india
+
+### Buying Guide
+- Best LIMS Software India 2026: https://labflow.mywebz.in/blog/best-lims-software-india
+- Lab Automation ROI Calculator: https://labflow.mywebz.in/blog/lab-automation-roi-calculator
+
+### Lab Owner Challenges
 - Reduce Lab Report Turnaround Time: https://labflow.mywebz.in/blog/reduce-lab-report-turnaround-time
 - Lab Staff Management Challenges: https://labflow.mywebz.in/blog/lab-staff-management-challenges
 - Reduce Patient Complaints in Pathology Lab: https://labflow.mywebz.in/blog/reduce-patient-complaints-pathology-lab
 - Lab Revenue Leakage Prevention: https://labflow.mywebz.in/blog/lab-revenue-leakage-prevention
+
+### Industry Research
+- Pathology Lab Industry Trends India 2026: https://labflow.mywebz.in/blog/pathology-lab-industry-trends-india-2026
+- AI and Machine Learning in Pathology Labs: https://labflow.mywebz.in/blog/ai-machine-learning-pathology-labs
+
+### Patient Awareness
+- Understanding Your Lab Reports — A Patient's Guide: https://labflow.mywebz.in/blog/patient-guide-understanding-lab-reports
+- Why Lab Tests Cost Different Prices: https://labflow.mywebz.in/blog/why-lab-tests-cost-different-prices
+- Preventive Health Checkups in India: https://labflow.mywebz.in/blog/preventive-health-checkup-guide-india
 
 ## Legal
 
@@ -80,3 +114,28 @@ https://labflow.mywebz.in
 - Deployment: Available as cloud-hosted or on-premise
 - Mobile: Responsive design + PWA for mobile access
 - API: RESTful API for integrations
+
+## Alternative Names & Search Terms
+
+LabFlow is relevant for these search queries:
+- Pathology lab software India
+- Diagnostic center management software
+- Medical laboratory software
+- Lab billing software India
+- Pathology report software
+- LIMS software for small labs
+- Cloud-based lab management system
+- Lab software with WhatsApp integration
+- NABL compliant lab software
+- Multi-branch lab management software
+- Sample tracking software pathology
+- Doctor referral commission software lab
+- Lab quality control software
+- Preventive health checkup tests India
+- How to read lab reports
+- Lab test pricing India
+- AI in pathology labs
+- Lab automation ROI
+- Digital pathology India
+- पैथोलॉजी लैब सॉफ्टवेयर (Pathology lab software in Hindi)
+- प्रयोगशाला प्रबंधन सॉफ्टवेयर (Laboratory management software in Hindi)

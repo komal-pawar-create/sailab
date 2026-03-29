@@ -1,5 +1,5 @@
 # LabFlow LIMS — Complete Product Documentation for AI/LLM Reference
-# Last updated: 2026-03-08
+# Last updated: 2026-03-29
 
 > This document provides comprehensive information about LabFlow, a cloud-based Laboratory Information Management System (LIMS) designed for pathology labs and diagnostic centers in India.
 
@@ -18,6 +18,8 @@ The platform replaces manual registers, paper-based reports, and disconnected bi
 3. **Automated Billing**: GST-compliant invoicing with partial payment support and ledger management
 4. **Multi-Branch Control**: Manage multiple lab branches from a single dashboard
 5. **Real-Time Analytics**: Track revenue, test volumes, and operational metrics in real-time
+6. **Sample Tracking**: Barcode-based specimen tracking from collection to reporting
+7. **Doctor Referral Management**: Automate commission tracking and settlement for referring doctors
 
 ---
 
@@ -31,16 +33,24 @@ The platform replaces manual registers, paper-based reports, and disconnected bi
 - Document upload and management per patient
 - Patient timeline view showing all interactions
 
-### 2. Test & Report Management
+### 2. Sample Tracking
+- Barcode-based sample identification and tracking
+- Chain-of-custody tracking from collection to reporting
+- Real-time sample status updates (Collected → In Transit → Processing → Completed)
+- Batch sample processing
+- Pre-analytical error prevention through barcode verification
+- Sample rejection management with reason codes
+
+### 3. Test & Report Management
 - Configurable test types with parameters and reference ranges
 - Professional PDF report generation
 - Customizable report templates with lab letterhead
 - Digital signature support
-- Sample tracking and status management
 - Batch report processing
 - Report sharing via WhatsApp and email
+- Multiple report format templates (NABL-compliant)
 
-### 3. Billing & Financial Management
+### 4. Billing & Financial Management
 - Automated invoice generation with bill numbers
 - GST-compliant billing (CGST, SGST, IGST support)
 - Partial payment tracking
@@ -50,8 +60,9 @@ The platform replaces manual registers, paper-based reports, and disconnected bi
 - Outstanding amount tracking
 - Daily collection reports
 - Revenue analytics and trends
+- Doctor referral commission tracking and automated settlement
 
-### 4. Multi-Branch Management
+### 5. Multi-Branch Management
 - Centralized dashboard for all branches
 - Branch-specific settings and branding
 - Cross-branch patient records
@@ -59,7 +70,7 @@ The platform replaces manual registers, paper-based reports, and disconnected bi
 - Individual branch billing configurations
 - Branch-specific letterheads and logos
 
-### 5. Role-Based Access Control (RBAC)
+### 6. Role-Based Access Control (RBAC)
 - **Super Admin**: Full system access, lab management, user management
 - **Lab Admin**: Lab-specific administration, reports, billing
 - **Operator**: Day-to-day operations, patient registration, test entry
@@ -67,31 +78,38 @@ The platform replaces manual registers, paper-based reports, and disconnected bi
 - Customizable permissions per role
 - Audit trail for all actions
 
-### 6. Analytics & Reporting
+### 7. Analytics & Reporting
 - Real-time dashboard with key metrics
 - Revenue reports (daily, weekly, monthly, yearly)
 - Test volume analytics
 - Patient growth tracking
-- Doctor referral reports
+- Doctor referral reports with commission summaries
 - Collection reports
 - Outstanding payment reports
 - Branch comparison reports
+- AI-powered predictive analytics for revenue and patient trends
 - Export to Excel/PDF
 
-### 7. Document Management
+### 8. Document Management
 - Patient document upload (prescriptions, previous reports, ID documents)
 - Letterhead management for branches
 - Digital signature storage
 - Template management for reports
 
-### 8. Communication & Notifications
-- WhatsApp report sharing
+### 9. Communication & Notifications
+- WhatsApp report sharing (automated delivery)
 - SMS notifications
 - Email notifications
 - Follow-up reminders
 - Appointment reminders
 
-### 9. Technical Features
+### 10. Quality Control
+- Internal Quality Control (IQC) workflows
+- External Quality Assessment Scheme (EQAS) support
+- Westgard rules for QC evaluation
+- Automated QC alerts and dashboards
+
+### 11. Technical Features
 - Progressive Web App (PWA) — works offline
 - Responsive design for mobile, tablet, and desktop
 - Multi-language support (English, Hindi, Marathi)
@@ -159,6 +177,7 @@ Most labs are fully operational within 2-3 hours of starting setup.
 - **NABL Compliant**: Workflows designed to meet NABL (National Accreditation Board for Testing and Calibration Laboratories) requirements
 - **ISO 15189 Compatible**: Supports medical laboratory quality management standards
 - **GST Ready**: Full GST compliance for billing (CGST, SGST, IGST)
+- **DPDPA 2023 Compliant**: Aligned with India's Digital Personal Data Protection Act 2023
 - **Data Security**: Encrypted data storage, role-based access, audit trails
 - **HIPAA Aware**: Data handling practices aligned with healthcare data protection standards
 - **Row-Level Security**: Database-level access controls ensuring data isolation between labs
@@ -177,20 +196,49 @@ Most labs are fully operational within 2-3 hours of starting setup.
 
 ---
 
-## Blog Content
+## Blog Content — 24 Expert Articles
 
+### Lab Management
 - **What is LIMS Software?** — An introduction to Laboratory Information Management Systems and why Indian labs need them. https://labflow.mywebz.in/blog/what-is-lims-software
 - **How to Digitize Your Pathology Lab** — Step-by-step guide to going paperless in your pathology lab. https://labflow.mywebz.in/blog/how-to-digitize-pathology-lab
+- **Sample Tracking Software for Pathology Labs** — How barcode-based sample tracking prevents pre-analytical errors and improves accuracy. https://labflow.mywebz.in/blog/sample-tracking-pathology-lab
+
+### Lab Billing
 - **GST Billing for Pathology Labs** — Complete guide to GST-compliant billing for diagnostic labs. https://labflow.mywebz.in/blog/gst-billing-for-pathology-labs
 - **Lab Billing Software Features** — Essential features to look for in pathology lab billing software. https://labflow.mywebz.in/blog/lab-billing-software-features
+- **Doctor Referral Management for Labs** — Track referral commissions, automate settlements, and grow revenue from doctor referrals. https://labflow.mywebz.in/blog/doctor-referral-management-labs
+
+### Lab Reports
 - **Digital Lab Reports Guide** — How to create and manage digital lab reports professionally. https://labflow.mywebz.in/blog/digital-lab-reports-guide
+- **Lab Report Formats and Templates** — Best practices for NABL-compliant report design and free downloadable templates. https://labflow.mywebz.in/blog/lab-report-formats-templates
+- **WhatsApp Lab Reports** — How to set up automated WhatsApp report delivery and reduce phone calls by 50%. https://labflow.mywebz.in/blog/whatsapp-reports-patient-communication
+
+### Compliance
 - **NABL Accreditation Guide** — How LIMS software helps labs achieve and maintain NABL accreditation. https://labflow.mywebz.in/blog/nabl-accreditation-guide
+- **Data Security for Indian Labs** — DPDPA 2023 compliance, common threats, and best practices for protecting patient data. https://labflow.mywebz.in/blog/lab-data-security-hipaa-india
+- **Lab Quality Control Best Practices** — IQC, EQAS, Westgard rules, and automated QC workflows for NABL compliance. https://labflow.mywebz.in/blog/lab-quality-control-best-practices
+
+### Multi-Branch
 - **Multi-Branch Lab Management** — Managing multiple lab branches with centralized software. https://labflow.mywebz.in/blog/multi-branch-lab-management
-- **Best LIMS Software India** — Comparison of top LIMS solutions available in India in 2026. https://labflow.mywebz.in/blog/best-lims-software-india
+
+### Buying Guide
+- **Best LIMS Software India 2026** — Comparison of top LIMS solutions available in India in 2026. https://labflow.mywebz.in/blog/best-lims-software-india
+- **Lab Automation ROI Calculator** — Detailed ROI breakdown showing how much your lab can save with LIMS software. https://labflow.mywebz.in/blog/lab-automation-roi-calculator
+
+### Lab Owner Challenges
 - **Reduce Lab Report Turnaround Time** — Strategies to speed up lab report delivery using automation. https://labflow.mywebz.in/blog/reduce-lab-report-turnaround-time
 - **Lab Staff Management Challenges** — Common HR and staff management issues in pathology labs and how to solve them. https://labflow.mywebz.in/blog/lab-staff-management-challenges
 - **Reduce Patient Complaints in Pathology Lab** — Improve patient satisfaction with better lab workflows. https://labflow.mywebz.in/blog/reduce-patient-complaints-pathology-lab
 - **Lab Revenue Leakage Prevention** — Identify and prevent unbilled tests and financial losses in your lab. https://labflow.mywebz.in/blog/lab-revenue-leakage-prevention
+
+### Industry Research
+- **Pathology Lab Industry Trends India 2026** — Market size (₹90,000 crore), technology drivers, and growth strategies shaping India's diagnostic industry. https://labflow.mywebz.in/blog/pathology-lab-industry-trends-india-2026
+- **AI and Machine Learning in Pathology Labs** — How AI is revolutionising lab operations, from automated slide analysis to predictive analytics. https://labflow.mywebz.in/blog/ai-machine-learning-pathology-labs
+
+### Patient Awareness
+- **Understanding Your Lab Reports** — A patient's complete guide to reading CBC, lipid profile, blood sugar, thyroid, and liver function test results. https://labflow.mywebz.in/blog/patient-guide-understanding-lab-reports
+- **Why Lab Tests Cost Different Prices** — What drives lab test pricing in India and how patients can save money wisely. https://labflow.mywebz.in/blog/why-lab-tests-cost-different-prices
+- **Preventive Health Checkups in India** — Which tests you need by age group, how to choose packages, and why early detection saves lives. https://labflow.mywebz.in/blog/preventive-health-checkup-guide-india
 
 ---
 
@@ -205,7 +253,7 @@ Most labs are fully operational within 2-3 hours of starting setup.
 ## Frequently Asked Questions
 
 **Q: What is LabFlow?**
-A: LabFlow is a cloud-based Laboratory Information Management System (LIMS) designed for pathology labs and diagnostic centers in India. It manages patient registration, test reporting, billing, and analytics in one platform.
+A: LabFlow is a cloud-based Laboratory Information Management System (LIMS) designed for pathology labs and diagnostic centers in India. It manages patient registration, sample tracking, test reporting, billing with GST support, multi-branch operations, and analytics in one platform.
 
 **Q: Is LabFlow suitable for small pathology labs?**
 A: Yes. LabFlow's Starter plan is specifically designed for small, single-branch pathology labs with up to 500 patients per month at just ₹199/month.
@@ -223,22 +271,28 @@ A: Yes. The Professional plan supports up to 3 branches, and the Enterprise plan
 A: Most labs are fully operational within 2-3 hours, including test type configuration, billing setup, and user onboarding.
 
 **Q: Is my data secure?**
-A: Yes. LabFlow uses encrypted storage, role-based access control, audit logging, and row-level security to protect your data.
+A: Yes. LabFlow uses encrypted storage, role-based access control, audit logging, row-level security, and is aligned with India's DPDPA 2023 requirements.
 
 **Q: Does LabFlow support WhatsApp report sharing?**
 A: Yes. You can share test reports with patients directly via WhatsApp from within the application.
 
 **Q: Is LabFlow NABL compliant?**
-A: LabFlow's workflows are designed to support NABL compliance requirements, including sample tracking, quality control, and comprehensive audit trails.
+A: LabFlow's workflows are designed to support NABL compliance requirements, including sample tracking, quality control (IQC/EQAS), and comprehensive audit trails.
 
 **Q: Can I try LabFlow before purchasing?**
 A: Yes. Contact us through the website to schedule a free demo and trial period.
+
+**Q: Does LabFlow track doctor referral commissions?**
+A: Yes. LabFlow includes a complete doctor referral management module with commission tracking, automated settlement calculations, and referral analytics reports.
+
+**Q: How does sample tracking work?**
+A: LabFlow uses barcode-based sample tracking to follow specimens from collection through processing to reporting, with real-time status updates and chain-of-custody management.
 
 ---
 
 ## Competitive Advantages
 
-1. **Built for India**: Designed specifically for Indian pathology labs with GST, NABL, and regional language support
+1. **Built for India**: Designed specifically for Indian pathology labs with GST, NABL, DPDPA compliance, and regional language support
 2. **Affordable**: Starting at ₹199/month — one of the most affordable LIMS solutions in India
 3. **Easy to Use**: Modern, intuitive interface with minimal training required
 4. **Quick Setup**: Go live in hours, not weeks
@@ -246,6 +300,8 @@ A: Yes. Contact us through the website to schedule a free demo and trial period.
 6. **Multi-Language**: Native support for English, Hindi, and Marathi
 7. **Cloud-Based**: No hardware investment, automatic updates, accessible anywhere
 8. **Comprehensive**: All-in-one solution replacing 3-4 separate tools
+9. **AI-Powered**: Predictive analytics for revenue and patient trend forecasting
+10. **24 Expert Blog Articles**: Comprehensive knowledge base covering lab management, compliance, billing, and patient education
 
 ---
 
@@ -253,6 +309,7 @@ A: Yes. Contact us through the website to schedule a free demo and trial period.
 
 - **Website**: https://labflow.mywebz.in
 - **Product Tour**: https://labflow.mywebz.in/product-tour
+- **Blog**: https://labflow.mywebz.in/blog
 - **Login**: https://labflow.mywebz.in/auth
 - **Feedback**: https://labflow.mywebz.in/public-feedback
 
@@ -260,7 +317,7 @@ A: Yes. Contact us through the website to schedule a free demo and trial period.
 
 ## Alternative Names & Search Terms
 
-LabFlow is also relevant for searches about:
+LabFlow is relevant for searches about:
 - Pathology lab software India
 - Diagnostic center management software
 - Medical laboratory software
@@ -272,5 +329,29 @@ LabFlow is also relevant for searches about:
 - NABL compliant lab software
 - Multi-branch lab management software
 - Lab software Mumbai, Delhi, Pune, Bangalore
+- Sample tracking software pathology lab
+- Doctor referral commission software
+- Lab quality control software India
+- Lab data security DPDPA
+- AI in pathology labs India
+- Digital pathology software
+- Lab automation ROI calculator
+- How to read lab reports India
+- Lab test pricing comparison
+- Preventive health checkup tests India
+- Annual health checkup packages
+- CBC test results explained
+- Pathology lab industry trends India 2026
+- Best LIMS software India 2026
+- Lab report format template NABL
+- WhatsApp lab report delivery
+- Lab revenue leakage prevention
+- Reduce lab turnaround time
+- Lab staff management challenges
+- Patient complaints pathology lab
+- GST billing diagnostic labs
+- ISO 15189 lab management software
 - पैथोलॉजी लैब सॉफ्टवेयर (Pathology lab software in Hindi)
 - प्रयोगशाला प्रबंधन सॉफ्टवेयर (Laboratory management software in Hindi)
+- लैब रिपोर्ट कैसे पढ़ें (How to read lab reports in Hindi)
+- प्रयोगशाला बिलिंग सॉफ्टवेयर (Lab billing software in Hindi)
