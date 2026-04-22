@@ -63,6 +63,7 @@ const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
 const RefundPolicy = React.lazy(() => import("./pages/RefundPolicy"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
+const TrackReport = React.lazy(() => import("./pages/TrackReport"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -123,7 +124,10 @@ const AppContent = () => {
   
   // Pages that should not have sidebar
   const noSidebarPages = ['/auth', '/forgot-password', '/', '/feedback', '/product-tour', '/blog', '/privacy-policy', '/terms-of-service', '/refund-policy'];
-  const showSidebar = !noSidebarPages.includes(location.pathname) && !location.pathname.startsWith('/feedback') && !location.pathname.startsWith('/blog');
+  const showSidebar = !noSidebarPages.includes(location.pathname)
+    && !location.pathname.startsWith('/feedback')
+    && !location.pathname.startsWith('/blog')
+    && !location.pathname.startsWith('/track/');
 
   useEffect(() => {
     // Register service worker
@@ -178,6 +182,7 @@ const AppContent = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/feedback" element={<PublicFeedback />} />
+          <Route path="/track/:billId" element={<TrackReport />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Printer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate } from '@/lib/utils';
+import QRCode from 'qrcode';
 
 interface Bill {
   id: string;
@@ -61,11 +62,27 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
   const printRef = useRef<HTMLDivElement>(null);
   const [labProfile, setLabProfile] = useState<LabProfile | null>(null);
   const [patientDetails, setPatientDetails] = useState<any>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   useEffect(() => {
     fetchLabProfile();
     fetchPatientDetails();
+    generateQrCode();
   }, [bill]);
+
+  const generateQrCode = async () => {
+    try {
+      const trackUrl = `${window.location.origin}/track/${bill.id}`;
+      const url = await QRCode.toDataURL(trackUrl, {
+        width: 220,
+        margin: 1,
+        errorCorrectionLevel: 'M',
+      });
+      setQrDataUrl(url);
+    } catch (e) {
+      console.error('QR generation failed', e);
+    }
+  };
 
   const fetchLabProfile = async () => {
     // Set default lab profile first
@@ -585,13 +602,26 @@ export const BillPrint = ({ bill }: BillPrintProps) => {
             </div>
           )}
 
-          {/* Signature */}
-          <div className="signature-section">
-            {labProfile?.signature_url && (
-              <img src={labProfile.signature_url} alt="Signature" className="signature-img" />
-            )}
-            <div style={{ borderTop: '1px solid #333', width: '200px', display: 'inline-block' }}></div>
-            <div style={{ fontSize: '12px', marginTop: '5px' }}>Authorized Signature</div>
+          {/* QR + Signature row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '30px', gap: '20px' }}>
+            {qrDataUrl ? (
+              <div style={{ textAlign: 'center' }}>
+                <img src={qrDataUrl} alt="Track report QR" style={{ width: '110px', height: '110px' }} />
+                <div style={{ fontSize: '10px', marginTop: '4px', color: '#374151', fontWeight: 600 }}>
+                  Scan to track your report
+                </div>
+                <div style={{ fontSize: '9px', color: '#6b7280' }}>
+                  No login required
+                </div>
+              </div>
+            ) : <div />}
+            <div className="signature-section" style={{ marginTop: 0, textAlign: 'right' }}>
+              {labProfile?.signature_url && (
+                <img src={labProfile.signature_url} alt="Signature" className="signature-img" />
+              )}
+              <div style={{ borderTop: '1px solid #333', width: '200px', display: 'inline-block' }}></div>
+              <div style={{ fontSize: '12px', marginTop: '5px' }}>Authorized Signature</div>
+            </div>
           </div>
 
           {/* Footer */}

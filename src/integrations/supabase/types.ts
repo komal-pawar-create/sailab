@@ -2749,6 +2749,10 @@ export type Database = {
         Args: { p_branch_id: string; p_token_date: string }
         Returns: number
       }
+      get_patient_reports_by_bill: {
+        Args: { p_bill_id: string }
+        Returns: Json
+      }
       get_user_branch: { Args: { user_id: string }; Returns: string }
       get_user_by_username: {
         Args: { p_username: string }
