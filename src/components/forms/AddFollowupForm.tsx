@@ -281,12 +281,17 @@ export function AddFollowupForm({ onFollowupAdded, preSelectedPatientId, trigger
                     {formData.due_date ? format(formData.due_date, 'PPP') : 'Pick date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent
+                  className="w-auto p-0 z-[100]"
+                  align="start"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onPointerDownOutside={(e) => e.preventDefault()}
+                >
                   <Calendar
                     mode="single"
                     selected={formData.due_date}
                     onSelect={(date) => setFormData({ ...formData, due_date: date })}
-                    initialFocus
+                    className="p-3 pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
@@ -315,12 +320,17 @@ export function AddFollowupForm({ onFollowupAdded, preSelectedPatientId, trigger
                     {formData.remind_date ? format(formData.remind_date, 'PPP') : 'Optional'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent
+                  className="w-auto p-0 z-[100]"
+                  align="start"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onPointerDownOutside={(e) => e.preventDefault()}
+                >
                   <Calendar
                     mode="single"
                     selected={formData.remind_date}
                     onSelect={(date) => setFormData({ ...formData, remind_date: date })}
-                    initialFocus
+                    className="p-3 pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
