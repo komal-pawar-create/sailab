@@ -1,65 +1,47 @@
 
 
-# Plan: Patient Report Tracking via QR Code on Bills
+# Plan: Fix Follow-up Creation (RLS) + Cleanup Console Errors
 
-## Goal
-Add a QR code to every printed bill that patients can scan to view/download their lab reports & documents — without needing to log in.
+## Root Cause: Follow-up 403 Error
+The screenshot shows: *"new row violates row-level security policy 'Admins can manage all followups' for table 'patient_followups'"*
 
-## How It Works
+The INSERT policy requires: `EXISTS (SELECT 1 FROM profiles WHERE user_id = assigned_to AND lab_id = <my lab>)`. Because the **profiles SELECT policy** only lets operators see *their own* profile, this `EXISTS` check returns false whenever an operator assigns the follow-up to someone else (e.g. the lab admin) → 403.
 
-```text
-Operator prints bill  →  QR code points to public URL
-                            │
-                            ▼
-Patient scans QR  →  /track/:billId  →  Sees reports + documents
-                                          (uploaded by operator)
+## Fix 1: Allow Lab Members to See Each Other (Migration)
+
+Add a profiles SELECT policy so any authenticated user can see basic info of other profiles **in the same lab** (needed for assignee dropdowns, team listings, etc.).
+
+```sql
+CREATE POLICY "Users can view profiles in their lab"
+ON public.profiles FOR SELECT
+TO authenticated
+USING (lab_id IS NOT NULL AND lab_id = get_user_lab(auth.uid()));
 ```
 
-## Implementation
+This:
+- Lets operators see the lab_admin and other operators in their lab → fixes the EXISTS check in the followups INSERT policy → no more 403
+- Keeps cross-lab isolation intact (other labs still hidden)
+- Profile rows contain no secret data (no password hashes etc.)
 
-### 1. Database (1 migration)
-Add a public-tracking RLS path. We won't expose the whole `test_reports`/`documents` tables — we'll create a **secure RPC function** that takes the bill ID and returns only that bill's patient's reports/documents.
+## Fix 2: OperatorSelect 400 Error
+`src/components/forms/OperatorSelect.tsx` sends `user_id=not.eq.&` (empty value) which Supabase rejects with 400. Remove the `.not('user_id', 'eq', '')` filter — the empty string comparison is invalid for UUID columns and the client-side `.filter(op => op.user_id && op.user_id.trim() !== '')` already handles it.
 
-- New function: `get_patient_reports_by_bill(p_bill_id uuid)` — `SECURITY DEFINER`, returns reports + documents (file name, type, status, signed URL paths) only for the patient linked to that bill
-- No RLS changes to existing tables (keeps lab data secure)
-- Returns: bill number, patient name (first name only for privacy), list of reports with status, list of uploaded documents with download links
+## Fix 3: Bills Search 400 Error
+In the dashboard bills query, `or=(patients.full_name.ilike.%X%)` fails because PostgREST can't apply `or()` to an embedded relation column directly. Fix the bills search to:
+- Either filter on the **inner join** using `.ilike('patients.full_name', ...)` with `patients!inner(...)`, OR
+- Pre-fetch matching patient IDs and use `.in('patient_id', ids)`
 
-### 2. Public Tracking Page (new file)
-**`src/pages/TrackReport.tsx`** — public route, no auth required:
-- Header with lab name/logo (from bill's branch)
-- Bill number + patient first name (privacy-safe)
-- **Reports section**: list of test reports with status badges (Pending / Processing / Completed)
-- **Documents section**: downloadable PDF/JPG reports uploaded by operator (signed URLs from `lab-files` bucket)
-- Friendly empty state: "Your report is being prepared. Please check back later."
-- Mobile-first design (most patients will scan from phone)
-
-### 3. Route Registration
-**`src/App.tsx`** — add `/track/:billId` to the `noSidebarPages` (public, no sidebar) routes list with lazy import.
-
-### 4. QR Code on Bill Print
-**`src/components/bills/BillPrint.tsx`**:
-- Install `qrcode` library (lightweight, ~15KB)
-- Generate QR code as data URL pointing to: `https://labflow.mywebz.in/track/{bill.id}`
-- Display QR code in the bill footer area (right side, ~100×100 px) with caption: **"Scan to track your report"**
-- Renders both in preview and printed output
-
-### 5. Storage Access
-Documents are in private `lab-files` bucket. The RPC will generate **signed URLs** (valid 1 hour) so patients can download without authentication, while keeping the bucket private.
+I'll locate the exact file (likely `src/components/dashboard/BillsTable.tsx` or a hook) and apply the inner-join approach so the search works.
 
 ## Files Changed
 
-| File | Type | Purpose |
-|------|------|---------|
-| `supabase/migrations/<new>.sql` | New | `get_patient_reports_by_bill` RPC function |
-| `src/pages/TrackReport.tsx` | New | Public report tracking page |
-| `src/components/bills/BillPrint.tsx` | Edit | Add QR code in footer |
-| `src/App.tsx` | Edit | Register `/track/:billId` public route |
-| `package.json` | Edit | Add `qrcode` dependency |
+| File | Change |
+|------|--------|
+| `supabase/migrations/<new>.sql` | Add lab-scoped SELECT policy on `profiles` |
+| `src/components/forms/OperatorSelect.tsx` | Remove invalid `.not('user_id','eq','')` filter |
+| Bills search query file | Fix `or()` on embedded patients column → use `patients!inner` + `ilike` |
 
-## Privacy & Security Notes
-- QR links use the bill UUID (random, non-guessable) — no patient ID exposed in URL
-- Public page shows only patient's **first name** (e.g., "Reports for Rahul S.") to avoid full PII leak if QR is shared
-- Signed URLs expire in 1 hour and are regenerated each visit
-- No login needed — frictionless patient experience
-- RPC is `SECURITY DEFINER` and only returns data scoped to one bill
+## Out of Scope (Noted but Not Fixed Here)
+- "Missing Description for DialogContent" warnings — accessibility only, non-blocking
+- i18next/PWA install banner notices — informational
 
