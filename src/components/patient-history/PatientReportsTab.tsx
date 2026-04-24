@@ -277,6 +277,7 @@ export default function PatientReportsTab({ patientId, patientName }: PatientRep
   }
 
   return (
+    <>
     <Tabs defaultValue="tests" className="w-full">
       <TabsList className="mb-4">
         <TabsTrigger value="tests" className="gap-2">
