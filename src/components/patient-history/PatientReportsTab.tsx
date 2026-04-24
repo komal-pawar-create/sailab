@@ -298,7 +298,7 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
                   <TableHead>Test Type</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-[100px]">Action</TableHead>
+                  <TableHead className="w-[140px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -318,9 +318,35 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button size="sm" variant="ghost" onClick={() => downloadTestReport(report)}>
-                        <Download className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => downloadTestReport(report)} title="Download">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
+                                  disabled={!latestBillId || !patientPhone || sending}
+                                  onClick={() => setShareTarget({ testName: report.test_type })}
+                                >
+                                  <MessageCircle className="h-4 w-4" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {!latestBillId
+                                ? "Generate a bill first to create a tracking link"
+                                : !patientPhone
+                                  ? "Patient has no phone number"
+                                  : "Send tracking link on WhatsApp"}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
