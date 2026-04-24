@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Loader2, Mail, MessageSquare, Phone, MessageCircle, CheckCircle2, Send, FlaskConical } from "lucide-react";
+import { Loader2, Mail, MessageSquare, Phone, MessageCircle, CheckCircle2, FlaskConical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function ApiSettings() {
@@ -164,7 +164,7 @@ export default function ApiSettings() {
 
   const SavedBadge = ({ k }: { k: string }) =>
     savedAt[k] ? (
-      <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-md px-3 py-2">
+      <div className="flex items-center gap-2 text-sm text-primary bg-primary/10 border border-primary/20 rounded-md px-3 py-2">
         <CheckCircle2 className="w-4 h-4" />
         <span>Saved at {savedAt[k]} — these IDs are stored locally for reference only. The edge function uses Lovable Cloud secrets.</span>
       </div>
