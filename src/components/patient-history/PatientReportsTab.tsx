@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Download, FileText, FileImage, File, Calendar, RefreshCw, Layers, Share } from "lucide-react";
+import { Download, FileText, FileImage, File, Calendar, RefreshCw, Layers, Share, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -14,6 +14,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useWhatsAppShare } from "@/hooks/useWhatsAppShare";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TestReport {
   id: string;
