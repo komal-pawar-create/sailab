@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Mail, MessageSquare, Phone } from "lucide-react";
+import { Loader2, Mail, MessageSquare, Phone, MessageCircle } from "lucide-react";
 
 export default function ApiSettings() {
   const [loading, setLoading] = useState(false);
@@ -25,6 +25,13 @@ export default function ApiSettings() {
   const [whatsappApiKey, setWhatsappApiKey] = useState("");
   const [whatsappPhoneNumberId, setWhatsappPhoneNumberId] = useState("");
   const [whatsappBusinessAccountId, setWhatsappBusinessAccountId] = useState("");
+
+  // MyOperator WhatsApp Settings
+  const [myopCompanyId, setMyopCompanyId] = useState(() => localStorage.getItem("labflow_myop_company_id") ?? "");
+  const [myopPhoneNumberId, setMyopPhoneNumberId] = useState(() => localStorage.getItem("labflow_myop_phone_number_id") ?? "");
+  const [myopWabaId, setMyopWabaId] = useState(() => localStorage.getItem("labflow_myop_waba_id") ?? "");
+  const [myopTemplate, setMyopTemplate] = useState(() => localStorage.getItem("labflow_myop_template") ?? "copy_labflow");
+  const [myopLanguage, setMyopLanguage] = useState(() => localStorage.getItem("labflow_myop_language") ?? "en");
 
   const handleSaveEmailSettings = async () => {
     setLoading(true);
@@ -76,6 +83,24 @@ export default function ApiSettings() {
     }
   };
 
+  const handleSaveMyopSettings = () => {
+    setLoading(true);
+    try {
+      localStorage.setItem("labflow_myop_company_id", myopCompanyId);
+      localStorage.setItem("labflow_myop_phone_number_id", myopPhoneNumberId);
+      localStorage.setItem("labflow_myop_waba_id", myopWabaId);
+      localStorage.setItem("labflow_myop_template", myopTemplate);
+      localStorage.setItem("labflow_myop_language", myopLanguage);
+      toast.success(
+        "MyOperator settings saved. Make sure MYOPERATOR_TOKEN, MYOPERATOR_COMPANY_ID, MYOPERATOR_PHONE_NUMBER_ID are set in Lovable Cloud secrets."
+      );
+    } catch {
+      toast.error("Failed to save MyOperator settings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
@@ -86,7 +111,7 @@ export default function ApiSettings() {
       </div>
 
       <Tabs defaultValue="email" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="email">
             <Mail className="w-4 h-4 mr-2" />
             Email (Resend)
@@ -98,6 +123,10 @@ export default function ApiSettings() {
           <TabsTrigger value="whatsapp">
             <MessageSquare className="w-4 h-4 mr-2" />
             WhatsApp
+          </TabsTrigger>
+          <TabsTrigger value="myop">
+            <MessageCircle className="w-4 h-4 mr-2" />
+            MyOperator
           </TabsTrigger>
         </TabsList>
 
@@ -247,6 +276,78 @@ export default function ApiSettings() {
               <Button onClick={handleSaveWhatsappSettings} disabled={loading}>
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save WhatsApp Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="myop">
+          <Card>
+            <CardHeader>
+              <CardTitle>WhatsApp via MyOperator</CardTitle>
+              <CardDescription>
+                Send patient report tracking links on WhatsApp using your MyOperator-approved template
+                (e.g. <code>copy_labflow</code>). Sensitive credentials (token) live server-side as Lovable Cloud
+                secrets — only non-secret IDs are stored here for reference.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+                Add these to Lovable Cloud secrets (already requested):
+                <code className="mx-1">MYOPERATOR_TOKEN</code>,
+                <code className="mx-1">MYOPERATOR_COMPANY_ID</code>,
+                <code className="mx-1">MYOPERATOR_PHONE_NUMBER_ID</code>.
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="myop-company-id">Company ID (reference)</Label>
+                <Input
+                  id="myop-company-id"
+                  placeholder="68b03dfe3cdbe222"
+                  value={myopCompanyId}
+                  onChange={(e) => setMyopCompanyId(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="myop-phone-id">Phone Number ID (reference)</Label>
+                <Input
+                  id="myop-phone-id"
+                  placeholder="700668386473133"
+                  value={myopPhoneNumberId}
+                  onChange={(e) => setMyopPhoneNumberId(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="myop-waba-id">WABA ID (optional)</Label>
+                <Input
+                  id="myop-waba-id"
+                  placeholder="WhatsApp Business Account ID"
+                  value={myopWabaId}
+                  onChange={(e) => setMyopWabaId(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="myop-template">Default Template</Label>
+                  <Input
+                    id="myop-template"
+                    placeholder="copy_labflow"
+                    value={myopTemplate}
+                    onChange={(e) => setMyopTemplate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="myop-language">Language Code</Label>
+                  <Input
+                    id="myop-language"
+                    placeholder="en"
+                    value={myopLanguage}
+                    onChange={(e) => setMyopLanguage(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Button onClick={handleSaveMyopSettings} disabled={loading}>
+                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Save MyOperator Settings
               </Button>
             </CardContent>
           </Card>

@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Download, FileText, FileImage, File, Calendar, RefreshCw, Layers, Share } from "lucide-react";
+import { Download, FileText, FileImage, File, RefreshCw, Layers, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -14,6 +14,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useWhatsAppShare } from "@/hooks/useWhatsAppShare";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TestReport {
   id: string;
@@ -45,14 +57,19 @@ interface PatientReportsTabProps {
   doctorPhone?: string;
 }
 
-export default function PatientReportsTab({ patientId, patientName, doctorPhone }: PatientReportsTabProps) {
+export default function PatientReportsTab({ patientId, patientName }: PatientReportsTabProps) {
   const [testReports, setTestReports] = useState<TestReport[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [templates, setTemplates] = useState<Record<string, DocumentTemplate>>({});
   const [loading, setLoading] = useState(false);
   const [processingDocs, setProcessingDocs] = useState<Set<string>>(new Set());
+  const [latestBillId, setLatestBillId] = useState<string | null>(null);
+  const [patientPhone, setPatientPhone] = useState<string | null>(null);
+  const [labName, setLabName] = useState<string>("");
+  const [shareTarget, setShareTarget] = useState<{ testName: string } | null>(null);
   const { toast } = useToast();
   const { profile } = useAuth();
+  const { sending, sendReportLink } = useWhatsAppShare();
 
   useEffect(() => {
     fetchData();
@@ -61,7 +78,7 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [testsRes, docsRes] = await Promise.all([
+      const [testsRes, docsRes, billRes, patientRes] = await Promise.all([
         supabase
           .from("test_reports")
           .select("*")
@@ -72,10 +89,37 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
           .select("*")
           .eq("patient_id", patientId)
           .order("created_at", { ascending: false }),
+        supabase
+          .from("bills")
+          .select("id")
+          .eq("patient_id", patientId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("patients")
+          .select("phone")
+          .eq("id", patientId)
+          .maybeSingle(),
       ]);
 
       setTestReports(testsRes.data || []);
       setDocuments(docsRes.data || []);
+      setLatestBillId(billRes.data?.id ?? null);
+      setPatientPhone(patientRes.data?.phone ?? null);
+
+      // Resolve a friendly lab/branch name for the WhatsApp template
+      if (profile?.branch_id || profile?.lab_id) {
+        const [branchRes, labRes] = await Promise.all([
+          profile?.branch_id
+            ? supabase.from("branches").select("name").eq("id", profile.branch_id).maybeSingle()
+            : Promise.resolve({ data: null } as any),
+          profile?.lab_id
+            ? supabase.from("labs").select("name").eq("id", profile.lab_id).maybeSingle()
+            : Promise.resolve({ data: null } as any),
+        ]);
+        setLabName(branchRes.data?.name || labRes.data?.name || "");
+      }
 
       // Fetch templates for documents
       if (docsRes.data && docsRes.data.length > 0) {
@@ -102,6 +146,18 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSendWhatsApp = async (testName: string) => {
+    if (!latestBillId) return;
+    await sendReportLink({
+      patientPhone,
+      patientName: patientName || "Patient",
+      testName,
+      billId: latestBillId,
+      labName,
+    });
+    setShareTarget(null);
   };
 
   const downloadTestReport = async (report: TestReport) => {
@@ -221,6 +277,7 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
   }
 
   return (
+    <>
     <Tabs defaultValue="tests" className="w-full">
       <TabsList className="mb-4">
         <TabsTrigger value="tests" className="gap-2">
@@ -242,7 +299,7 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
                   <TableHead>Test Type</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-[100px]">Action</TableHead>
+                  <TableHead className="w-[140px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -262,9 +319,35 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button size="sm" variant="ghost" onClick={() => downloadTestReport(report)}>
-                        <Download className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => downloadTestReport(report)} title="Download">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-green-600 dark:text-green-500 hover:bg-accent"
+                                  disabled={!latestBillId || !patientPhone || sending}
+                                  onClick={() => setShareTarget({ testName: report.test_type })}
+                                >
+                                  <MessageCircle className="h-4 w-4" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {!latestBillId
+                                ? "Generate a bill first to create a tracking link"
+                                : !patientPhone
+                                  ? "Patient has no phone number"
+                                  : "Send tracking link on WhatsApp"}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -326,6 +409,13 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
                           Generate Letterhead
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem
+                        disabled={!latestBillId || !patientPhone || sending}
+                        onClick={() => setShareTarget({ testName: doc.file_name })}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                        Send on WhatsApp
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -337,5 +427,36 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
         )}
       </TabsContent>
     </Tabs>
+
+    <AlertDialog open={!!shareTarget} onOpenChange={(o) => !o && setShareTarget(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Send report link on WhatsApp?</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="text-muted-foreground">To: </span>
+                <span className="font-medium text-foreground">
+                  {patientName || "Patient"} ({patientPhone || "—"})
+                </span>
+              </div>
+              <div className="rounded-md border bg-muted/40 p-3 whitespace-pre-line text-foreground">
+                {`Dear ${(patientName || "Patient").split(" ")[0]},\nYour ${shareTarget?.testName ?? ""} report is ready.\nAccess your report securely here:\nhttps://labflow.mywebz.in/track/${latestBillId ?? ""}\nPlease do not share this link with others for privacy reasons.\n${labName || "Your Lab"}\nThank you`}
+              </div>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={sending}
+            onClick={() => shareTarget && handleSendWhatsApp(shareTarget.testName)}
+          >
+            {sending ? "Sending…" : "Send WhatsApp"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
