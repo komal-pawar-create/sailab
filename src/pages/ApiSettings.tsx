@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Mail, MessageSquare, Phone } from "lucide-react";
+import { Loader2, Mail, MessageSquare, Phone, MessageCircle } from "lucide-react";
 
 export default function ApiSettings() {
   const [loading, setLoading] = useState(false);
@@ -25,6 +25,13 @@ export default function ApiSettings() {
   const [whatsappApiKey, setWhatsappApiKey] = useState("");
   const [whatsappPhoneNumberId, setWhatsappPhoneNumberId] = useState("");
   const [whatsappBusinessAccountId, setWhatsappBusinessAccountId] = useState("");
+
+  // MyOperator WhatsApp Settings
+  const [myopCompanyId, setMyopCompanyId] = useState(() => localStorage.getItem("labflow_myop_company_id") ?? "");
+  const [myopPhoneNumberId, setMyopPhoneNumberId] = useState(() => localStorage.getItem("labflow_myop_phone_number_id") ?? "");
+  const [myopWabaId, setMyopWabaId] = useState(() => localStorage.getItem("labflow_myop_waba_id") ?? "");
+  const [myopTemplate, setMyopTemplate] = useState(() => localStorage.getItem("labflow_myop_template") ?? "copy_labflow");
+  const [myopLanguage, setMyopLanguage] = useState(() => localStorage.getItem("labflow_myop_language") ?? "en");
 
   const handleSaveEmailSettings = async () => {
     setLoading(true);
