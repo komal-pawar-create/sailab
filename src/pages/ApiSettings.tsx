@@ -124,6 +124,52 @@ export default function ApiSettings() {
     }
   };
 
+  const handleSendTestWhatsapp = async () => {
+    if (!testPhone || testPhone.replace(/[^0-9]/g, "").length < 10) {
+      toast.error("Enter a valid phone number (with or without +91)");
+      return;
+    }
+    setTestRunning(true);
+    setTestResponse("");
+    try {
+      const digits = testPhone.replace(/[^0-9]/g, "");
+      const phone = digits.length === 10 ? `91${digits}` : digits;
+      const params = [testFirstName || "Test", testTestName || "CBC", testLink || "https://labflow.mywebz.in/track/demo", testLabName || "LabFlow"];
+      const requestBody = {
+        to: phone,
+        templateName: myopTemplate || "copy_labflow",
+        languageCode: myopLanguage || "en",
+        params,
+        mode: testMode,
+      };
+      console.log("[ApiSettings] test WhatsApp request:", requestBody);
+      const { data, error } = await supabase.functions.invoke("send-myoperator-whatsapp", { body: requestBody });
+      const result = error
+        ? { invoke_error: error.message || String(error), data }
+        : data;
+      setTestResponse(JSON.stringify(result, null, 2));
+      if (error || !data?.success) {
+        toast.error("Test failed — see response panel below for details", { duration: 8000 });
+      } else {
+        toast.success(testMode === "test" ? "Payload assembled (test mode — not sent)" : "Test message sent successfully");
+      }
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      setTestResponse(JSON.stringify({ exception: msg }, null, 2));
+      toast.error(`Test failed: ${msg}`, { duration: 8000 });
+    } finally {
+      setTestRunning(false);
+    }
+  };
+
+  const SavedBadge = ({ k }: { k: string }) =>
+    savedAt[k] ? (
+      <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-md px-3 py-2">
+        <CheckCircle2 className="w-4 h-4" />
+        <span>Saved at {savedAt[k]} — these IDs are stored locally for reference only. The edge function uses Lovable Cloud secrets.</span>
+      </div>
+    ) : null;
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
