@@ -329,7 +329,7 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
+                                  className="text-green-600 dark:text-green-500 hover:bg-accent"
                                   disabled={!latestBillId || !patientPhone || sending}
                                   onClick={() => setShareTarget({ testName: report.test_type })}
                                 >
