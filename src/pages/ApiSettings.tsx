@@ -244,6 +244,7 @@ export default function ApiSettings() {
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save Email Settings
               </Button>
+              <SavedBadge k="email" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -298,6 +299,7 @@ export default function ApiSettings() {
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save SMS Settings
               </Button>
+              <SavedBadge k="sms" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -346,6 +348,7 @@ export default function ApiSettings() {
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save WhatsApp Settings
               </Button>
+              <SavedBadge k="whatsapp" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -418,6 +421,96 @@ export default function ApiSettings() {
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save MyOperator Settings
               </Button>
+              <SavedBadge k="myop" />
+
+              <Separator className="my-2" />
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <FlaskConical className="w-4 h-4 text-primary" />
+                  <h3 className="font-semibold">Send Test WhatsApp</h3>
+                  <Badge variant="secondary">Diagnostic</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Sends to the MyOperator API using the <code>copy_labflow</code> template (or whatever you set above).
+                  Use <strong>Test mode</strong> first to inspect the assembled payload without actually sending.
+                </p>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="test-phone">Phone Number *</Label>
+                    <Input
+                      id="test-phone"
+                      placeholder="+91 98765 43210"
+                      value={testPhone}
+                      onChange={(e) => setTestPhone(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="test-firstname">{`{{1}} First name`}</Label>
+                    <Input
+                      id="test-firstname"
+                      value={testFirstName}
+                      onChange={(e) => setTestFirstName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="test-testname">{`{{2}} Test / report name`}</Label>
+                    <Input
+                      id="test-testname"
+                      value={testTestName}
+                      onChange={(e) => setTestTestName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="test-link">{`{{3}} Tracking link`}</Label>
+                    <Input
+                      id="test-link"
+                      value={testLink}
+                      onChange={(e) => setTestLink(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="test-labname">{`{{4}} Lab name`}</Label>
+                    <Input
+                      id="test-labname"
+                      value={testLabName}
+                      onChange={(e) => setTestLabName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant={testMode === "test" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTestMode("test")}
+                  >
+                    Test mode (no send)
+                  </Button>
+                  <Button
+                    variant={testMode === "send" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTestMode("send")}
+                  >
+                    Live send
+                  </Button>
+                  <div className="flex-1" />
+                  <Button onClick={handleSendTestWhatsapp} disabled={testRunning}>
+                    {testRunning && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    {testMode === "test" ? "Assemble payload" : "Send test message"}
+                  </Button>
+                </div>
+
+                {testResponse && (
+                  <div className="space-y-2">
+                    <Label>API Response</Label>
+                    <pre className="text-xs bg-muted/40 border rounded-md p-3 overflow-auto max-h-[400px] whitespace-pre-wrap break-all">
+                      {testResponse}
+                    </pre>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
