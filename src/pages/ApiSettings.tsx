@@ -83,6 +83,24 @@ export default function ApiSettings() {
     }
   };
 
+  const handleSaveMyopSettings = () => {
+    setLoading(true);
+    try {
+      localStorage.setItem("labflow_myop_company_id", myopCompanyId);
+      localStorage.setItem("labflow_myop_phone_number_id", myopPhoneNumberId);
+      localStorage.setItem("labflow_myop_waba_id", myopWabaId);
+      localStorage.setItem("labflow_myop_template", myopTemplate);
+      localStorage.setItem("labflow_myop_language", myopLanguage);
+      toast.success(
+        "MyOperator settings saved. Make sure MYOPERATOR_TOKEN, MYOPERATOR_COMPANY_ID, MYOPERATOR_PHONE_NUMBER_ID are set in Lovable Cloud secrets."
+      );
+    } catch {
+      toast.error("Failed to save MyOperator settings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
@@ -93,7 +111,7 @@ export default function ApiSettings() {
       </div>
 
       <Tabs defaultValue="email" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="email">
             <Mail className="w-4 h-4 mr-2" />
             Email (Resend)
@@ -105,6 +123,10 @@ export default function ApiSettings() {
           <TabsTrigger value="whatsapp">
             <MessageSquare className="w-4 h-4 mr-2" />
             WhatsApp
+          </TabsTrigger>
+          <TabsTrigger value="myop">
+            <MessageCircle className="w-4 h-4 mr-2" />
+            MyOperator
           </TabsTrigger>
         </TabsList>
 
