@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function ApiSettings() {
   const [loading, setLoading] = useState(false);
+  const [savedAt, setSavedAt] = useState<Record<string, string>>({});
 
   // Email (Resend) Settings
   const [resendApiKey, setResendApiKey] = useState("");
@@ -35,6 +36,21 @@ export default function ApiSettings() {
   const [myopWabaId, setMyopWabaId] = useState(() => localStorage.getItem("labflow_myop_waba_id") ?? "");
   const [myopTemplate, setMyopTemplate] = useState(() => localStorage.getItem("labflow_myop_template") ?? "copy_labflow");
   const [myopLanguage, setMyopLanguage] = useState(() => localStorage.getItem("labflow_myop_language") ?? "en");
+
+  // Test WhatsApp state
+  const [testPhone, setTestPhone] = useState("");
+  const [testFirstName, setTestFirstName] = useState("Test");
+  const [testTestName, setTestTestName] = useState("CBC");
+  const [testLink, setTestLink] = useState("https://labflow.mywebz.in/track/demo");
+  const [testLabName, setTestLabName] = useState("LabFlow");
+  const [testMode, setTestMode] = useState<"test" | "send">("test");
+  const [testRunning, setTestRunning] = useState(false);
+  const [testResponse, setTestResponse] = useState<string>("");
+
+  const stamp = (key: string) => {
+    const t = new Date().toLocaleTimeString();
+    setSavedAt((prev) => ({ ...prev, [key]: t }));
+  };
 
   const handleSaveEmailSettings = async () => {
     setLoading(true);
