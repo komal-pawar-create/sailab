@@ -78,7 +78,7 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [testsRes, docsRes] = await Promise.all([
+      const [testsRes, docsRes, billRes, patientRes] = await Promise.all([
         supabase
           .from("test_reports")
           .select("*")
@@ -89,10 +89,37 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
           .select("*")
           .eq("patient_id", patientId)
           .order("created_at", { ascending: false }),
+        supabase
+          .from("bills")
+          .select("id")
+          .eq("patient_id", patientId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("patients")
+          .select("phone")
+          .eq("id", patientId)
+          .maybeSingle(),
       ]);
 
       setTestReports(testsRes.data || []);
       setDocuments(docsRes.data || []);
+      setLatestBillId(billRes.data?.id ?? null);
+      setPatientPhone(patientRes.data?.phone ?? null);
+
+      // Resolve a friendly lab/branch name for the WhatsApp template
+      if (profile?.branch_id || profile?.lab_id) {
+        const [branchRes, labRes] = await Promise.all([
+          profile?.branch_id
+            ? supabase.from("branches").select("name").eq("id", profile.branch_id).maybeSingle()
+            : Promise.resolve({ data: null } as any),
+          profile?.lab_id
+            ? supabase.from("labs").select("name").eq("id", profile.lab_id).maybeSingle()
+            : Promise.resolve({ data: null } as any),
+        ]);
+        setLabName(branchRes.data?.name || labRes.data?.name || "");
+      }
 
       // Fetch templates for documents
       if (docsRes.data && docsRes.data.length > 0) {
@@ -119,6 +146,18 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSendWhatsApp = async (testName: string) => {
+    if (!latestBillId) return;
+    await sendReportLink({
+      patientPhone,
+      patientName: patientName || "Patient",
+      testName,
+      billId: latestBillId,
+      labName,
+    });
+    setShareTarget(null);
   };
 
   const downloadTestReport = async (report: TestReport) => {
