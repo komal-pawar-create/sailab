@@ -57,7 +57,7 @@ interface PatientReportsTabProps {
   doctorPhone?: string;
 }
 
-export default function PatientReportsTab({ patientId, patientName, doctorPhone }: PatientReportsTabProps) {
+export default function PatientReportsTab({ patientId, patientName }: PatientReportsTabProps) {
   const [testReports, setTestReports] = useState<TestReport[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [templates, setTemplates] = useState<Record<string, DocumentTemplate>>({});
@@ -408,6 +408,13 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
                           Generate Letterhead
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem
+                        disabled={!latestBillId || !patientPhone || sending}
+                        onClick={() => setShareTarget({ testName: doc.file_name })}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                        Send on WhatsApp
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -419,5 +426,36 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
         )}
       </TabsContent>
     </Tabs>
+
+    <AlertDialog open={!!shareTarget} onOpenChange={(o) => !o && setShareTarget(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Send report link on WhatsApp?</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="text-muted-foreground">To: </span>
+                <span className="font-medium text-foreground">
+                  {patientName || "Patient"} ({patientPhone || "—"})
+                </span>
+              </div>
+              <div className="rounded-md border bg-muted/40 p-3 whitespace-pre-line text-foreground">
+                {`Dear ${(patientName || "Patient").split(" ")[0]},\nYour ${shareTarget?.testName ?? ""} report is ready.\nAccess your report securely here:\nhttps://labflow.mywebz.in/track/${latestBillId ?? ""}\nPlease do not share this link with others for privacy reasons.\n${labName || "Your Lab"}\nThank you`}
+              </div>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={sending}
+            onClick={() => shareTarget && handleSendWhatsApp(shareTarget.testName)}
+          >
+            {sending ? "Sending…" : "Send WhatsApp"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
