@@ -60,6 +60,7 @@ export default function ApiSettings() {
       localStorage.setItem('resend_from_email', resendFromEmail);
       localStorage.setItem('resend_from_name', resendFromName);
       
+      stamp("email");
       toast.success("Email settings saved. Add RESEND_API_KEY to Supabase secrets for production use.");
       console.log('RESEND_API_KEY needed in Supabase secrets');
     } catch (error) {
@@ -77,6 +78,7 @@ export default function ApiSettings() {
       localStorage.setItem('sms_sender_id', smsSenderId);
       localStorage.setItem('sms_api_url', smsApiUrl);
       
+      stamp("sms");
       toast.success("SMS settings saved. Add SMS_API_KEY, SMS_API_URL, SMS_SENDER_ID, SMS_PROVIDER to Supabase secrets.");
       console.log('SMS secrets needed in Supabase:', { SMS_API_KEY: smsApiKey, SMS_API_URL: smsApiUrl, SMS_SENDER_ID: smsSenderId, SMS_PROVIDER: smsProvider });
     } catch (error) {
@@ -93,6 +95,7 @@ export default function ApiSettings() {
       localStorage.setItem('whatsapp_phone_number_id', whatsappPhoneNumberId);
       localStorage.setItem('whatsapp_business_account_id', whatsappBusinessAccountId);
       
+      stamp("whatsapp");
       toast.success("WhatsApp settings saved. Add WHATSAPP_API_KEY, WHATSAPP_PHONE_NUMBER_ID to Supabase secrets.");
       console.log('WhatsApp secrets needed in Supabase:', { WHATSAPP_API_KEY: whatsappApiKey, WHATSAPP_PHONE_NUMBER_ID: whatsappPhoneNumberId });
     } catch (error) {
@@ -110,6 +113,7 @@ export default function ApiSettings() {
       localStorage.setItem("labflow_myop_waba_id", myopWabaId);
       localStorage.setItem("labflow_myop_template", myopTemplate);
       localStorage.setItem("labflow_myop_language", myopLanguage);
+      stamp("myop");
       toast.success(
         "MyOperator settings saved. Make sure MYOPERATOR_TOKEN, MYOPERATOR_COMPANY_ID, MYOPERATOR_PHONE_NUMBER_ID are set in Lovable Cloud secrets."
       );
