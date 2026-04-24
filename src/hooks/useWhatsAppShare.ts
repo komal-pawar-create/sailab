@@ -24,6 +24,17 @@ export function useWhatsAppShare() {
     return digits.length === 10 ? `91${digits}` : digits;
   };
 
+  const formatError = (err: unknown): string => {
+    if (!err) return "Unknown error";
+    if (typeof err === "string") return err;
+    if (err instanceof Error) return err.message;
+    try {
+      return JSON.stringify(err, null, 2);
+    } catch {
+      return String(err);
+    }
+  };
+
   const sendReportLink = async ({
     patientPhone,
     patientName,
@@ -52,35 +63,35 @@ export function useWhatsAppShare() {
     const trackingUrl = buildTrackingUrl(billId);
     const params = [firstName, testName || "lab", trackingUrl, labName || "Your Lab"];
 
+    const requestBody = { to: phone, templateName, languageCode, params };
+    console.log("[useWhatsAppShare] invoking send-myoperator-whatsapp with:", requestBody);
+
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke(
         "send-myoperator-whatsapp",
-        {
-          body: { to: phone, templateName, languageCode, params },
-        }
+        { body: requestBody }
       );
+
+      console.log("[useWhatsAppShare] response:", { data, error });
 
       if (error) {
         console.error("WhatsApp send error:", error);
-        toast.error(error.message || "Failed to send WhatsApp message");
+        toast.error(`WhatsApp send failed: ${formatError(error)}`, { duration: 10000 });
         return { success: false, error };
       }
 
       if (!data?.success) {
-        const apiErr =
-          typeof data?.error === "string"
-            ? data.error
-            : data?.error?.message || JSON.stringify(data?.error || {});
-        toast.error(`WhatsApp send failed: ${apiErr}`);
-        return { success: false, error: apiErr };
+        const apiErr = formatError(data?.error ?? data);
+        toast.error(`WhatsApp send failed: ${apiErr}`, { duration: 10000 });
+        return { success: false, error: apiErr, raw: data };
       }
 
       toast.success(`WhatsApp sent to ${firstName}`);
       return { success: true, data };
     } catch (err: any) {
       console.error("WhatsApp send exception:", err);
-      toast.error(err.message || "Failed to send WhatsApp");
+      toast.error(`WhatsApp send failed: ${formatError(err)}`, { duration: 10000 });
       return { success: false, error: err };
     } finally {
       setSending(false);

@@ -4,11 +4,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Loader2, Mail, MessageSquare, Phone, MessageCircle } from "lucide-react";
+import { Loader2, Mail, MessageSquare, Phone, MessageCircle, CheckCircle2, FlaskConical } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ApiSettings() {
   const [loading, setLoading] = useState(false);
+  const [savedAt, setSavedAt] = useState<Record<string, string>>({});
 
   // Email (Resend) Settings
   const [resendApiKey, setResendApiKey] = useState("");
@@ -33,6 +37,21 @@ export default function ApiSettings() {
   const [myopTemplate, setMyopTemplate] = useState(() => localStorage.getItem("labflow_myop_template") ?? "copy_labflow");
   const [myopLanguage, setMyopLanguage] = useState(() => localStorage.getItem("labflow_myop_language") ?? "en");
 
+  // Test WhatsApp state
+  const [testPhone, setTestPhone] = useState("");
+  const [testFirstName, setTestFirstName] = useState("Test");
+  const [testTestName, setTestTestName] = useState("CBC");
+  const [testLink, setTestLink] = useState("https://labflow.mywebz.in/track/demo");
+  const [testLabName, setTestLabName] = useState("LabFlow");
+  const [testMode, setTestMode] = useState<"test" | "send">("test");
+  const [testRunning, setTestRunning] = useState(false);
+  const [testResponse, setTestResponse] = useState<string>("");
+
+  const stamp = (key: string) => {
+    const t = new Date().toLocaleTimeString();
+    setSavedAt((prev) => ({ ...prev, [key]: t }));
+  };
+
   const handleSaveEmailSettings = async () => {
     setLoading(true);
     try {
@@ -41,6 +60,7 @@ export default function ApiSettings() {
       localStorage.setItem('resend_from_email', resendFromEmail);
       localStorage.setItem('resend_from_name', resendFromName);
       
+      stamp("email");
       toast.success("Email settings saved. Add RESEND_API_KEY to Supabase secrets for production use.");
       console.log('RESEND_API_KEY needed in Supabase secrets');
     } catch (error) {
@@ -58,6 +78,7 @@ export default function ApiSettings() {
       localStorage.setItem('sms_sender_id', smsSenderId);
       localStorage.setItem('sms_api_url', smsApiUrl);
       
+      stamp("sms");
       toast.success("SMS settings saved. Add SMS_API_KEY, SMS_API_URL, SMS_SENDER_ID, SMS_PROVIDER to Supabase secrets.");
       console.log('SMS secrets needed in Supabase:', { SMS_API_KEY: smsApiKey, SMS_API_URL: smsApiUrl, SMS_SENDER_ID: smsSenderId, SMS_PROVIDER: smsProvider });
     } catch (error) {
@@ -74,6 +95,7 @@ export default function ApiSettings() {
       localStorage.setItem('whatsapp_phone_number_id', whatsappPhoneNumberId);
       localStorage.setItem('whatsapp_business_account_id', whatsappBusinessAccountId);
       
+      stamp("whatsapp");
       toast.success("WhatsApp settings saved. Add WHATSAPP_API_KEY, WHATSAPP_PHONE_NUMBER_ID to Supabase secrets.");
       console.log('WhatsApp secrets needed in Supabase:', { WHATSAPP_API_KEY: whatsappApiKey, WHATSAPP_PHONE_NUMBER_ID: whatsappPhoneNumberId });
     } catch (error) {
@@ -91,6 +113,7 @@ export default function ApiSettings() {
       localStorage.setItem("labflow_myop_waba_id", myopWabaId);
       localStorage.setItem("labflow_myop_template", myopTemplate);
       localStorage.setItem("labflow_myop_language", myopLanguage);
+      stamp("myop");
       toast.success(
         "MyOperator settings saved. Make sure MYOPERATOR_TOKEN, MYOPERATOR_COMPANY_ID, MYOPERATOR_PHONE_NUMBER_ID are set in Lovable Cloud secrets."
       );
@@ -100,6 +123,52 @@ export default function ApiSettings() {
       setLoading(false);
     }
   };
+
+  const handleSendTestWhatsapp = async () => {
+    if (!testPhone || testPhone.replace(/[^0-9]/g, "").length < 10) {
+      toast.error("Enter a valid phone number (with or without +91)");
+      return;
+    }
+    setTestRunning(true);
+    setTestResponse("");
+    try {
+      const digits = testPhone.replace(/[^0-9]/g, "");
+      const phone = digits.length === 10 ? `91${digits}` : digits;
+      const params = [testFirstName || "Test", testTestName || "CBC", testLink || "https://labflow.mywebz.in/track/demo", testLabName || "LabFlow"];
+      const requestBody = {
+        to: phone,
+        templateName: myopTemplate || "copy_labflow",
+        languageCode: myopLanguage || "en",
+        params,
+        mode: testMode,
+      };
+      console.log("[ApiSettings] test WhatsApp request:", requestBody);
+      const { data, error } = await supabase.functions.invoke("send-myoperator-whatsapp", { body: requestBody });
+      const result = error
+        ? { invoke_error: error.message || String(error), data }
+        : data;
+      setTestResponse(JSON.stringify(result, null, 2));
+      if (error || !data?.success) {
+        toast.error("Test failed — see response panel below for details", { duration: 8000 });
+      } else {
+        toast.success(testMode === "test" ? "Payload assembled (test mode — not sent)" : "Test message sent successfully");
+      }
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      setTestResponse(JSON.stringify({ exception: msg }, null, 2));
+      toast.error(`Test failed: ${msg}`, { duration: 8000 });
+    } finally {
+      setTestRunning(false);
+    }
+  };
+
+  const SavedBadge = ({ k }: { k: string }) =>
+    savedAt[k] ? (
+      <div className="flex items-center gap-2 text-sm text-primary bg-primary/10 border border-primary/20 rounded-md px-3 py-2">
+        <CheckCircle2 className="w-4 h-4" />
+        <span>Saved at {savedAt[k]} — these IDs are stored locally for reference only. The edge function uses Lovable Cloud secrets.</span>
+      </div>
+    ) : null;
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -175,6 +244,7 @@ export default function ApiSettings() {
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save Email Settings
               </Button>
+              <SavedBadge k="email" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -229,6 +299,7 @@ export default function ApiSettings() {
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save SMS Settings
               </Button>
+              <SavedBadge k="sms" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -277,6 +348,7 @@ export default function ApiSettings() {
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save WhatsApp Settings
               </Button>
+              <SavedBadge k="whatsapp" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -349,6 +421,96 @@ export default function ApiSettings() {
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save MyOperator Settings
               </Button>
+              <SavedBadge k="myop" />
+
+              <Separator className="my-2" />
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <FlaskConical className="w-4 h-4 text-primary" />
+                  <h3 className="font-semibold">Send Test WhatsApp</h3>
+                  <Badge variant="secondary">Diagnostic</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Sends to the MyOperator API using the <code>copy_labflow</code> template (or whatever you set above).
+                  Use <strong>Test mode</strong> first to inspect the assembled payload without actually sending.
+                </p>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="test-phone">Phone Number *</Label>
+                    <Input
+                      id="test-phone"
+                      placeholder="+91 98765 43210"
+                      value={testPhone}
+                      onChange={(e) => setTestPhone(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="test-firstname">{`{{1}} First name`}</Label>
+                    <Input
+                      id="test-firstname"
+                      value={testFirstName}
+                      onChange={(e) => setTestFirstName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="test-testname">{`{{2}} Test / report name`}</Label>
+                    <Input
+                      id="test-testname"
+                      value={testTestName}
+                      onChange={(e) => setTestTestName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="test-link">{`{{3}} Tracking link`}</Label>
+                    <Input
+                      id="test-link"
+                      value={testLink}
+                      onChange={(e) => setTestLink(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="test-labname">{`{{4}} Lab name`}</Label>
+                    <Input
+                      id="test-labname"
+                      value={testLabName}
+                      onChange={(e) => setTestLabName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant={testMode === "test" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTestMode("test")}
+                  >
+                    Test mode (no send)
+                  </Button>
+                  <Button
+                    variant={testMode === "send" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTestMode("send")}
+                  >
+                    Live send
+                  </Button>
+                  <div className="flex-1" />
+                  <Button onClick={handleSendTestWhatsapp} disabled={testRunning}>
+                    {testRunning && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    {testMode === "test" ? "Assemble payload" : "Send test message"}
+                  </Button>
+                </div>
+
+                {testResponse && (
+                  <div className="space-y-2">
+                    <Label>API Response</Label>
+                    <pre className="text-xs bg-muted/40 border rounded-md p-3 overflow-auto max-h-[400px] whitespace-pre-wrap break-all">
+                      {testResponse}
+                    </pre>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
