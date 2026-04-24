@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Download, FileText, FileImage, File, Calendar, RefreshCw, Layers, Share, MessageCircle } from "lucide-react";
+import { Download, FileText, FileImage, File, RefreshCw, Layers, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import {
   DropdownMenu,
