@@ -4,8 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Loader2, Mail, MessageSquare, Phone, MessageCircle } from "lucide-react";
+import { Loader2, Mail, MessageSquare, Phone, MessageCircle, CheckCircle2, Send, FlaskConical } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ApiSettings() {
   const [loading, setLoading] = useState(false);
