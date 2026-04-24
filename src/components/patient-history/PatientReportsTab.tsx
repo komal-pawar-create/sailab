@@ -63,8 +63,13 @@ export default function PatientReportsTab({ patientId, patientName, doctorPhone 
   const [templates, setTemplates] = useState<Record<string, DocumentTemplate>>({});
   const [loading, setLoading] = useState(false);
   const [processingDocs, setProcessingDocs] = useState<Set<string>>(new Set());
+  const [latestBillId, setLatestBillId] = useState<string | null>(null);
+  const [patientPhone, setPatientPhone] = useState<string | null>(null);
+  const [labName, setLabName] = useState<string>("");
+  const [shareTarget, setShareTarget] = useState<{ testName: string } | null>(null);
   const { toast } = useToast();
   const { profile } = useAuth();
+  const { sending, sendReportLink } = useWhatsAppShare();
 
   useEffect(() => {
     fetchData();
