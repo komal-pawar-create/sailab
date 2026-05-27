@@ -1,5 +1,5 @@
 # LabFlow LIMS — Laboratory Information Management System
-# Last updated: 2026-03-29
+# Last updated: 2026-05-27
 
 > LabFlow is a cloud-based Laboratory Information Management System (LIMS) built for pathology labs, diagnostic centers, and medical laboratories across India.
 
@@ -90,6 +90,10 @@ https://labflow.mywebz.in
 ### Industry Research
 - Pathology Lab Industry Trends India 2026: https://labflow.mywebz.in/blog/pathology-lab-industry-trends-india-2026
 - AI and Machine Learning in Pathology Labs: https://labflow.mywebz.in/blog/ai-machine-learning-pathology-labs
+- AI-Powered Lab Report Generation in 2026: https://labflow.mywebz.in/blog/ai-lab-report-generation-2026
+- Generative AI in Pathology Diagnostics: https://labflow.mywebz.in/blog/generative-ai-pathology-diagnostics
+- Lab Industry Trends 2026 (AI, ABDM, DPDPA): https://labflow.mywebz.in/blog/lab-industry-trends-2026
+- AI Chatbots for Patient Communication in Labs: https://labflow.mywebz.in/blog/ai-chatbot-patient-communication-labs
 
 ### Patient Awareness
 - Understanding Your Lab Reports — A Patient's Guide: https://labflow.mywebz.in/blog/patient-guide-understanding-lab-reports
