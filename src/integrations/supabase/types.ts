@@ -320,43 +320,49 @@ export type Database = {
           bill_id: string
           branch_id: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           id: string
           is_refund: boolean | null
           notes: string | null
+          offline_id: string | null
           payment_amount: number
           payment_date: string
           payment_method: string
           reference_number: string | null
           refund_reason: string | null
+          source: string | null
         }
         Insert: {
           bill_id: string
           branch_id?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           id?: string
           is_refund?: boolean | null
           notes?: string | null
+          offline_id?: string | null
           payment_amount: number
           payment_date?: string
           payment_method?: string
           reference_number?: string | null
           refund_reason?: string | null
+          source?: string | null
         }
         Update: {
           bill_id?: string
           branch_id?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           id?: string
           is_refund?: boolean | null
           notes?: string | null
+          offline_id?: string | null
           payment_amount?: number
           payment_date?: string
           payment_method?: string
           reference_number?: string | null
           refund_reason?: string | null
+          source?: string | null
         }
         Relationships: [
           {
@@ -388,7 +394,7 @@ export type Database = {
           bill_number: string
           branch_id: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           discount_amount: number | null
           discount_type: string | null
           due_amount: number
@@ -397,8 +403,10 @@ export type Database = {
           items: Json
           lab_id: string
           notes: string | null
+          offline_id: string | null
           paid_amount: number | null
           patient_id: string
+          source: string | null
           status: string
           total_amount: number
           updated_at: string
@@ -408,7 +416,7 @@ export type Database = {
           bill_number: string
           branch_id?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           discount_amount?: number | null
           discount_type?: string | null
           due_amount: number
@@ -417,8 +425,10 @@ export type Database = {
           items?: Json
           lab_id: string
           notes?: string | null
+          offline_id?: string | null
           paid_amount?: number | null
           patient_id: string
+          source?: string | null
           status?: string
           total_amount: number
           updated_at?: string
@@ -428,7 +438,7 @@ export type Database = {
           bill_number?: string
           branch_id?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           discount_amount?: number | null
           discount_type?: string | null
           due_amount?: number
@@ -437,8 +447,10 @@ export type Database = {
           items?: Json
           lab_id?: string
           notes?: string | null
+          offline_id?: string | null
           paid_amount?: number | null
           patient_id?: string
+          source?: string | null
           status?: string
           total_amount?: number
           updated_at?: string
@@ -651,8 +663,10 @@ export type Database = {
           doctor_id: string
           id: string
           lab_id: string
+          offline_id: string | null
           patient_id: string
           settled_in_settlement_id: string | null
+          source: string | null
           status: string | null
         }
         Insert: {
@@ -665,8 +679,10 @@ export type Database = {
           doctor_id: string
           id?: string
           lab_id: string
+          offline_id?: string | null
           patient_id: string
           settled_in_settlement_id?: string | null
+          source?: string | null
           status?: string | null
         }
         Update: {
@@ -679,8 +695,10 @@ export type Database = {
           doctor_id?: string
           id?: string
           lab_id?: string
+          offline_id?: string | null
           patient_id?: string
           settled_in_settlement_id?: string | null
+          source?: string | null
           status?: string | null
         }
         Relationships: [
@@ -2015,17 +2033,19 @@ export type Database = {
           age_in_months: number | null
           branch_id: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           full_name: string
           gender: string | null
           id: string
           lab_id: string
+          offline_id: string | null
           patient_history: string | null
           patient_id: string
           phone: string
           referred_by_doctor_name: string | null
           referred_by_doctor_phone: string | null
           referring_doctor_id: string | null
+          source: string | null
           updated_at: string
         }
         Insert: {
@@ -2033,17 +2053,19 @@ export type Database = {
           age_in_months?: number | null
           branch_id?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           full_name: string
           gender?: string | null
           id?: string
           lab_id: string
+          offline_id?: string | null
           patient_history?: string | null
           patient_id: string
           phone: string
           referred_by_doctor_name?: string | null
           referred_by_doctor_phone?: string | null
           referring_doctor_id?: string | null
+          source?: string | null
           updated_at?: string
         }
         Update: {
@@ -2051,17 +2073,19 @@ export type Database = {
           age_in_months?: number | null
           branch_id?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           full_name?: string
           gender?: string | null
           id?: string
           lab_id?: string
+          offline_id?: string | null
           patient_history?: string | null
           patient_id?: string
           phone?: string
           referred_by_doctor_name?: string | null
           referred_by_doctor_phone?: string | null
           referring_doctor_id?: string | null
+          source?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2164,7 +2188,9 @@ export type Database = {
           id: string
           is_active: boolean | null
           lab_id: string
+          offline_id: string | null
           phone: string | null
+          source: string | null
           specialization: string | null
         }
         Insert: {
@@ -2179,7 +2205,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           lab_id: string
+          offline_id?: string | null
           phone?: string | null
+          source?: string | null
           specialization?: string | null
         }
         Update: {
@@ -2194,7 +2222,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           lab_id?: string
+          offline_id?: string | null
           phone?: string | null
+          source?: string | null
           specialization?: string | null
         }
         Relationships: [
@@ -2419,6 +2449,95 @@ export type Database = {
           },
         ]
       }
+      sync_history: {
+        Row: {
+          branch_id: string
+          direction: string
+          duration_ms: number | null
+          error: string | null
+          id: string
+          records_count: number
+          status: string
+          synced_at: string
+        }
+        Insert: {
+          branch_id: string
+          direction: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          records_count?: number
+          status?: string
+          synced_at?: string
+        }
+        Update: {
+          branch_id?: string
+          direction?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          records_count?: number
+          status?: string
+          synced_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_history_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sync_tokens: {
+        Row: {
+          branch_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          lab_id: string
+          last_sync_at: string | null
+          machine_id: string | null
+          token_hash: string
+        }
+        Insert: {
+          branch_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lab_id: string
+          last_sync_at?: string | null
+          machine_id?: string | null
+          token_hash: string
+        }
+        Update: {
+          branch_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lab_id?: string
+          last_sync_at?: string | null
+          machine_id?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_tokens_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sync_tokens_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_health: {
         Row: {
           id: string
@@ -2459,42 +2578,66 @@ export type Database = {
       }
       test_reports: {
         Row: {
+          bill_id: string | null
+          body_part: string | null
           branch_id: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
+          department: string | null
           id: string
           lab_id: string
+          modality: string | null
+          offline_id: string | null
           patient_id: string
+          referring_doctor_id: string | null
           results: Json | null
+          source: string | null
           status: string
+          study_notes: string | null
           technician_name: string | null
           test_date: string
           test_type: string
           updated_at: string
         }
         Insert: {
+          bill_id?: string | null
+          body_part?: string | null
           branch_id?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
+          department?: string | null
           id?: string
           lab_id: string
+          modality?: string | null
+          offline_id?: string | null
           patient_id: string
+          referring_doctor_id?: string | null
           results?: Json | null
+          source?: string | null
           status?: string
+          study_notes?: string | null
           technician_name?: string | null
           test_date: string
           test_type: string
           updated_at?: string
         }
         Update: {
+          bill_id?: string | null
+          body_part?: string | null
           branch_id?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
+          department?: string | null
           id?: string
           lab_id?: string
+          modality?: string | null
+          offline_id?: string | null
           patient_id?: string
+          referring_doctor_id?: string | null
           results?: Json | null
+          source?: string | null
           status?: string
+          study_notes?: string | null
           technician_name?: string | null
           test_date?: string
           test_type?: string
@@ -2506,6 +2649,13 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_reports_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
             referencedColumns: ["id"]
           },
           {
@@ -2522,33 +2672,55 @@ export type Database = {
             referencedRelation: "patients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "test_reports_referring_doctor_id_fkey"
+            columns: ["referring_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "referring_doctors"
+            referencedColumns: ["id"]
+          },
         ]
       }
       test_types: {
         Row: {
           branch_id: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
+          department: string | null
           id: string
+          is_active: boolean | null
           lab_id: string
+          offline_id: string | null
+          price: number | null
+          source: string | null
           test_name: string
           updated_at: string
         }
         Insert: {
           branch_id?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
+          department?: string | null
           id?: string
+          is_active?: boolean | null
           lab_id: string
+          offline_id?: string | null
+          price?: number | null
+          source?: string | null
           test_name: string
           updated_at?: string
         }
         Update: {
           branch_id?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
+          department?: string | null
           id?: string
+          is_active?: boolean | null
           lab_id?: string
+          offline_id?: string | null
+          price?: number | null
+          source?: string | null
           test_name?: string
           updated_at?: string
         }
