@@ -59,6 +59,10 @@ const PatientGuideLabReports = React.lazy(() => import("./pages/blog/PatientGuid
 const LabTestPricing = React.lazy(() => import("./pages/blog/LabTestPricing"));
 const PreventiveHealthCheckups = React.lazy(() => import("./pages/blog/PreventiveHealthCheckups"));
 const LabQualityControl = React.lazy(() => import("./pages/blog/LabQualityControl"));
+const AiLabReportGeneration = React.lazy(() => import("./pages/blog/AiLabReportGeneration"));
+const GenerativeAiPathology = React.lazy(() => import("./pages/blog/GenerativeAiPathology"));
+const LabIndustryTrends2026 = React.lazy(() => import("./pages/blog/LabIndustryTrends2026"));
+const AiChatbotPatientComms = React.lazy(() => import("./pages/blog/AiChatbotPatientComms"));
 const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
 const RefundPolicy = React.lazy(() => import("./pages/RefundPolicy"));
@@ -176,6 +180,10 @@ const AppContent = () => {
           <Route path="/blog/why-lab-tests-cost-different-prices" element={<LabTestPricing />} />
           <Route path="/blog/preventive-health-checkup-guide-india" element={<PreventiveHealthCheckups />} />
           <Route path="/blog/lab-quality-control-best-practices" element={<LabQualityControl />} />
+          <Route path="/blog/ai-lab-report-generation-2026" element={<AiLabReportGeneration />} />
+          <Route path="/blog/generative-ai-pathology-diagnostics" element={<GenerativeAiPathology />} />
+          <Route path="/blog/lab-industry-trends-2026" element={<LabIndustryTrends2026 />} />
+          <Route path="/blog/ai-chatbot-patient-communication-labs" element={<AiChatbotPatientComms />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />

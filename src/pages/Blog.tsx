@@ -101,6 +101,20 @@ const Blog = () => {
           )}
         </div>
 
+        {/* Latest highlight strip — AI & 2026 trends */}
+        <div className="mb-10 rounded-xl border border-primary/20 bg-primary/5 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Badge variant="default" className="text-xs">New</Badge>
+            <h2 className="text-sm font-semibold text-foreground">Latest: AI & 2026 Lab Industry Updates</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/blog/lab-industry-trends-2026" className="text-sm px-3 py-1.5 rounded-full bg-background border border-border hover:border-primary hover:text-primary transition-colors">Lab Industry Trends 2026</Link>
+            <Link to="/blog/ai-lab-report-generation-2026" className="text-sm px-3 py-1.5 rounded-full bg-background border border-border hover:border-primary hover:text-primary transition-colors">AI Lab Report Generation</Link>
+            <Link to="/blog/generative-ai-pathology-diagnostics" className="text-sm px-3 py-1.5 rounded-full bg-background border border-border hover:border-primary hover:text-primary transition-colors">Generative AI in Pathology</Link>
+            <Link to="/blog/ai-chatbot-patient-communication-labs" className="text-sm px-3 py-1.5 rounded-full bg-background border border-border hover:border-primary hover:text-primary transition-colors">AI Chatbots for Patients</Link>
+          </div>
+        </div>
+
         {/* Search bar */}
         <div className="relative max-w-md mx-auto mb-8">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
