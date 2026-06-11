@@ -84,6 +84,17 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
               <ChevronDown className="h-5 w-5" aria-hidden="true" />
             </Link>
           </Button>
+          <Button variant="secondary" size="lg" className="text-lg px-8 py-6 active:scale-95 transition-transform" asChild>
+            <a
+              href="https://drive.google.com/file/d/1VrD7E_qylICeyVJ8QRFo5KmkY6UgcWhm/view?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2"
+            >
+              Download Labflow
+              <Download className="h-5 w-5" aria-hidden="true" />
+            </a>
+          </Button>
         </div>
 
         {/* Trust signals */}
