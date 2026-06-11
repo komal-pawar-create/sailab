@@ -1,61 +1,47 @@
-
-# Plan: New AI + Industry-Updates Blog Posts & SEO Boost
-
 ## Goal
-Publish 4 fresh, SEO-optimized blog posts focused on **AI in labs** and **2026 lab industry updates**, then strengthen on-site SEO signals so they index and rank faster.
+Replace the hand-maintained `public/sitemap.xml` with a generator script that derives entries from the route table + `src/lib/blogData.ts`, so adding a blog post automatically updates the sitemap on next dev/build.
 
-## New Blog Posts (4)
+## Approach
 
-| # | Slug | Title (target keyword) | Cluster |
-|---|------|------------------------|---------|
-| 1 | `ai-lab-report-generation-2026` | AI-Powered Lab Report Generation: How Indian Labs Use It in 2026 | lab-reports |
-| 2 | `generative-ai-pathology-diagnostics` | Generative AI in Pathology Diagnostics: Use Cases, Accuracy & ROI | lab-management |
-| 3 | `lab-industry-trends-2026` | Lab Industry Trends 2026: AI, NABH Digital Health, ABDM & What's Next | lab-management |
-| 4 | `ai-chatbot-patient-communication-labs` | AI Chatbots for Patient Communication in Diagnostic Labs | lab-management |
+### 1. New generator: `scripts/generate-sitemap.ts`
+- `BASE_URL = "https://labflow.mywebz.in"`
+- Static public entries (non auth-gated, derived from `src/App.tsx` routes):
+  - `/` (priority 1.0, weekly)
+  - `/product-tour` (0.9, weekly)
+  - `/blog` (0.9, weekly)
+  - `/auth`, `/forgot-password` (0.4–0.7, monthly)
+  - `/feedback` (0.6, weekly)
+  - `/privacy-policy`, `/terms-of-service`, `/refund-policy` (0.5, monthly)
+- Dynamic blog entries: import `blogPosts` from `src/lib/blogData.ts` and emit one `<url>` per post at `/blog/{slug}` (priority 0.8, monthly, `lastmod` from each post's `updatedAt`/`publishedAt` or today).
+- Exclude auth-gated / internal routes: `/dashboard`, `/super-admin`, `/analytics`, `/reports`, `/followups`, `/patient-history`, `/branch-settings`, `/lab-profile`, `/api-settings`, `/audit-logs`, `/data-management`, `/outstanding-report`, `/sales-leads`, `/track/:billId`, `*`. (Already blocked in `robots.txt`.)
+- Writes `public/sitemap.xml` (served at `https://labflow.mywebz.in/sitemap.xml`, also copied into `dist/` on build).
 
-Each post (~1200-1500 words) will include:
-- Proper H1/H2/H3 hierarchy, TOC, internal links to existing posts (LIMS, digitize, turnaround time, AI in pathology, WhatsApp reports, NABL, data security)
-- BlogCTA, related-posts grid, Article + Breadcrumb JSON-LD (via existing `BlogLayout`)
-- Indian context (ABDM, NDHM, DPDPA 2023, NABL/NABH), real workflow examples
-- 4-6 long-tail keywords each
+### 2. Wire it up in `package.json`
+Add:
+- `"predev": "bunx tsx scripts/generate-sitemap.ts"`
+- `"prebuild": "bunx tsx scripts/generate-sitemap.ts"`
 
-## Wiring (per post)
-- Add entry to `src/lib/blogData.ts` (with cluster + keywords + dates)
-- Create `src/pages/blog/<Name>.tsx` mirroring `AiInPathologyLabs.tsx` structure
-- Register `React.lazy` import + `<Route>` in `src/App.tsx`
-- Add `<url>` entry in `public/sitemap.xml` with current `lastmod`
+So the sitemap regenerates automatically before every `vite dev` and `vite build` — adding a new post to `blogData.ts` is the only step needed.
 
-## SEO Improvements
+### 3. `robots.txt`
+Already correct — has `Sitemap: https://labflow.mywebz.in/sitemap.xml` and disallows all internal routes. No change.
 
-1. **Sitemap freshness** — bump `<lastmod>` on the blog index + add 4 new URLs.
-2. **Internal linking** — add contextual links from existing AI/LIMS posts → the 4 new ones (and vice-versa) so they're crawl-discoverable from day 1.
-3. **`public/llms.txt` + `llms-full.txt`** — append the new article titles + URLs so AI search engines (Perplexity, ChatGPT, etc.) can discover them.
-4. **IndexNow ping** — no code change needed; user can click the existing "Notify Search Engines" button on `/blog` after publish (already implemented).
-5. **Blog index hero** — add a short "Latest: AI & 2026 Trends" highlight strip above the cluster filters linking to the 4 new posts, improving CTR + crawl depth.
-6. **Trigger an SEO scan** at the end so any regressions (missing meta, duplicate H1s, etc.) surface in the SEO panel.
-
-## Out of Scope
-- New OG images (existing posts reuse the brand image; we'll do the same — no placeholder generation)
-- Backend / RLS / functions changes
-- Changes to existing blog post bodies beyond adding 1-2 internal links each
+### 4. Delete the static `public/sitemap.xml`
+The generator will recreate it on next dev/build. (Vite serves `public/` as-is, and `predev` runs before the dev server starts, so there's no window where it's missing.)
 
 ## Files Changed
-
 | File | Change |
 |------|--------|
-| `src/lib/blogData.ts` | +4 post entries |
-| `src/pages/blog/AiLabReportGeneration.tsx` | NEW |
-| `src/pages/blog/GenerativeAiPathology.tsx` | NEW |
-| `src/pages/blog/LabIndustryTrends2026.tsx` | NEW |
-| `src/pages/blog/AiChatbotPatientComms.tsx` | NEW |
-| `src/App.tsx` | 4 lazy imports + 4 routes |
-| `public/sitemap.xml` | +4 URLs, bumped lastmod |
-| `public/llms.txt`, `public/llms-full.txt` | Append new posts |
-| `src/pages/Blog.tsx` | "Latest" highlight strip |
-| `src/pages/blog/AiInPathologyLabs.tsx` | 1-2 internal links to new AI posts |
+| `scripts/generate-sitemap.ts` | NEW — generator |
+| `package.json` | +`predev`, +`prebuild` hooks |
+| `public/sitemap.xml` | Regenerated by script (no longer hand-edited) |
+
+## Out of Scope
+- Image sitemap entries (the current file has one for the logo — dropping it; can re-add if requested)
+- Hreflang alternates for hi/mr locales (separate task)
+- Submitting the sitemap to Search Console / IndexNow ping on build
 
 ## Verify
-- `/blog` shows 4 new cards under their clusters + highlight strip
-- Each new URL renders with proper title/meta/JSON-LD (Helmet via BlogLayout)
-- Sitemap validates
-- SEO scan returns 0 new failing findings
+- Run dev → confirm `public/sitemap.xml` regenerates and contains all 26 blog slugs from `blogData.ts` + the 9 public static routes.
+- Add a dummy entry to `blogData.ts` → restart dev → confirm it appears in the sitemap.
+- Visit `/sitemap.xml` in preview → valid XML, no auth-gated routes leak in.
