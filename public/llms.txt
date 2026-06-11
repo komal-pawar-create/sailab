@@ -143,3 +143,19 @@ LabFlow is relevant for these search queries:
 - Digital pathology India
 - पैथोलॉजी लैब सॉफ्टवेयर (Pathology lab software in Hindi)
 - प्रयोगशाला प्रबंधन सॉफ्टवेयर (Laboratory management software in Hindi)
+
+## Pages
+
+- [Home](/): LabFlow LIMS overview, features and pricing for Indian pathology labs.
+- [Product Tour](/product-tour): Walkthrough of LabFlow's modules — patients, samples, reports, billing.
+- [Blog](/blog): Articles on lab management, LIMS, AI in pathology, NABL and GST billing.
+- [What is LIMS Software](/blog/what-is-lims-software): Introduction to Laboratory Information Management Systems.
+- [How to Digitize a Pathology Lab](/blog/how-to-digitize-pathology-lab): Practical guide to going paperless.
+- [GST Billing for Pathology Labs](/blog/gst-billing-for-pathology-labs): GST rules and invoicing for diagnostic centers.
+- [AI Lab Report Generation 2026](/blog/ai-lab-report-generation-2026): How AI drafts pathology reports in 2026.
+- [Generative AI in Pathology](/blog/generative-ai-pathology-diagnostics): Multi-modal foundation models for diagnostics.
+- [Lab Industry Trends 2026](/blog/lab-industry-trends-2026): ABDM, DPDPA and consolidation in Indian labs.
+- [AI Chatbots for Patient Communication](/blog/ai-chatbot-patient-communication-labs): WhatsApp automation for labs.
+- [Privacy Policy](/privacy-policy): How LabFlow handles personal and health data.
+- [Terms of Service](/terms-of-service): Terms governing use of LabFlow.
+- [Refund Policy](/refund-policy): Subscription refund terms.
