@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, ChevronDown, Building2, FileText, Activity, Headphones, ShieldCheck, CreditCard, Clock } from 'lucide-react';
+import { Sparkles, ArrowRight, ChevronDown, Building2, FileText, Activity, Headphones, ShieldCheck, CreditCard, Clock, Download } from 'lucide-react';
 import { AnimatedCounter } from './shared';
 import type { HeroContent, StatItem } from './types';
 import dashboardScreenshot from '@/assets/screenshots/dashboard-overview.png';
@@ -83,6 +83,17 @@ const HeroSection = ({ heroContent, stats, scrollY }: HeroSectionProps) => {
               {t('hero.seeHow')}
               <ChevronDown className="h-5 w-5" aria-hidden="true" />
             </Link>
+          </Button>
+          <Button variant="secondary" size="lg" className="text-lg px-8 py-6 active:scale-95 transition-transform" asChild>
+            <a
+              href="https://drive.google.com/file/d/1VrD7E_qylICeyVJ8QRFo5KmkY6UgcWhm/view?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2"
+            >
+              Download Labflow
+              <Download className="h-5 w-5" aria-hidden="true" />
+            </a>
           </Button>
         </div>
 
