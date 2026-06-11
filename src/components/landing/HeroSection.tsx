@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, ChevronDown, Building2, FileText, Activity, Headphones, ShieldCheck, CreditCard, Clock } from 'lucide-react';
+import { Sparkles, ArrowRight, ChevronDown, Building2, FileText, Activity, Headphones, ShieldCheck, CreditCard, Clock, Download } from 'lucide-react';
 import { AnimatedCounter } from './shared';
 import type { HeroContent, StatItem } from './types';
 import dashboardScreenshot from '@/assets/screenshots/dashboard-overview.png';
