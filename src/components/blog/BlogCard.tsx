@@ -22,8 +22,8 @@ const BlogCard = ({ slug, title, excerpt, category, readTime, datePublished }: B
           <time className="text-xs text-muted-foreground" dateTime={datePublished}>
             {new Date(datePublished).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
           </time>
-          <span className="text-sm font-medium text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
-            Read more <ArrowRight className="h-3.5 w-3.5" />
+          <span className="text-sm font-medium text-primary flex items-center gap-1 group-hover:gap-2 transition-all" aria-label={`Read more about ${title}`}>
+            Read article <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </span>
         </div>
       </Link>
