@@ -139,19 +139,22 @@ export function useAuth() {
         Promise.resolve(getUserAgent())
       ]);
 
+      const checkRateLimit = async (): Promise<RateLimitRpcResponse | null> => {
+        const { data: rateLimitRaw, error: rateLimitError } = await supabase.rpc('check_login_rate_limit', {
+          p_username: username,
+          p_ip_address: ipAddress
+        });
+
+        if (rateLimitError) {
+          console.error('Rate limit check failed:', rateLimitError);
+          return null;
+        }
+
+        return rateLimitRaw as unknown as RateLimitRpcResponse | null;
+      };
+
       // 1. Check rate limit before attempting login
-      const { data: rateLimitRaw, error: rateLimitError } = await supabase.rpc('check_login_rate_limit', {
-        p_username: username,
-        p_ip_address: ipAddress
-      });
-
-      // Cast the response to our expected type (using unknown first for type safety)
-      const rateLimitData = rateLimitRaw as unknown as RateLimitRpcResponse | null;
-
-      if (rateLimitError) {
-        console.error('Rate limit check failed:', rateLimitError);
-        // Continue with login attempt even if rate limit check fails
-      }
+      const rateLimitData = await checkRateLimit();
 
       if (rateLimitData && !rateLimitData.allowed) {
         const rateLimitState = parseRateLimitResponse(rateLimitData);
@@ -178,10 +181,12 @@ export function useAuth() {
           p_failure_reason: 'Invalid username',
           p_user_id: null
         });
+
+        const updatedRateLimitData = await checkRateLimit();
         
         return { 
           error: { message: 'Invalid username or password' },
-          rateLimitState: rateLimitData ? parseRateLimitResponse(rateLimitData) : undefined
+          rateLimitState: updatedRateLimitData ? parseRateLimitResponse(updatedRateLimitData) : undefined
         };
       }
       
@@ -202,9 +207,11 @@ export function useAuth() {
       });
 
       if (error) {
+        const updatedRateLimitData = await checkRateLimit();
+
         return { 
           error: { message: 'Invalid username or password' },
-          rateLimitState: rateLimitData ? parseRateLimitResponse(rateLimitData) : undefined
+          rateLimitState: updatedRateLimitData ? parseRateLimitResponse(updatedRateLimitData) : undefined
         };
       }
 

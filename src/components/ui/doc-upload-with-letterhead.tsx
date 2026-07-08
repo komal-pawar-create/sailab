@@ -46,50 +46,49 @@ export const DocUploadWithLetterhead = ({
   const [processing, setProcessing] = useState(false);
   const { profile } = useAuth();
 
+  const getPublicAssetUrl = (urlOrPath?: string | null) => {
+    if (!urlOrPath) return null;
+    if (urlOrPath.startsWith('http')) return urlOrPath;
+
+    return supabase.storage.from('lab-assets').getPublicUrl(urlOrPath).data.publicUrl;
+  };
+
   // Fetch letterhead and logo when component mounts or when apply letterhead is toggled
   useEffect(() => {
-    if (applyLetterhead && profile?.branch_id) {
+    if (applyLetterhead && (profile?.branch_id || profile?.lab_id)) {
       fetchLetterheadAndLogo();
     }
-  }, [applyLetterhead, profile?.branch_id]);
+  }, [applyLetterhead, profile?.branch_id, profile?.lab_id]);
 
   const fetchLetterheadAndLogo = async () => {
-    if (!profile?.branch_id) return;
+    if (!profile?.branch_id && !profile?.lab_id) return;
 
     try {
       // First check branch for letterhead, logo, and signature
-      const { data: branchData } = await supabase
-        .from('branches')
-        .select('letterhead_url, logo_url, signature_url')
-        .eq('id', profile.branch_id)
-        .single();
+      const { data: branchData } = profile.branch_id
+        ? await supabase
+            .from('branches')
+            .select('letterhead_url, logo_url, signature_url')
+            .eq('id', profile.branch_id)
+            .maybeSingle()
+        : { data: null };
 
-      if (branchData) {
-        if (branchData.letterhead_url) {
-          setLetterheadUrl(branchData.letterhead_url);
-        }
-        if (branchData.logo_url) {
-          setLogoUrl(branchData.logo_url);
-        }
-      }
+      let nextLetterheadUrl = branchData?.letterhead_url || null;
+      let nextLogoUrl = branchData?.logo_url || null;
 
-      // If no letterhead/logo in branch, check lab
-      if ((!branchData?.letterhead_url || !branchData?.logo_url) && profile.lab_id) {
+      if ((!nextLetterheadUrl || !nextLogoUrl) && profile.lab_id) {
         const { data: labData } = await supabase
           .from('labs')
           .select('letterhead_url, logo_url')
           .eq('id', profile.lab_id)
-          .single();
+          .maybeSingle();
 
-        if (labData) {
-          if (!letterheadUrl && labData.letterhead_url) {
-            setLetterheadUrl(labData.letterhead_url);
-          }
-          if (!logoUrl && labData.logo_url) {
-            setLogoUrl(labData.logo_url);
-          }
-        }
+        nextLetterheadUrl = nextLetterheadUrl || labData?.letterhead_url || null;
+        nextLogoUrl = nextLogoUrl || labData?.logo_url || null;
       }
+
+      setLetterheadUrl(getPublicAssetUrl(nextLetterheadUrl));
+      setLogoUrl(getPublicAssetUrl(nextLogoUrl));
     } catch (error) {
       console.error('Error fetching letterhead and logo:', error);
     }
@@ -181,8 +180,8 @@ export const DocUploadWithLetterhead = ({
           logoUrl: fileData.logo_url,
           documentType: 'patient_document',
           originalFileUrl: publicUrl,
-          lab_id: profile.lab_id,
-          branch_id: profile.branch_id,
+          labId: profile.lab_id,
+          branchId: profile.branch_id,
           fileName: fileData.file_name,
           hasLetterhead: true
         }
@@ -216,12 +215,12 @@ export const DocUploadWithLetterhead = ({
 
   const getLetterheadPreviewUrl = () => {
     if (!letterheadUrl) return null;
-    return supabase.storage.from('lab-assets').getPublicUrl(letterheadUrl).data.publicUrl;
+    return getPublicAssetUrl(letterheadUrl);
   };
 
   const getLogoPreviewUrl = () => {
     if (!logoUrl) return null;
-    return supabase.storage.from('lab-assets').getPublicUrl(logoUrl).data.publicUrl;
+    return getPublicAssetUrl(logoUrl);
   };
 
   return (

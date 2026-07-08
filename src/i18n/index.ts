@@ -29,6 +29,8 @@ i18n
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
+      prefix: '{',
+      suffix: '}',
     },
   });
 

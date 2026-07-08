@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE = `labflow-static-${CACHE_VERSION}`;
 const API_CACHE = `labflow-api-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `labflow-dynamic-${CACHE_VERSION}`;
@@ -128,7 +128,27 @@ async function staleWhileRevalidate(request) {
   });
 }
 
-// Cache-first for static assets
+// Network-first for app code so users do not keep running stale JS/CSS bundles.
+async function networkFirstStatic(request) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse.ok) {
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    const cachedResponse = await cache.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    console.warn('[SW] Static app asset fetch failed:', request.url);
+    return new Response('', { status: 404 });
+  }
+}
+
+// Cache-first for immutable/static media assets
 async function cacheFirst(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
   const cachedResponse = await cache.match(request);
@@ -275,7 +295,8 @@ self.addEventListener('fetch', (event) => {
 
   // Handle static assets with cache-first
   if (isStaticAsset(request)) {
-    event.respondWith(cacheFirst(request));
+    const isAppCode = url.pathname.endsWith('.js') || url.pathname.endsWith('.css');
+    event.respondWith(isAppCode ? networkFirstStatic(request) : cacheFirst(request));
     return;
   }
 

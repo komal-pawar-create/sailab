@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, FileText, Receipt, Phone, Calendar, User } from "lucide-react";
+import { Eye, FileText, Receipt, Phone, Calendar, User, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,12 +24,16 @@ interface MobilePatientCardProps {
   patient: Patient;
   onAddReport: (patient: Patient) => void;
   onAddBill: (patient: Patient) => void;
+  onDeletePatient?: (patient: Patient) => void;
+  canDeletePatient?: boolean;
 }
 
 export const MobilePatientCard = memo(function MobilePatientCard({
   patient,
   onAddReport,
   onAddBill,
+  onDeletePatient,
+  canDeletePatient = false,
 }: MobilePatientCardProps) {
   const navigate = useNavigate();
 
@@ -101,6 +105,17 @@ export const MobilePatientCard = memo(function MobilePatientCard({
             <Receipt className="h-4 w-4 mr-1.5" />
             Bill
           </Button>
+          {canDeletePatient && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="flex-1 h-10"
+              onClick={() => onDeletePatient?.(patient)}
+            >
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              Delete
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -111,6 +126,8 @@ interface MobileCardViewProps {
   patients: Patient[];
   onAddReport: (patient: Patient) => void;
   onAddBill: (patient: Patient) => void;
+  onDeletePatient?: (patient: Patient) => void;
+  canDeletePatient?: boolean;
   isLoading?: boolean;
   emptyMessage?: string;
 }
@@ -119,6 +136,8 @@ export const MobileCardView = memo(function MobileCardView({
   patients,
   onAddReport,
   onAddBill,
+  onDeletePatient,
+  canDeletePatient = false,
   isLoading = false,
   emptyMessage = "No patients found",
 }: MobileCardViewProps) {
@@ -167,6 +186,8 @@ export const MobileCardView = memo(function MobileCardView({
           patient={patient}
           onAddReport={onAddReport}
           onAddBill={onAddBill}
+          onDeletePatient={onDeletePatient}
+          canDeletePatient={canDeletePatient}
         />
       ))}
     </div>

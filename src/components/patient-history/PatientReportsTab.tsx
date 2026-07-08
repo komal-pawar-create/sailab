@@ -38,6 +38,8 @@ interface TestReport {
 
 interface Document {
   id: string;
+  lab_id: string;
+  branch_id: string | null;
   file_name: string;
   file_type: string;
   file_path: string | null;
@@ -212,19 +214,52 @@ export default function PatientReportsTab({ patientId, patientName }: PatientRep
     }
   };
 
+  const getPublicAssetUrl = (urlOrPath?: string | null) => {
+    if (!urlOrPath) return null;
+    if (urlOrPath.startsWith("http")) return urlOrPath;
+
+    const { data } = supabase.storage.from("lab-assets").getPublicUrl(urlOrPath);
+    return data.publicUrl;
+  };
+
   const generateLetterhead = async (doc: Document) => {
-    if (!profile?.lab_id || !profile?.branch_id || !doc.file_path) return;
+    if (!doc.file_path) {
+      toast({ title: "Missing document", description: "Original document file is missing.", variant: "destructive" });
+      return;
+    }
+
     setProcessingDocs((prev) => new Set(prev).add(doc.id));
 
     try {
+      let targetLabId = doc.lab_id || profile?.lab_id || null;
+      const targetBranchId = doc.branch_id || profile?.branch_id || null;
+
       const [branchRes, labRes] = await Promise.all([
-        supabase.from("branches").select("letterhead_url, logo_url").eq("id", profile.branch_id).single(),
-        supabase.from("labs").select("letterhead_url").eq("id", profile.lab_id).single(),
+        targetBranchId
+          ? supabase.from("branches").select("letterhead_url, logo_url, lab_id").eq("id", targetBranchId).maybeSingle()
+          : Promise.resolve({ data: null, error: null } as any),
+        targetLabId
+          ? supabase.from("labs").select("letterhead_url, logo_url").eq("id", targetLabId).maybeSingle()
+          : Promise.resolve({ data: null, error: null } as any),
       ]);
 
-      const letterheadUrl = branchRes.data?.letterhead_url || labRes.data?.letterhead_url;
+      if (branchRes.error) throw branchRes.error;
+      if (labRes.error) throw labRes.error;
+
+      targetLabId = targetLabId || branchRes.data?.lab_id || null;
+      if (!targetLabId) {
+        toast({ title: "Missing lab", description: "Could not determine the lab for this document.", variant: "destructive" });
+        return;
+      }
+
+      const letterheadUrl = getPublicAssetUrl(branchRes.data?.letterhead_url || labRes.data?.letterhead_url);
+      const logoUrl = getPublicAssetUrl(branchRes.data?.logo_url || labRes.data?.logo_url);
       if (!letterheadUrl) {
-        toast({ title: "No letterhead", description: "Upload a letterhead first", variant: "destructive" });
+        toast({
+          title: "No letterhead",
+          description: "Upload a branch or lab letterhead before generating the report.",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -234,18 +269,26 @@ export default function PatientReportsTab({ patientId, patientName }: PatientRep
         body: {
           documentId: doc.id,
           letterheadUrl,
-          logoUrl: branchRes.data?.logo_url,
+          logoUrl,
           documentType: "patient_document",
           originalFileUrl: publicUrl,
           fileName: doc.file_name,
-          labId: profile.lab_id,
-          branchId: profile.branch_id,
+          labId: targetLabId,
+          branchId: targetBranchId,
         },
       });
 
       if (error) throw error;
       if (data?.success) {
         toast({ title: "Success", description: "Letterhead generated" });
+        setTemplates((prev) => ({
+          ...prev,
+          [doc.id]: {
+            id: data.templateId,
+            original_document_id: doc.id,
+            generated_pdf_url: data.generatedPdfUrl,
+          },
+        }));
         fetchData();
       }
     } catch (error: any) {

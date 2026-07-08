@@ -3,9 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, FileText, Receipt, Search } from "lucide-react";
+import { Eye, FileText, Receipt, Search, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
 import { AddBillForm } from "@/components/forms/AddBillForm";
 import { AddPatientForm } from "@/components/forms/AddPatientForm";
@@ -13,6 +23,9 @@ import { TablePagination } from "./TablePagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileCardView } from "./MobileCardView";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Patient {
   id: string;
@@ -51,11 +64,16 @@ export function PatientsTable({
 }: PatientsTableProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { profile } = useAuth();
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
   const [showBillForm, setShowBillForm] = useState(false);
 
+  const canDeletePatient = profile?.role === 'admin' || profile?.role === 'lab_admin';
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const hasNext = currentPage < totalPages;
   const hasPrev = currentPage > 1;
@@ -82,6 +100,34 @@ export function PatientsTable({
     setShowBillForm(true);
   };
 
+  const handleDeletePatient = async () => {
+    if (!patientToDelete || !canDeletePatient) return;
+
+    setIsDeleting(true);
+    const { error } = await supabase
+      .from('patients')
+      .delete()
+      .eq('id', patientToDelete.id);
+
+    setIsDeleting(false);
+
+    if (error) {
+      toast({
+        title: "Delete failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Patient deleted",
+      description: `${patientToDelete.full_name} has been removed from the system.`,
+    });
+    setPatientToDelete(null);
+    onRefresh();
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3 justify-between">
@@ -104,6 +150,8 @@ export function PatientsTable({
           patients={patients}
           onAddReport={handleAddReport}
           onAddBill={handleAddBill}
+          onDeletePatient={setPatientToDelete}
+          canDeletePatient={canDeletePatient}
           isLoading={isLoading}
         />
       ) : (
@@ -118,7 +166,7 @@ export function PatientsTable({
               <TableHead className="w-[120px]">Phone</TableHead>
               <TableHead>Referring Doctor</TableHead>
               <TableHead className="w-[100px]">Registered</TableHead>
-              <TableHead className="w-[180px] text-right">Actions</TableHead>
+              <TableHead className="w-[240px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -185,6 +233,17 @@ export function PatientsTable({
                         <Receipt className="h-3 w-3 mr-1" />
                         Bill
                       </Button>
+                      {canDeletePatient && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setPatientToDelete(patient)}
+                          className="h-8 text-xs"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -245,6 +304,28 @@ export function PatientsTable({
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!patientToDelete} onOpenChange={(open) => !open && !isDeleting && setPatientToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete patient?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {patientToDelete?.full_name} ({patientToDelete?.patient_id}) and related
+              patient records such as bills, reports, documents, follow-ups, and feedback where linked.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePatient}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete patient"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

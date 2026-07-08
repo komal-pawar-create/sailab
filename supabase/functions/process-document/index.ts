@@ -460,6 +460,32 @@ async function renderGeneralDocument(
   return currentY;
 }
 
+async function embedImageFromUrl(pdfDoc: any, imageUrl: string, label: string) {
+  const response = await fetch(imageUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to download ${label}: ${response.status} ${response.statusText}`);
+  }
+
+  const bytes = await response.arrayBuffer();
+  const contentType = response.headers.get('content-type')?.toLowerCase() || '';
+  const normalizedUrl = imageUrl.toLowerCase().split('?')[0];
+
+  if (contentType.includes('png') || normalizedUrl.endsWith('.png')) {
+    return await pdfDoc.embedPng(bytes);
+  }
+
+  if (
+    contentType.includes('jpeg') ||
+    contentType.includes('jpg') ||
+    normalizedUrl.endsWith('.jpg') ||
+    normalizedUrl.endsWith('.jpeg')
+  ) {
+    return await pdfDoc.embedJpg(bytes);
+  }
+
+  throw new Error(`${label} must be a PNG or JPG image.`);
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -546,15 +572,7 @@ serve(async (req) => {
       let letterheadImage;
       if (letterheadUrl) {
         console.log('Downloading letterhead from:', letterheadUrl);
-        const letterheadResponse = await fetch(letterheadUrl);
-        const letterheadBytes = await letterheadResponse.arrayBuffer();
-        
-        // Embed the letterhead image
-        if (letterheadUrl.toLowerCase().includes('.png')) {
-          letterheadImage = await pdfDoc.embedPng(letterheadBytes);
-        } else {
-          letterheadImage = await pdfDoc.embedJpg(letterheadBytes);
-        }
+        letterheadImage = await embedImageFromUrl(pdfDoc, letterheadUrl, 'letterhead');
       }
 
       // Embed standard fonts for text rendering
@@ -695,15 +713,7 @@ serve(async (req) => {
       } else if (originalFileUrl && (fileName.toLowerCase().match(/\.(jpg|jpeg|png)$/))) {
         // If original is an image, create a PDF with the image
         console.log('Processing image document');
-        const originalResponse = await fetch(originalFileUrl);
-        const imageBytes = await originalResponse.arrayBuffer();
-        
-        let embeddedImage;
-        if (fileName.toLowerCase().includes('.png')) {
-          embeddedImage = await pdfDoc.embedPng(imageBytes);
-        } else {
-          embeddedImage = await pdfDoc.embedJpg(imageBytes);
-        }
+        const embeddedImage = await embedImageFromUrl(pdfDoc, originalFileUrl, 'original image');
         
         // Create a page with A4 dimensions
         const page = pdfDoc.addPage([595.28, 841.89]); // A4 size in points

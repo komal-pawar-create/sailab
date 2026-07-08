@@ -129,6 +129,9 @@ const Auth = () => {
 
   const isLockedOut = rateLimitState && !rateLimitState.allowed && lockoutCountdown;
   const showWarning = rateLimitState && rateLimitState.allowed && rateLimitState.remainingAttempts < 5;
+  const attemptsRemainingMessage = rateLimitState
+    ? `${rateLimitState.remainingAttempts} login attempt(s) remaining before temporary lockout.`
+    : '';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
@@ -174,7 +177,7 @@ const Auth = () => {
             <Alert className="mb-4 border-warning bg-warning/10">
               <AlertTriangle className="h-4 w-4 text-warning" />
               <AlertDescription className="text-warning">
-                {t('app.auth.attemptsRemaining', { count: rateLimitState.remainingAttempts })}
+                {attemptsRemainingMessage}
               </AlertDescription>
             </Alert>
           )}

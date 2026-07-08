@@ -134,19 +134,34 @@ const AppContent = () => {
     && !location.pathname.startsWith('/track/');
 
   useEffect(() => {
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker
-          .register('/service-worker.js')
-          .then((registration) => {
-            console.log('ServiceWorker registration successful:', registration);
-          })
-          .catch((error) => {
-            console.log('ServiceWorker registration failed:', error);
-          });
-      });
+    if (!('serviceWorker' in navigator)) {
+      return;
     }
+
+    if (!import.meta.env.PROD) {
+      navigator.serviceWorker.getRegistrations()
+        .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+        .catch((error) => console.log('ServiceWorker cleanup failed:', error));
+      caches.keys()
+        .then((cacheNames) => Promise.all(
+          cacheNames
+            .filter((cacheName) => cacheName.startsWith('labflow-') || cacheName.startsWith('lab-master-'))
+            .map((cacheName) => caches.delete(cacheName))
+        ))
+        .catch((error) => console.log('Cache cleanup failed:', error));
+      return;
+    }
+
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/service-worker.js')
+        .then((registration) => {
+          console.log('ServiceWorker registration successful:', registration);
+        })
+        .catch((error) => {
+          console.log('ServiceWorker registration failed:', error);
+        });
+    });
   }, []);
 
   if (!showSidebar) {
