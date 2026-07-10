@@ -2689,9 +2689,13 @@ export type Database = {
           department: string | null
           id: string
           is_active: boolean | null
+          is_default_library: boolean | null
+          is_user_modified: boolean | null
           lab_id: string
+          library_group: string | null
           offline_id: string | null
           price: number | null
+          short_name: string | null
           source: string | null
           test_name: string
           updated_at: string
@@ -2703,9 +2707,13 @@ export type Database = {
           department?: string | null
           id?: string
           is_active?: boolean | null
+          is_default_library?: boolean | null
+          is_user_modified?: boolean | null
           lab_id: string
+          library_group?: string | null
           offline_id?: string | null
           price?: number | null
+          short_name?: string | null
           source?: string | null
           test_name: string
           updated_at?: string
@@ -2717,9 +2725,13 @@ export type Database = {
           department?: string | null
           id?: string
           is_active?: boolean | null
+          is_default_library?: boolean | null
+          is_user_modified?: boolean | null
           lab_id?: string
+          library_group?: string | null
           offline_id?: string | null
           price?: number | null
+          short_name?: string | null
           source?: string | null
           test_name?: string
           updated_at?: string
