@@ -1,19 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
-import { Plus, UserPlus, TestTube, FileText, Receipt, Calendar, Search } from "lucide-react";
+import { Plus, UserPlus, FileText, Receipt, Search } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddPatientForm } from "@/components/forms/AddPatientForm";
-import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
+import { PathologyReportForm } from "@/components/pathology/PathologyReportForm";
 import { AddBillForm } from "@/components/forms/AddBillForm";
 import { AddDocumentForm } from "@/components/forms/AddDocumentForm";
-import { useNavigate } from "react-router-dom";
 
 export function QuickActions() {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const [showPatientDialog, setShowPatientDialog] = useState(false);
-  const [showTestDialog, setShowTestDialog] = useState(false);
   const [showBillDialog, setShowBillDialog] = useState(false);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
 
@@ -23,12 +20,6 @@ export function QuickActions() {
       icon: UserPlus,
       onClick: () => setShowPatientDialog(true),
       color: "bg-blue-500 hover:bg-blue-600",
-    },
-    {
-      label: t('app.quickActions.newTest'),
-      icon: TestTube,
-      onClick: () => setShowTestDialog(true),
-      color: "bg-green-500 hover:bg-green-600",
     },
     {
       label: t('app.quickActions.newBill'),
@@ -72,6 +63,7 @@ export function QuickActions() {
             {action.label}
           </Button>
         ))}
+        <PathologyReportForm onReportAdded={() => window.location.reload()} />
       </div>
 
       <Dialog open={showPatientDialog} onOpenChange={setShowPatientDialog}>
@@ -81,18 +73,6 @@ export function QuickActions() {
           </DialogHeader>
           <AddPatientForm onPatientAdded={() => {
             setShowPatientDialog(false);
-            window.location.reload();
-          }} />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showTestDialog} onOpenChange={setShowTestDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('app.quickActions.addTestReport')}</DialogTitle>
-          </DialogHeader>
-          <AddTestReportForm onReportAdded={() => {
-            setShowTestDialog(false);
             window.location.reload();
           }} />
         </DialogContent>

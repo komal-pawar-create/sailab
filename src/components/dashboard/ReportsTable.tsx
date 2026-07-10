@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, Search } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
+import { PathologyReportForm } from "@/components/pathology/PathologyReportForm";
 import { TablePagination } from "./TablePagination";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -84,7 +85,10 @@ export function ReportsTable({
             className="pl-9"
           />
         </div>
-        <AddTestReportForm onReportAdded={onRefresh} />
+        <div className="flex flex-wrap gap-2">
+          <PathologyReportForm onReportAdded={onRefresh} />
+          <AddTestReportForm onReportAdded={onRefresh} />
+        </div>
       </div>
 
       <div className="border rounded-lg overflow-hidden">

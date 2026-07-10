@@ -16,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { PatientSearchSelect } from './PatientSearchSelect';
 import { FeatureTooltip } from '@/components/ui/feature-tooltip';
 import { PathologyReportEditor } from '@/components/pathology/PathologyReportEditor';
+import { PathologyReportForm } from '@/components/pathology/PathologyReportForm';
 import type { PathologyReportPayload } from '@/lib/pathologyTypes';
 
 interface Patient {
@@ -292,23 +293,25 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
   const todayDate = new Date().toISOString().split('T')[0];
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <div className="flex flex-wrap gap-2">
+      <PathologyReportForm onReportAdded={onReportAdded} preSelectedPatientId={preSelectedPatientId} />
+      <Dialog open={open} onOpenChange={setOpen}>
       <FeatureTooltip
         featureKey="add-test-report"
-        title="Upload Test Reports"
-        description="Upload test results with images and documents. Reports can be linked to specific test types and include technician details."
+        title="Create Imaging Report"
+        description="Create Radiology and Sonography narrative reports with optional images and documents."
         side="bottom"
       >
         <DialogTrigger asChild>
           <Button>
             <Plus className="w-4 h-4 mr-2" />
-            Add New Test Report
+            New Imaging Report
           </Button>
         </DialogTrigger>
       </FeatureTooltip>
       <DialogContent className="max-w-6xl max-h-[92vh]">
         <DialogHeader>
-          <DialogTitle>Add New Test Report</DialogTitle>
+          <DialogTitle>New Radiology / Sonography Report</DialogTitle>
         </DialogHeader>
         <ScrollArea className="h-full max-h-[calc(90vh-8rem)] pr-4">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -336,7 +339,6 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pathology">Pathology</SelectItem>
                   <SelectItem value="radiology">Radiology / X-Ray</SelectItem>
                   <SelectItem value="sonography">Sonography / USG</SelectItem>
                 </SelectContent>
@@ -480,6 +482,7 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
           </form>
         </ScrollArea>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </div>
   );
 };
