@@ -22,10 +22,31 @@ const text = (value: unknown) => (value == null ? "" : String(value));
 
 const split = (doc: jsPDF, value: string, width: number) => doc.splitTextToSize(text(value), width) as string[];
 
-const addWrapped = (doc: jsPDF, value: string, x: number, y: number, width: number, lineHeight = 5) => {
-  const lines = split(doc, value, width);
-  doc.text(lines, x, y);
-  return y + Math.max(lines.length, 1) * lineHeight;
+const encodeBase64 = (bytes: Uint8Array) => {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, Math.min(index + chunkSize, bytes.length)));
+  }
+  return btoa(binary);
+};
+
+const loadSignatureImage = async (adminClient: ReturnType<typeof createClient>, signaturePath: string) => {
+  if (!signaturePath) return null;
+  const url = signaturePath.startsWith("http")
+    ? signaturePath
+    : adminClient.storage.from("lab-assets").getPublicUrl(signaturePath).data.publicUrl;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const contentType = response.headers.get("content-type") || "image/png";
+    if (!contentType.includes("png") && !contentType.includes("jpeg") && !contentType.includes("jpg")) return null;
+    const format = contentType.includes("jpeg") || contentType.includes("jpg") ? "JPEG" : "PNG";
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    return { data: `data:${contentType};base64,${encodeBase64(bytes)}`, format };
+  } catch {
+    return null;
+  }
 };
 
 serve(async (req) => {
@@ -97,6 +118,9 @@ serve(async (req) => {
     const lab = Array.isArray(report.labs) ? report.labs[0] : report.labs;
     const referringDoctor = Array.isArray(report.referring_doctors) ? report.referring_doctors[0] : report.referring_doctors;
     const reportNumber = report.report_number || `RPT-${new Date(report.created_at ?? Date.now()).getFullYear()}-${String(report.id).slice(0, 8).toUpperCase()}`;
+    const signatureImage = await loadSignatureImage(adminClient, text(branch?.signature_url || lab?.signature_url));
+    const consultantName = text(branch?.consultant_pathologist_name);
+    const labInchargeName = text(branch?.lab_incharge_name);
 
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const page = { width: 210, height: 297, marginX: 14, footerTop: 258 };
@@ -115,7 +139,7 @@ serve(async (req) => {
       doc.line(page.marginX, 24, page.width - page.marginX, 24);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      doc.text("DEPARTMENT OF PATHOLOGY", 105, 31, { align: "center" });
+      doc.text(`DEPARTMENT OF ${text(report.department || "pathology").toUpperCase()}`, 105, 31, { align: "center" });
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
       const leftX = page.marginX;
@@ -195,18 +219,27 @@ serve(async (req) => {
       });
     }
 
-    ensureSpace(40);
+    // Reserve a fixed final footer zone so content never overlaps signatures.
+    ensureSpace(60);
+    const footerText = text(branch?.footer_text);
+    if (footerText) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(split(doc, footerText, 182).slice(0, 2), page.marginX, 232);
+    }
     doc.setFont("helvetica", "bold");
-    doc.text("*** End Of Report ***", 105, Math.max(y + 8, 226), { align: "center" });
+    doc.setFontSize(9);
+    doc.text("*** End Of Report ***", 105, 246, { align: "center" });
     doc.setFont("helvetica", "normal");
+    if (signatureImage) {
+      doc.addImage(signatureImage.data, signatureImage.format, 137, 253, 46, 14, undefined, "FAST");
+    }
     doc.line(22, 270, 78, 270);
     doc.line(132, 270, 188, 270);
-    doc.text("Lab Incharge", 50, 276, { align: "center" });
-    doc.text("Consultant Pathologist", 160, 276, { align: "center" });
-    if (branch?.footer_text) {
-      doc.setFontSize(8);
-      addWrapped(doc, text(branch.footer_text), page.marginX, 286, page.width - page.marginX * 2, 4);
-    }
+    if (labInchargeName) doc.text(labInchargeName, 50, 276, { align: "center" });
+    if (consultantName) doc.text(consultantName, 160, 276, { align: "center" });
+    doc.text("Lab Incharge", 50, labInchargeName ? 282 : 276, { align: "center" });
+    doc.text("Consultant Pathologist", 160, consultantName ? 282 : 276, { align: "center" });
 
     const bytes = doc.output("arraybuffer");
     const path = `${report.lab_id}/${report.branch_id || "branch"}/${report.id}.pdf`;

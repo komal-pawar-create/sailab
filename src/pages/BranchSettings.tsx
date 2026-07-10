@@ -28,6 +28,8 @@ interface Branch {
   logo_url?: string | null;
   letterhead_url?: string | null;
   signature_url?: string | null;
+  consultant_pathologist_name?: string | null;
+  lab_incharge_name?: string | null;
   website?: string | null;
   registration_number?: string | null;
   gst_number?: string | null;
@@ -362,6 +364,27 @@ export default function BranchSettings() {
                       id="branch_code"
                       value={formData.branch_code}
                       onChange={(e) => setFormData({ ...formData, branch_code: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="consultant_pathologist_name">Consultant Pathologist Name</Label>
+                    <Input
+                      id="consultant_pathologist_name"
+                      value={formData.consultant_pathologist_name || ''}
+                      onChange={(e) => setFormData({ ...formData, consultant_pathologist_name: e.target.value })}
+                      placeholder="Dr. Full Name, MD Pathology"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lab_incharge_name">Lab Incharge Name</Label>
+                    <Input
+                      id="lab_incharge_name"
+                      value={formData.lab_incharge_name || ''}
+                      onChange={(e) => setFormData({ ...formData, lab_incharge_name: e.target.value })}
+                      placeholder="Name"
                     />
                   </div>
                 </div>
