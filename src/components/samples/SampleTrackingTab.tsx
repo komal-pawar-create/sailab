@@ -103,6 +103,7 @@ export const SampleTrackingTab = memo(function SampleTrackingTab({
                     sampleId={sample.sample_id}
                     barcode={sample.barcode}
                     patientName={sample.patients?.full_name || ""}
+                    patientId={sample.patients?.patient_id || ""}
                     testType={sample.test_type}
                     collectedAt={sample.collected_at}
                   />
@@ -171,7 +172,7 @@ export const SampleTrackingTab = memo(function SampleTrackingTab({
                 return (
                   <TableRow key={sample.id}>
                     <TableCell className="font-mono font-medium">{sample.sample_id}</TableCell>
-                    <TableCell>{sample.patients?.full_name || "—"}</TableCell>
+                    <TableCell>{sample.patients?.full_name || "-"}</TableCell>
                     <TableCell>{sample.test_type}</TableCell>
                     <TableCell>
                       <SampleStatusBadge status={sample.status} slaBreached={tat.breached} />
@@ -196,6 +197,7 @@ export const SampleTrackingTab = memo(function SampleTrackingTab({
                           sampleId={sample.sample_id}
                           barcode={sample.barcode}
                           patientName={sample.patients?.full_name || ""}
+                          patientId={sample.patients?.patient_id || ""}
                           testType={sample.test_type}
                           collectedAt={sample.collected_at}
                         />
@@ -235,7 +237,7 @@ function TimelineDialog({ open, onOpenChange, sample }: { open: boolean; onOpenC
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[380px]">
         <DialogHeader>
-          <DialogTitle>Sample Timeline — {sample.sample_id}</DialogTitle>
+          <DialogTitle>Sample Timeline - {sample.sample_id}</DialogTitle>
         </DialogHeader>
         <SampleTimelineView
           status={sample.status}

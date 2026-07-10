@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Beaker, Clock } from "lucide-react";
 import { format, differenceInHours, differenceInMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { Sample } from "@/types/samples";
+import type { Sample, SampleWithPatient } from "@/types/samples";
 import { samplesTable } from "@/types/samples";
 
 interface PatientSamplesProps {
@@ -17,7 +17,7 @@ interface PatientSamplesProps {
 }
 
 export default function PatientSamples({ patientId }: PatientSamplesProps) {
-  const [samples, setSamples] = useState<Sample[]>([]);
+  const [samples, setSamples] = useState<SampleWithPatient[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -25,12 +25,12 @@ export default function PatientSamples({ patientId }: PatientSamplesProps) {
     setLoading(true);
     try {
       const { data, error } = await samplesTable()
-        .select("*")
+        .select("*, patients!samples_patient_id_fkey(id, full_name, patient_id)")
         .eq("patient_id", patientId)
         .order("collected_at", { ascending: false });
 
       if (error) throw error;
-      setSamples((data || []) as Sample[]);
+      setSamples((data || []) as SampleWithPatient[]);
     } catch (error: unknown) {
       toast({ title: "Error", description: "Failed to fetch samples", variant: "destructive" });
     } finally {
@@ -109,7 +109,8 @@ export default function PatientSamples({ patientId }: PatientSamplesProps) {
                 <SampleBarcode
                   sampleId={sample.sample_id}
                   barcode={sample.barcode}
-                  patientName=""
+                  patientName={sample.patients?.full_name || "Patient"}
+                  patientId={sample.patients?.patient_id || patientId}
                   testType={sample.test_type}
                   collectedAt={sample.collected_at}
                 />

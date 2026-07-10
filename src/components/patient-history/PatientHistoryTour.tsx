@@ -5,6 +5,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 const TOUR_STORAGE_KEY = 'labflow_patient_history_tour_completed';
 const TOUR_PERMANENT_DISMISS_KEY = 'labflow_patient_history_tour_dismissed';
+const TOUR_AUTO_COUNT_KEY = 'labflow_patient_history_tour_auto_show_count';
+const TOUR_AUTO_SESSION_KEY = 'labflow_patient_history_tour_auto_started_session';
+const MAX_AUTO_SHOWS = 3;
 
 interface FinalStepContentProps {
   dontShowAgain: boolean;
@@ -160,9 +163,23 @@ export const PatientHistoryTour = ({ hasPatientSelected }: PatientHistoryTourPro
     if (permanentlyDismissed) return;
 
     const tourCompleted = localStorage.getItem(TOUR_STORAGE_KEY);
-    if (!tourCompleted) {
-      const timer = setTimeout(() => setRunTour(true), 1000);
-      return () => clearTimeout(timer);
+    const autoShowCount = Number(localStorage.getItem(TOUR_AUTO_COUNT_KEY) || '0');
+    if (!tourCompleted && autoShowCount < MAX_AUTO_SHOWS && !sessionStorage.getItem(TOUR_AUTO_SESSION_KEY)) {
+      sessionStorage.setItem(TOUR_AUTO_SESSION_KEY, 'true');
+      const timer = setTimeout(() => {
+        const latestCount = Number(localStorage.getItem(TOUR_AUTO_COUNT_KEY) || '0');
+        sessionStorage.removeItem(TOUR_AUTO_SESSION_KEY);
+        if (latestCount >= MAX_AUTO_SHOWS) return;
+        localStorage.setItem(TOUR_AUTO_COUNT_KEY, String(latestCount + 1));
+        if (latestCount + 1 >= MAX_AUTO_SHOWS) {
+          localStorage.setItem(TOUR_PERMANENT_DISMISS_KEY, 'true');
+        }
+        setRunTour(true);
+      }, 1000);
+      return () => {
+        clearTimeout(timer);
+        sessionStorage.removeItem(TOUR_AUTO_SESSION_KEY);
+      };
     }
   }, [hasPatientSelected]);
 
