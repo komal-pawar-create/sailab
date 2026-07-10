@@ -34,6 +34,9 @@ interface TestReport {
   status: string;
   results: any;
   created_at: string;
+  department?: string | null;
+  pdf_url?: string | null;
+  report_number?: string | null;
 }
 
 interface Document {
@@ -163,8 +166,25 @@ export default function PatientReportsTab({ patientId, patientName }: PatientRep
   };
 
   const downloadTestReport = async (report: TestReport) => {
-    if (report.results?.file_path) {
-      try {
+    try {
+      if (report.pdf_url) {
+        window.open(report.pdf_url, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      if ((report.department || "pathology") === "pathology") {
+        const { data, error } = await supabase.functions.invoke("generate-pathology-report-pdf", {
+          body: { reportId: report.id },
+        });
+        if (error || !data?.success) {
+          throw new Error(error?.message || data?.error || "PDF generation failed");
+        }
+        window.open(data.pdfUrl, "_blank", "noopener,noreferrer");
+        fetchData();
+        return;
+      }
+
+      if (report.results?.file_path) {
         const { data, error } = await supabase.storage
           .from("lab-files")
           .download(report.results.file_path);
@@ -179,9 +199,11 @@ export default function PatientReportsTab({ patientId, patientName }: PatientRep
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
         }
-      } catch {
-        toast({ title: "Error", description: "Failed to download", variant: "destructive" });
+      } else {
+        toast({ title: "No file", description: "No PDF or uploaded file is available for this report yet." });
       }
+    } catch (error: any) {
+      toast({ title: "Error", description: error?.message || "Failed to download", variant: "destructive" });
     }
   };
 
@@ -342,6 +364,7 @@ export default function PatientReportsTab({ patientId, patientName }: PatientRep
                   <TableHead>Test Type</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Report No.</TableHead>
                   <TableHead className="w-[140px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -361,6 +384,7 @@ export default function PatientReportsTab({ patientId, patientName }: PatientRep
                         {report.status}
                       </Badge>
                     </TableCell>
+                    <TableCell className="font-mono text-xs">{report.report_number || "-"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Button size="sm" variant="ghost" onClick={() => downloadTestReport(report)} title="Download">

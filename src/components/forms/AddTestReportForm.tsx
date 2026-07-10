@@ -15,6 +15,8 @@ import { OperatorSelect } from './OperatorSelect';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PatientSearchSelect } from './PatientSearchSelect';
 import { FeatureTooltip } from '@/components/ui/feature-tooltip';
+import { PathologyReportEditor } from '@/components/pathology/PathologyReportEditor';
+import type { PathologyReportPayload } from '@/lib/pathologyTypes';
 
 interface Patient {
   id: string;
@@ -26,6 +28,8 @@ interface Patient {
 interface TestType {
   id: string;
   test_name: string;
+  category?: string | null;
+  department?: string | null;
   is_global?: boolean;
 }
 
@@ -42,6 +46,8 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
   const [uploadedFiles, setUploadedFiles] = useState<Array<{ file_name: string; file_path: string; file_type: string; file_size: number }>>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedOperator, setSelectedOperator] = useState('');
+  const [department, setDepartment] = useState<'pathology' | 'radiology' | 'sonography'>('pathology');
+  const [pathologyPayload, setPathologyPayload] = useState<PathologyReportPayload | null>(null);
   const { profile } = useAuth();
 
   useEffect(() => {
@@ -174,10 +180,28 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
         created_by = selectedOperator;
       }
       
+      const selectedDepartment = (formData.get('department') as string) || department;
+      const modality = (formData.get('modality') as string) || (selectedDepartment === 'sonography' ? 'USG' : selectedDepartment === 'radiology' ? 'X-Ray' : 'Laboratory');
+      const bodyPart = (formData.get('body_part') as string) || '';
       const results = formData.get('results') as string;
-      let parsedResults = null;
+      let parsedResults: any = null;
+      let selectedTestType = formData.get('test_type') as string;
       
-      if (results) {
+      if (selectedDepartment === 'pathology') {
+        if (!pathologyPayload || pathologyPayload.rows.length === 0 || pathologyPayload.selectedTestIds.length === 0) {
+          throw new Error('Select at least one pathology test and enter report values.');
+        }
+        parsedResults = pathologyPayload.rows;
+        selectedTestType = pathologyPayload.testTypeLabel;
+      } else if (selectedDepartment === 'radiology' || selectedDepartment === 'sonography') {
+        parsedResults = [
+          { testName: 'Clinical History', result: formData.get('clinical_history') as string || '', sortOrder: 1 },
+          { testName: 'Technique', result: formData.get('technique') as string || '', sortOrder: 2 },
+          { testName: 'Findings', result: formData.get('findings') as string || '', sortOrder: 3 },
+          { testName: 'Impression', result: formData.get('impression') as string || '', sortOrder: 4 },
+          { testName: 'Advice', result: formData.get('advice') as string || '', sortOrder: 5 },
+        ];
+      } else if (results) {
         try {
           parsedResults = JSON.parse(results);
         } catch {
@@ -189,11 +213,15 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
         .from('test_reports')
         .insert({
           patient_id: formData.get('patient_id') as string,
-          test_type: formData.get('test_type') as string,
+          test_type: selectedTestType,
           test_date: formData.get('test_date') as string,
           status: formData.get('status') as string,
           technician_name: formData.get('technician_name') as string,
           results: parsedResults,
+          department: selectedDepartment,
+          modality,
+          body_part: bodyPart,
+          study_notes: formData.get('study_notes') as string || null,
           lab_id,
           branch_id,
           created_by,
@@ -202,6 +230,20 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
         .single();
 
       if (reportError) throw reportError;
+
+      if (selectedDepartment === 'pathology' && reportData?.id && formData.get('status') === 'completed') {
+        const { error: pdfError } = await supabase.functions.invoke('generate-pathology-report-pdf', {
+          body: { reportId: reportData.id },
+        });
+        if (pdfError) {
+          console.error('Pathology PDF generation failed:', pdfError);
+          toast({
+            title: 'Report saved, PDF pending',
+            description: 'The report was saved but the server PDF could not be generated yet.',
+            variant: 'destructive',
+          });
+        }
+      }
 
       // Insert uploaded files as documents
       if (uploadedFiles.length > 0 && reportData) {
@@ -264,7 +306,7 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
           </Button>
         </DialogTrigger>
       </FeatureTooltip>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-w-6xl max-h-[92vh]">
         <DialogHeader>
           <DialogTitle>Add New Test Report</DialogTitle>
         </DialogHeader>
@@ -288,35 +330,70 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="test_type">Test Type *</Label>
-              <Select name="test_type" required>
+              <Label htmlFor="department">Department *</Label>
+              <Select name="department" value={department} onValueChange={(value) => setDepartment(value as 'pathology' | 'radiology' | 'sonography')} required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select test type" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {testTypes.filter(t => t.is_global).length > 0 && (
-                    <>
-                      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Platform Tests</div>
-                      {testTypes.filter(t => t.is_global).map((testType) => (
-                        <SelectItem key={testType.id} value={testType.test_name}>
-                          {testType.test_name}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
-                  {testTypes.filter(t => !t.is_global).length > 0 && (
-                    <>
-                      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Branch Tests</div>
-                      {testTypes.filter(t => !t.is_global).map((testType) => (
-                        <SelectItem key={testType.id} value={testType.test_name}>
-                          {testType.test_name}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
+                  <SelectItem value="pathology">Pathology</SelectItem>
+                  <SelectItem value="radiology">Radiology / X-Ray</SelectItem>
+                  <SelectItem value="sonography">Sonography / USG</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {department === 'pathology' ? (
+              <PathologyReportEditor
+                branchId={profile?.branch_id}
+                labId={profile?.lab_id}
+                onChange={setPathologyPayload}
+              />
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="test_type">Test Type *</Label>
+                <Select name="test_type" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select test type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {testTypes.filter(t => t.is_global && (t.department || department) === department).length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Platform Tests</div>
+                        {testTypes.filter(t => t.is_global && (t.department || department) === department).map((testType) => (
+                          <SelectItem key={testType.id} value={testType.test_name}>
+                            {testType.test_name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                    {testTypes.filter(t => !t.is_global && (t.department || department) === department).length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Branch Tests</div>
+                        {testTypes.filter(t => !t.is_global && (t.department || department) === department).map((testType) => (
+                          <SelectItem key={testType.id} value={testType.test_name}>
+                            {testType.test_name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {department !== 'pathology' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="modality">Modality</Label>
+                  <CapitalizedInput name="modality" defaultValue={department === 'sonography' ? 'USG' : 'X-Ray'} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="body_part">Body Part / Study</Label>
+                  <CapitalizedInput name="body_part" placeholder="Chest, Abdomen, Pelvis, KUB" />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="test_date">Test Date *</Label>
@@ -368,15 +445,34 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="results">Results</Label>
-              <CapitalizedTextarea
-                name="results"
-                placeholder="Enter test results (optional)"
-                rows={4}
-                required={false}
-              />
-            </div>
+            {department === 'pathology' ? (
+              <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
+                Structured pathology results will be saved from the grid above. Calculated values remain editable and manual overrides are preserved.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="clinical_history">Clinical History</Label>
+                  <CapitalizedTextarea name="clinical_history" rows={2} placeholder="Relevant history" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="technique">Technique</Label>
+                  <CapitalizedTextarea name="technique" rows={2} defaultValue={department === 'sonography' ? 'Real-time ultrasound examination performed with appropriate probe.' : 'Digital radiography study performed.'} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="findings">Findings *</Label>
+                  <CapitalizedTextarea name="findings" rows={4} placeholder="Enter findings" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="impression">Impression *</Label>
+                  <CapitalizedTextarea name="impression" rows={3} placeholder="Enter impression" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="advice">Advice</Label>
+                  <CapitalizedTextarea name="advice" rows={2} placeholder="Correlate clinically" />
+                </div>
+              </div>
+            )}
 
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Adding..." : "Add Test Report"}

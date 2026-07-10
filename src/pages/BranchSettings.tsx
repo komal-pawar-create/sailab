@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Upload, X, Building, CreditCard, FileText, Image } from 'lucide-react';
+import { Loader2, Upload, X, Building, CreditCard, FileText, Image, FlaskConical } from 'lucide-react';
+import { PathologyTestLibraryManager } from '@/components/pathology/PathologyTestLibraryManager';
 import { BillPreviewSample } from '@/components/bills/BillPreviewSample';
 
 interface Branch {
@@ -317,7 +318,7 @@ export default function BranchSettings() {
 
       {formData && (
         <Tabs defaultValue="general" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="general">
               <Building className="w-4 h-4 mr-2" />
               General
@@ -333,6 +334,10 @@ export default function BranchSettings() {
             <TabsTrigger value="settings">
               <FileText className="w-4 h-4 mr-2" />
               Settings
+            </TabsTrigger>
+            <TabsTrigger value="test-library">
+              <FlaskConical className="w-4 h-4 mr-2" />
+              Test Library
             </TabsTrigger>
           </TabsList>
 
@@ -698,6 +703,15 @@ export default function BranchSettings() {
               logoPreview={logoPreview}
               signaturePreview={signaturePreview}
             />
+          </TabsContent>
+
+          <TabsContent value="test-library">
+            {selectedBranch && (
+              <PathologyTestLibraryManager
+                branchId={selectedBranch.id}
+                labId={selectedBranch.lab_id || profile?.lab_id}
+              />
+            )}
           </TabsContent>
         </Tabs>
       )}

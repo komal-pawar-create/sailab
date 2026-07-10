@@ -2,3 +2,6 @@ project_id = "jlqocytwodbbebrgboaw"
 
 [functions.send-myoperator-whatsapp]
 verify_jwt = true
+
+[functions.generate-pathology-report-pdf]
+verify_jwt = true
