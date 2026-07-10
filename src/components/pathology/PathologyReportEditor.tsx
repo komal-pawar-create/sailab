@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ interface PathologyReportEditorProps {
   branchId?: string | null;
   labId?: string | null;
   onChange: (payload: PathologyReportPayload) => void;
+  initialTestNames?: string[];
+  initialRows?: PathologyResultRow[];
 }
 
 const buildRefRange = (parameter: PathologyParameter) => {
@@ -34,13 +36,15 @@ const parameterUnit = (parameter: PathologyParameter) => parameter.override?.uni
 const parameterDefault = (parameter: PathologyParameter) => parameter.override?.default_value ?? parameter.default_value ?? "";
 const CORE_ENABLED_SHORT_NAMES = new Set(["CBC", "KFT", "LFT", "LIPID", "WIDAL", "URINE", "SUGAR", "THYROID", "SEROLOGY", "DENGUE_RAPID", "BIO", "RA_PANEL", "MP_RAPID"]);
 
-export function PathologyReportEditor({ branchId, labId, onChange }: PathologyReportEditorProps) {
+export function PathologyReportEditor({ branchId, labId, onChange, initialTestNames = [], initialRows = [] }: PathologyReportEditorProps) {
   const [loading, setLoading] = useState(false);
   const [tests, setTests] = useState<PathologyTestType[]>([]);
   const [parameters, setParameters] = useState<PathologyParameter[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [rows, setRows] = useState<PathologyResultRow[]>([]);
   const [search, setSearch] = useState("");
+  const initialRowsRef = useRef(initialRows);
+  const hydratedRef = useRef(false);
 
   const selectedTests = useMemo(
     () => tests.filter((test) => selectedIds.includes(test.id)),
@@ -57,6 +61,8 @@ export function PathologyReportEditor({ branchId, labId, onChange }: PathologyRe
 
   useEffect(() => {
     if (branchId) {
+      hydratedRef.current = false;
+      initialRowsRef.current = initialRows;
       fetchEnabledLibrary();
     }
   }, [branchId]);
@@ -123,6 +129,18 @@ export function PathologyReportEditor({ branchId, labId, onChange }: PathologyRe
 
       setTests(mergedTests);
       setParameters((params || []).map((param: PathologyParameter) => ({ ...param, override: overrideByParam.get(param.id) as any })));
+
+      const wanted = new Set(initialTestNames.map((name) => name.trim().toLowerCase()));
+      const initialIds = mergedTests
+        .filter((test: PathologyTestType) => [test.short_name, test.test_name, test.display_name]
+          .filter(Boolean)
+          .some((name) => wanted.has(String(name).trim().toLowerCase())))
+        .map((test: PathologyTestType) => test.id);
+      if (!hydratedRef.current) {
+        setSelectedIds(initialIds);
+        setRows(initialRowsRef.current || []);
+        hydratedRef.current = true;
+      }
     } catch (error: any) {
       toast({
         title: "Pathology library unavailable",
@@ -137,7 +155,8 @@ export function PathologyReportEditor({ branchId, labId, onChange }: PathologyRe
   const rebuildRows = () => {
     const selectedSet = new Set(selectedIds);
     const selectedById = new Map(tests.map((test) => [test.id, test]));
-    const previousByKey = new Map(rows.map((row) => [`${row.categoryName}|${row.testName}|${row.sortOrder}`, row]));
+    const previousRows = rows.length > 0 ? rows : initialRowsRef.current;
+    const previousByKey = new Map(previousRows.map((row) => [`${row.categoryName}|${row.testName}|${row.sortOrder}`, row]));
     const nextRows: PathologyResultRow[] = [];
 
     selectedIds.forEach((testId, testIndex) => {
@@ -180,6 +199,7 @@ export function PathologyReportEditor({ branchId, labId, onChange }: PathologyRe
     onChange({
       testTypeLabel,
       selectedTestIds: selectedIds,
+      selectedTestShortNames: selectedTests.map((test) => test.short_name || test.test_name),
       rows: nextRows,
       totalPrice,
     });

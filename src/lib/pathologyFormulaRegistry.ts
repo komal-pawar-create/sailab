@@ -32,6 +32,15 @@ export const applyPathologyFormulas = (rows: PathologyResultRow[]): PathologyRes
     target.isCalculated = true;
   };
 
+  const setCalculatedByName = (names: string[], value: number | null, decimals = 2) => {
+    if (value === null || !Number.isFinite(value)) return;
+    const normalizedNames = names.map(normalize);
+    const target = next.find((row) => normalizedNames.includes(normalize(row.testName)));
+    if (!target || target.isOverridden) return;
+    target.result = round(value, decimals);
+    target.isCalculated = true;
+  };
+
   const triglycerides = findValue(next, ["Triglycerides"]);
   const totalCholesterol = findValue(next, ["Total Cholesterol"]);
   const hdl = findValue(next, ["HDL Cholesterol"]);
@@ -40,6 +49,19 @@ export const applyPathologyFormulas = (rows: PathologyResultRow[]): PathologyRes
   if (totalCholesterol !== null && hdl !== null && vldl !== null) {
     setCalculated("lipid.ldl", totalCholesterol - hdl - vldl);
     setCalculated("lipid.total_hdl_ratio", hdl !== 0 ? totalCholesterol / hdl : null);
+  }
+
+  const haemoglobin = findValue(next, ["Haemoglobin (Hb)", "Hemoglobin (Hb)"]);
+  const rbcCount = findValue(next, ["RBC Count"]);
+  const pcv = findValue(next, ["PCV / HCT", "PCV", "HCT"]);
+  if (pcv !== null && rbcCount !== null && rbcCount > 0) {
+    setCalculatedByName(["MCV"], (pcv / rbcCount) * 10, 1);
+  }
+  if (haemoglobin !== null && rbcCount !== null && rbcCount > 0) {
+    setCalculatedByName(["MCH"], (haemoglobin / rbcCount) * 10, 1);
+  }
+  if (haemoglobin !== null && pcv !== null && pcv > 0) {
+    setCalculatedByName(["MCHC"], (haemoglobin / pcv) * 100, 1);
   }
 
   const bilirubinTotal = findValue(next, ["Bilirubin Total", "Bilirubin (Total)"]);

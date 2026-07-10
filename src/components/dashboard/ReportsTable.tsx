@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Search } from "lucide-react";
+import { Eye, Pencil, Search } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
 import { PathologyReportForm } from "@/components/pathology/PathologyReportForm";
@@ -18,6 +18,7 @@ interface Report {
   status: string;
   technician_name: string | null;
   created_at: string;
+  department?: string | null;
   patients?: {
     id: string;
     full_name: string;
@@ -86,7 +87,6 @@ export function ReportsTable({
           />
         </div>
         <div className="flex flex-wrap gap-2">
-          <PathologyReportForm onReportAdded={onRefresh} />
           <AddTestReportForm onReportAdded={onRefresh} />
         </div>
       </div>
@@ -138,6 +138,13 @@ export function ReportsTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end">
+                      {report.department?.toLowerCase() === "pathology" && (
+                        <PathologyReportForm
+                          reportId={report.id}
+                          onReportAdded={onRefresh}
+                          trigger={<Button variant="ghost" size="icon" title="Edit pathology report"><Pencil className="h-4 w-4" /></Button>}
+                        />
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"

@@ -68,7 +68,7 @@ serve(async (req) => {
 
     const { data: report, error: reportError } = await adminClient
       .from("test_reports")
-      .select("*, patients(*), branches(*), labs(*)")
+      .select("*, patients(*), branches(*), labs(*), referring_doctors(*)")
       .eq("id", reportId)
       .maybeSingle();
     if (reportError) throw reportError;
@@ -95,6 +95,7 @@ serve(async (req) => {
     const patient = Array.isArray(report.patients) ? report.patients[0] : report.patients;
     const branch = Array.isArray(report.branches) ? report.branches[0] : report.branches;
     const lab = Array.isArray(report.labs) ? report.labs[0] : report.labs;
+    const referringDoctor = Array.isArray(report.referring_doctors) ? report.referring_doctors[0] : report.referring_doctors;
     const reportNumber = report.report_number || `RPT-${new Date(report.created_at ?? Date.now()).getFullYear()}-${String(report.id).slice(0, 8).toUpperCase()}`;
 
     const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -122,7 +123,7 @@ serve(async (req) => {
       doc.text(`REPORT NO : ${reportNumber}`, leftX, 40);
       doc.text(`PATIENT NAME : ${text(patient?.full_name)}`, leftX, 46);
       doc.text(`AGE/SEX : ${text(patient?.age)} / ${text(patient?.gender)}`, leftX, 52);
-      doc.text(`REFERRED BY : ${text(report.technician_name || "Self")}`, leftX, 58);
+      doc.text(`REFERRED BY : ${text(referringDoctor?.doctor_name || "Self / Walk-in")}`, leftX, 58);
       doc.text(`DATE : ${text(report.test_date)}`, rightX, 40);
       doc.text(`SAMPLE : ${text(report.modality || "Laboratory")}`, rightX, 46);
       doc.text(`STUDY : ${text(report.test_type)}`, rightX, 52);
@@ -180,7 +181,21 @@ serve(async (req) => {
       y += lineCount * 5 + 2;
     });
 
-    ensureSpace(32);
+    if (report.study_notes) {
+      ensureSpace(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("COMMENTS", page.marginX, y);
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      const commentLines = split(doc, text(report.study_notes), page.width - page.marginX * 2);
+      commentLines.forEach((line) => {
+        ensureSpace(6);
+        doc.text(line, page.marginX, y);
+        y += 5;
+      });
+    }
+
+    ensureSpace(40);
     doc.setFont("helvetica", "bold");
     doc.text("*** End Of Report ***", 105, Math.max(y + 8, 226), { align: "center" });
     doc.setFont("helvetica", "normal");

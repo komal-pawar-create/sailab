@@ -49,6 +49,7 @@ export interface PathologyResultRow {
 export interface PathologyReportPayload {
   testTypeLabel: string;
   selectedTestIds: string[];
+  selectedTestShortNames: string[];
   rows: PathologyResultRow[];
   totalPrice: number;
 }
