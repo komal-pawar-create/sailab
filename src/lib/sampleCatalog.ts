@@ -22,11 +22,11 @@ const keyFor = (test: { short_name?: string | null; test_name: string }) =>
 
 /** Loads the same active branch/global catalog used by the other diagnostic workflows. */
 export async function loadSampleTestCatalog(branchId: string | null, labId: string | null) {
+  // Keep the local query compatible with older deployments where custom
+  // test_types only has the original id/name/branch fields.
   let localQuery = supabase
     .from("test_types")
-    .select("id, test_name, short_name, department, library_group, sort_order, price, is_active")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true })
+    .select("id, test_name, branch_id, lab_id")
     .order("test_name", { ascending: true });
   if (branchId) localQuery = localQuery.eq("branch_id", branchId);
   else if (labId) localQuery = localQuery.eq("lab_id", labId);

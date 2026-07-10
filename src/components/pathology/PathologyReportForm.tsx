@@ -129,7 +129,7 @@ export function PathologyReportForm({ onReportAdded, preSelectedPatientId, repor
     if (billError) throw billError;
     const paid = Number(paidAmount ?? bill.paid_amount ?? 0);
     const items = (payload?.selectedTestShortNames || []).map((name) => ({ description: name, quantity: 1, rate: amount / Math.max(1, payload?.selectedTestIds.length || 1), amount: amount / Math.max(1, payload?.selectedTestIds.length || 1) }));
-    const { error } = await (supabase as any).from("bills").update({ total_amount: amount, due_amount: Math.max(0, amount - paid), paid_amount: paid, items, status: paid >= amount ? "paid" : paid > 0 ? "partial" : "pending" }).eq("id", billId);
+    const { error } = await (supabase as any).from("bills").update({ total_amount: amount, due_amount: Math.max(0, amount - paid), paid_amount: paid, items, status: paid >= amount ? "paid" : paid > 0 ? "partially_paid" : "pending" }).eq("id", billId);
     if (error) throw error;
     if (!doctorId) return;
     const { data: doctor } = await (supabase as any).from("referring_doctors").select("commission_percentage, commission_type, fixed_commission_amount").eq("id", doctorId).maybeSingle();
@@ -146,7 +146,7 @@ export function PathologyReportForm({ onReportAdded, preSelectedPatientId, repor
     if (!billId) {
       const { data: billNumber, error: numberError } = await supabase.rpc("generate_bill_number", { p_lab_id: activeLabId! });
       if (numberError) throw numberError;
-      const { data: bill, error } = await (supabase as any).from("bills").insert({ bill_number: billNumber, patient_id: report.patient_id, total_amount: totalPrice, due_amount: Math.max(0, totalPrice - paymentAmount), paid_amount: paymentAmount, due_date: report.test_date, items: (payload?.selectedTestShortNames || []).map((name) => ({ description: name, quantity: 1, rate: totalPrice / Math.max(1, selectedCount), amount: totalPrice / Math.max(1, selectedCount) })), lab_id: activeLabId, branch_id: activeBranchId, created_by: report.created_by, status: paymentAmount >= totalPrice ? "paid" : paymentAmount > 0 ? "partial" : "pending", source: "cloud" }).select("id").single();
+      const { data: bill, error } = await (supabase as any).from("bills").insert({ bill_number: billNumber, patient_id: report.patient_id, total_amount: totalPrice, due_amount: Math.max(0, totalPrice - paymentAmount), paid_amount: paymentAmount, due_date: report.test_date, items: (payload?.selectedTestShortNames || []).map((name) => ({ description: name, quantity: 1, rate: totalPrice / Math.max(1, selectedCount), amount: totalPrice / Math.max(1, selectedCount) })), lab_id: activeLabId, branch_id: activeBranchId, created_by: report.created_by, status: paymentAmount >= totalPrice ? "paid" : paymentAmount > 0 ? "partially_paid" : "pending", source: "cloud" }).select("id").single();
       if (error) throw error;
       billId = bill.id;
       const { error: linkError } = await (supabase as any).from("test_reports").update({ bill_id: billId }).eq("id", report.id);

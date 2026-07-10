@@ -124,7 +124,7 @@ BEGIN
     ) VALUES (
       v_bill_number, p_patient_id, v_total, GREATEST(v_total - v_paid, 0), LEAST(v_paid, v_total), p_test_date,
       p_results, p_lab_id, p_branch_id, COALESCE(p_created_by, auth.uid()),
-      CASE WHEN v_paid >= v_total AND v_total > 0 THEN 'paid' WHEN v_paid > 0 THEN 'partial' ELSE 'pending' END, 'cloud'
+      CASE WHEN v_paid >= v_total AND v_total > 0 THEN 'paid' WHEN v_paid > 0 THEN 'partially_paid' ELSE 'pending' END, 'cloud'
     ) RETURNING id INTO v_bill_id;
     UPDATE public.test_reports SET bill_id = v_bill_id WHERE id = v_report.id;
     IF v_paid > 0 THEN
@@ -134,7 +134,7 @@ BEGIN
   ELSIF v_bill_id IS NOT NULL THEN
     SELECT COALESCE(paid_amount, 0) INTO v_paid FROM public.bills WHERE id = v_bill_id FOR UPDATE;
     UPDATE public.bills SET total_amount = v_total, due_amount = GREATEST(v_total - v_paid, 0),
-      status = CASE WHEN v_paid >= v_total AND v_total > 0 THEN 'paid' WHEN v_paid > 0 THEN 'partial' ELSE 'pending' END,
+      status = CASE WHEN v_paid >= v_total AND v_total > 0 THEN 'paid' WHEN v_paid > 0 THEN 'partially_paid' ELSE 'pending' END,
       items = p_results, updated_at = now() WHERE id = v_bill_id;
   END IF;
 
