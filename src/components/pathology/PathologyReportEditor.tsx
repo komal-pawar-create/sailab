@@ -18,6 +18,7 @@ interface PathologyReportEditorProps {
   onChange: (payload: PathologyReportPayload) => void;
   initialTestNames?: string[];
   initialRows?: PathologyResultRow[];
+  onResultsComplete?: () => void;
 }
 
 const buildRefRange = (parameter: PathologyParameter) => {
@@ -33,10 +34,26 @@ const buildRefRange = (parameter: PathologyParameter) => {
 
 const parameterName = (parameter: PathologyParameter) => parameter.override?.parameter_name || parameter.parameter_name;
 const parameterUnit = (parameter: PathologyParameter) => parameter.override?.unit ?? parameter.unit ?? "";
-const parameterDefault = (parameter: PathologyParameter) => parameter.override?.default_value ?? parameter.default_value ?? "";
+const parameterRefText = (parameter: PathologyParameter) => parameter.override?.ref_range_text ?? parameter.ref_range_text ?? "";
+export const resolvePathologyDefault = (parameter: PathologyParameter) => {
+  const configuredDefault = parameter.override?.default_value ?? parameter.default_value ?? "";
+  if (configuredDefault) return configuredDefault;
+
+  const name = parameterName(parameter).trim().toLowerCase();
+  const rangeText = parameterRefText(parameter);
+  const lowerRange = rangeText.toLowerCase();
+
+  if (["method", "interpretation", "comments"].includes(name)) return rangeText;
+  if (lowerRange.includes("nil")) return "Nil";
+  if (lowerRange.includes("negative")) return "Negative";
+  if (lowerRange.includes("non-reactive")) return "Non-Reactive";
+  if (lowerRange.includes("clear")) return "Clear";
+  if (lowerRange.includes("pale straw")) return "Pale Straw";
+  return "";
+};
 const CORE_ENABLED_SHORT_NAMES = new Set(["CBC", "KFT", "LFT", "LIPID", "WIDAL", "URINE", "SUGAR", "THYROID", "SEROLOGY", "DENGUE_RAPID", "BIO", "RA_PANEL", "MP_RAPID"]);
 
-export function PathologyReportEditor({ branchId, labId, onChange, initialTestNames = [], initialRows = [] }: PathologyReportEditorProps) {
+export function PathologyReportEditor({ branchId, labId, onChange, initialTestNames = [], initialRows = [], onResultsComplete }: PathologyReportEditorProps) {
   const [loading, setLoading] = useState(false);
   const [tests, setTests] = useState<PathologyTestType[]>([]);
   const [parameters, setParameters] = useState<PathologyParameter[]>([]);
@@ -45,9 +62,10 @@ export function PathologyReportEditor({ branchId, labId, onChange, initialTestNa
   const [search, setSearch] = useState("");
   const initialRowsRef = useRef(initialRows);
   const hydratedRef = useRef(false);
+  const resultInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const selectedTests = useMemo(
-    () => tests.filter((test) => selectedIds.includes(test.id)),
+    () => selectedIds.map((id) => tests.find((test) => test.id === id)).filter(Boolean) as PathologyTestType[],
     [selectedIds, tests],
   );
 
@@ -130,12 +148,16 @@ export function PathologyReportEditor({ branchId, labId, onChange, initialTestNa
       setTests(mergedTests);
       setParameters((params || []).map((param: PathologyParameter) => ({ ...param, override: overrideByParam.get(param.id) as any })));
 
-      const wanted = new Set(initialTestNames.map((name) => name.trim().toLowerCase()));
-      const initialIds = mergedTests
-        .filter((test: PathologyTestType) => [test.short_name, test.test_name, test.display_name]
-          .filter(Boolean)
-          .some((name) => wanted.has(String(name).trim().toLowerCase())))
-        .map((test: PathologyTestType) => test.id);
+      const byName = new Map<string, PathologyTestType>();
+      mergedTests.forEach((test: PathologyTestType) => {
+        [test.short_name, test.test_name, test.display_name].filter(Boolean).forEach((name) => {
+          byName.set(String(name).trim().toLowerCase(), test);
+        });
+      });
+      const initialIds = initialTestNames
+        .map((name) => byName.get(name.trim().toLowerCase())?.id)
+        .filter((id): id is string => !!id)
+        .filter((id, index, ids) => ids.indexOf(id) === index);
       if (!hydratedRef.current) {
         setSelectedIds(initialIds);
         setRows(initialRowsRef.current || []);
@@ -156,7 +178,7 @@ export function PathologyReportEditor({ branchId, labId, onChange, initialTestNa
     const selectedSet = new Set(selectedIds);
     const selectedById = new Map(tests.map((test) => [test.id, test]));
     const previousRows = rows.length > 0 ? rows : initialRowsRef.current;
-    const previousByKey = new Map(previousRows.map((row) => [`${row.categoryName}|${row.testName}|${row.sortOrder}`, row]));
+    const previousByKey = new Map(previousRows.map((row) => [`${row.categoryName}|${row.testName}`, row]));
     const nextRows: PathologyResultRow[] = [];
 
     selectedIds.forEach((testId, testIndex) => {
@@ -171,9 +193,9 @@ export function PathologyReportEditor({ branchId, labId, onChange, initialTestNa
       testParameters.forEach((parameter) => {
         const sortOrder = (testIndex + 1) * 1000 + (parameter.sort_order ?? 0);
         const name = parameterName(parameter);
-        const previous = previousByKey.get(`${categoryName}|${name}|${sortOrder}`);
+        const previous = previousByKey.get(`${categoryName}|${name}`);
         const refRange = buildRefRange(parameter);
-        const result = previous?.result ?? parameterDefault(parameter);
+        const result = previous?.result ?? resolvePathologyDefault(parameter);
         nextRows.push({
           testName: name,
           categoryName,
@@ -216,7 +238,7 @@ export function PathologyReportEditor({ branchId, labId, onChange, initialTestNa
         const updated = { ...row, [field]: value };
         if (field === "result") {
           updated.isAbnormal = isValueOutsideRange(String(value), row.refRange);
-          if (row.formulaKey && row.isCalculated) {
+          if (row.formulaKey) {
             updated.isOverridden = true;
             updated.isCalculated = false;
           }
@@ -225,6 +247,29 @@ export function PathologyReportEditor({ branchId, labId, onChange, initialTestNa
       });
       return applyPathologyFormulas(next);
     });
+  };
+
+  const moveResultFocus = (index: number, direction: -1 | 1) => {
+    let nextIndex = index + direction;
+    while (nextIndex >= 0 && nextIndex < rows.length && !resultInputRefs.current[nextIndex]) {
+      nextIndex += direction;
+    }
+    if (nextIndex >= 0 && nextIndex < rows.length) {
+      requestAnimationFrame(() => {
+        const input = resultInputRefs.current[nextIndex];
+        input?.focus();
+        input?.select();
+      });
+    } else if (direction === 1) {
+      onResultsComplete?.();
+    }
+  };
+
+  const handleResultKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    event.stopPropagation();
+    moveResultFocus(index, event.shiftKey ? -1 : 1);
   };
 
   const selectedPrice = selectedTests.reduce((sum, test) => sum + Number(test.branch_price ?? test.default_price ?? 0), 0);
@@ -309,8 +354,11 @@ export function PathologyReportEditor({ branchId, labId, onChange, initialTestNa
                           <span className="text-xs text-muted-foreground">Section</span>
                         ) : (
                           <Input
+                            ref={(input) => { resultInputRefs.current[index] = input; }}
                             value={row.result}
                             onChange={(event) => updateRow(index, "result", event.target.value)}
+                            onKeyDown={(event) => handleResultKeyDown(event, index)}
+                            aria-label={`${row.categoryName} ${row.testName} result`}
                             className={row.isAbnormal ? "border-destructive text-destructive" : ""}
                           />
                         )}

@@ -47,8 +47,10 @@ export const applyPathologyFormulas = (rows: PathologyResultRow[]): PathologyRes
   const vldl = triglycerides !== null ? triglycerides / 5 : null;
   setCalculated("lipid.vldl", vldl);
   if (totalCholesterol !== null && hdl !== null && vldl !== null) {
-    setCalculated("lipid.ldl", totalCholesterol - hdl - vldl);
-    setCalculated("lipid.total_hdl_ratio", hdl !== 0 ? totalCholesterol / hdl : null);
+    setCalculated("lipid.ldl", Math.max(0, totalCholesterol - hdl - vldl), 1);
+  }
+  if (totalCholesterol !== null && hdl !== null && hdl > 0) {
+    setCalculated("lipid.total_hdl_ratio", totalCholesterol / hdl, 2);
   }
 
   const haemoglobin = findValue(next, ["Haemoglobin (Hb)", "Hemoglobin (Hb)"]);
@@ -67,14 +69,14 @@ export const applyPathologyFormulas = (rows: PathologyResultRow[]): PathologyRes
   const bilirubinTotal = findValue(next, ["Bilirubin Total", "Bilirubin (Total)"]);
   const bilirubinDirect = findValue(next, ["Bilirubin Direct", "Bilirubin (Direct)"]);
   if (bilirubinTotal !== null && bilirubinDirect !== null) {
-    setCalculated("lft.indirect_bilirubin", bilirubinTotal - bilirubinDirect);
+    setCalculated("lft.indirect_bilirubin", Math.max(0, bilirubinTotal - bilirubinDirect), 2);
   }
 
   const totalProtein = findValue(next, ["Total Protein", "S. Total Protein"]);
   const albumin = findValue(next, ["Albumin"]);
   if (totalProtein !== null && albumin !== null) {
     const globulin = totalProtein - albumin;
-    setCalculated("lft.globulin", globulin);
+    setCalculated("lft.globulin", Math.max(0, globulin), 1);
     setCalculated("lft.ag_ratio", globulin !== 0 ? albumin / globulin : null);
   }
 
@@ -85,7 +87,7 @@ export const applyPathologyFormulas = (rows: PathologyResultRow[]): PathologyRes
 
   const urea = findValue(next, ["S. Urea", "Urea"]);
   if (urea !== null) {
-    setCalculated("kft.bun", urea * 0.467);
+    setCalculated("kft.bun", urea / 2.14, 1);
   }
 
   return next;
