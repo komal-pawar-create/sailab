@@ -15,9 +15,7 @@ import { OperatorSelect } from './OperatorSelect';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PatientSearchSelect } from './PatientSearchSelect';
 import { FeatureTooltip } from '@/components/ui/feature-tooltip';
-import { PathologyReportEditor } from '@/components/pathology/PathologyReportEditor';
 import { PathologyReportForm } from '@/components/pathology/PathologyReportForm';
-import type { PathologyReportPayload } from '@/lib/pathologyTypes';
 
 interface Patient {
   id: string;
@@ -47,8 +45,7 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
   const [uploadedFiles, setUploadedFiles] = useState<Array<{ file_name: string; file_path: string; file_type: string; file_size: number }>>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedOperator, setSelectedOperator] = useState('');
-  const [department, setDepartment] = useState<'pathology' | 'radiology' | 'sonography'>('pathology');
-  const [pathologyPayload, setPathologyPayload] = useState<PathologyReportPayload | null>(null);
+  const [department, setDepartment] = useState<'radiology' | 'sonography'>('radiology');
   const { profile } = useAuth();
 
   useEffect(() => {
@@ -181,34 +178,17 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
         created_by = selectedOperator;
       }
       
-      const selectedDepartment = (formData.get('department') as string) || department;
-      const modality = (formData.get('modality') as string) || (selectedDepartment === 'sonography' ? 'USG' : selectedDepartment === 'radiology' ? 'X-Ray' : 'Laboratory');
+      const selectedDepartment = ((formData.get('department') as string) || department) as 'radiology' | 'sonography';
+      const modality = (formData.get('modality') as string) || (selectedDepartment === 'sonography' ? 'USG' : 'X-Ray');
       const bodyPart = (formData.get('body_part') as string) || '';
-      const results = formData.get('results') as string;
-      let parsedResults: any = null;
-      let selectedTestType = formData.get('test_type') as string;
-      
-      if (selectedDepartment === 'pathology') {
-        if (!pathologyPayload || pathologyPayload.rows.length === 0 || pathologyPayload.selectedTestIds.length === 0) {
-          throw new Error('Select at least one pathology test and enter report values.');
-        }
-        parsedResults = pathologyPayload.rows;
-        selectedTestType = pathologyPayload.testTypeLabel;
-      } else if (selectedDepartment === 'radiology' || selectedDepartment === 'sonography') {
-        parsedResults = [
-          { testName: 'Clinical History', result: formData.get('clinical_history') as string || '', sortOrder: 1 },
-          { testName: 'Technique', result: formData.get('technique') as string || '', sortOrder: 2 },
-          { testName: 'Findings', result: formData.get('findings') as string || '', sortOrder: 3 },
-          { testName: 'Impression', result: formData.get('impression') as string || '', sortOrder: 4 },
-          { testName: 'Advice', result: formData.get('advice') as string || '', sortOrder: 5 },
-        ];
-      } else if (results) {
-        try {
-          parsedResults = JSON.parse(results);
-        } catch {
-          parsedResults = results;
-        }
-      }
+      const selectedTestType = formData.get('test_type') as string;
+      const parsedResults = [
+        { testName: 'Clinical History', result: formData.get('clinical_history') as string || '', sortOrder: 1 },
+        { testName: 'Technique', result: formData.get('technique') as string || '', sortOrder: 2 },
+        { testName: 'Findings', result: formData.get('findings') as string || '', sortOrder: 3 },
+        { testName: 'Impression', result: formData.get('impression') as string || '', sortOrder: 4 },
+        { testName: 'Advice', result: formData.get('advice') as string || '', sortOrder: 5 },
+      ];
 
       const { data: reportData, error: reportError } = await supabase
         .from('test_reports')
@@ -232,19 +212,6 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
 
       if (reportError) throw reportError;
 
-      if (selectedDepartment === 'pathology' && reportData?.id && formData.get('status') === 'completed') {
-        const { error: pdfError } = await supabase.functions.invoke('generate-pathology-report-pdf', {
-          body: { reportId: reportData.id },
-        });
-        if (pdfError) {
-          console.error('Pathology PDF generation failed:', pdfError);
-          toast({
-            title: 'Report saved, PDF pending',
-            description: 'The report was saved but the server PDF could not be generated yet.',
-            variant: 'destructive',
-          });
-        }
-      }
 
       // Insert uploaded files as documents
       if (uploadedFiles.length > 0 && reportData) {
@@ -292,10 +259,17 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
   // Get today's date in YYYY-MM-DD format
   const todayDate = new Date().toISOString().split('T')[0];
 
+  const handleDialogChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (nextOpen) {
+      setDepartment('radiology');
+    }
+  };
+
   return (
     <div className="flex flex-wrap gap-2">
       <PathologyReportForm onReportAdded={onReportAdded} preSelectedPatientId={preSelectedPatientId} />
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleDialogChange}>
       <FeatureTooltip
         featureKey="add-test-report"
         title="Create Imaging Report"
@@ -334,7 +308,7 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
 
             <div className="space-y-2">
               <Label htmlFor="department">Department *</Label>
-              <Select name="department" value={department} onValueChange={(value) => setDepartment(value as 'pathology' | 'radiology' | 'sonography')} required>
+              <Select name="department" value={department} onValueChange={(value) => setDepartment(value as 'radiology' | 'sonography')} required>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -345,14 +319,7 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
               </Select>
             </div>
 
-            {department === 'pathology' ? (
-              <PathologyReportEditor
-                branchId={profile?.branch_id}
-                labId={profile?.lab_id}
-                onChange={setPathologyPayload}
-              />
-            ) : (
-              <div className="space-y-2">
+            <div className="space-y-2">
                 <Label htmlFor="test_type">Test Type *</Label>
                 <Select name="test_type" required>
                   <SelectTrigger>
@@ -381,21 +348,18 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
                     )}
                   </SelectContent>
                 </Select>
-              </div>
-            )}
+            </div>
 
-            {department !== 'pathology' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="modality">Modality</Label>
-                  <CapitalizedInput name="modality" defaultValue={department === 'sonography' ? 'USG' : 'X-Ray'} />
+                  <CapitalizedInput key={department} name="modality" defaultValue={department === 'sonography' ? 'USG' : 'X-Ray'} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="body_part">Body Part / Study</Label>
                   <CapitalizedInput name="body_part" placeholder="Chest, Abdomen, Pelvis, KUB" />
                 </div>
-              </div>
-            )}
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="test_date">Test Date *</Label>
@@ -447,19 +411,14 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
               </div>
             </div>
 
-            {department === 'pathology' ? (
-              <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
-                Structured pathology results will be saved from the grid above. Calculated values remain editable and manual overrides are preserved.
-              </div>
-            ) : (
-              <div className="space-y-3">
+            <div className="space-y-3">
                 <div className="space-y-2">
                   <Label htmlFor="clinical_history">Clinical History</Label>
                   <CapitalizedTextarea name="clinical_history" rows={2} placeholder="Relevant history" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="technique">Technique</Label>
-                  <CapitalizedTextarea name="technique" rows={2} defaultValue={department === 'sonography' ? 'Real-time ultrasound examination performed with appropriate probe.' : 'Digital radiography study performed.'} />
+                  <CapitalizedTextarea key={department} name="technique" rows={2} defaultValue={department === 'sonography' ? 'Real-time ultrasound examination performed with appropriate probe.' : 'Digital radiography study performed.'} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="findings">Findings *</Label>
@@ -473,8 +432,7 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
                   <Label htmlFor="advice">Advice</Label>
                   <CapitalizedTextarea name="advice" rows={2} placeholder="Correlate clinically" />
                 </div>
-              </div>
-            )}
+            </div>
 
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Adding..." : "Add Test Report"}
