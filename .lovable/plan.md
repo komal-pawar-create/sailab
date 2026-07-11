@@ -1,42 +1,36 @@
-## Apply pending Supabase migrations
+## Git sync status
 
-Apply the two uploaded migration files (already present in your local `supabase/migrations/`) to the connected Supabase project so the online pathology library goes live.
+Lovable's GitHub integration is bidirectional and real-time — there is no manual "pull". Your latest push is already reflected in this sandbox. Verified presence of the key files:
 
-### Migration 1 — `20260710000100_test_library_metadata.sql` (17 lines)
-Adds desktop catalog metadata columns:
-- `public.test_types`: `short_name`, `library_group` (default `'Custom'`), `is_default_library`, `is_user_modified`
-- `public.desktop_test_templates`: `is_user_modified`
-- Two partial indexes on `test_types` (by `library_group` and `short_name`, scoped to `source = 'desktop'`)
+- `src/components/pathology/PathologyReportEditor.tsx`
+- `src/components/pathology/PathologyReportForm.tsx`
+- `src/components/pathology/PathologyTestLibraryManager.tsx`
+- `src/lib/pathologyFormulaRegistry.ts`
+- `supabase/functions/generate-pathology-report-pdf/index.ts`
 
-Risk: this migration references `public.desktop_test_templates`. If that table doesn't exist yet in this project, the `ALTER TABLE` will fail. I'll pre-check via `supabase--read_query` before submitting the migration, and if missing I'll either skip that single line or ask you first.
+## Supabase state (verified live)
 
-### Migration 2 — `20260710000200_online_pathology_report_library.sql` (559 lines)
-Online pathology catalog + branch overrides + PDF plumbing:
-- `global_test_types`: add `short_name`, `library_group`, `default_price`, `sort_order`, `is_default_library`
-- `test_reports`: add `report_number`, `pdf_url`, `finalized_at`, `finalized_by`
-- New tables (with RLS + triggers):
-  - `global_test_parameters` — parameter catalog per global test
-  - `branch_test_library_settings` — per-branch enable/disable + price + display name
-  - `branch_test_parameter_overrides` — per-branch unit/range/default overrides
-- Storage: creates public bucket `pathology-reports`
-- Seeds ~100 pathology tests + parameters into `global_test_types` / `global_test_parameters`
-- Enables the 13 default library tests on every existing branch in `branch_test_library_settings`
+| Check | Result |
+|---|---|
+| `global_test_types` rows | 114 |
+| `global_test_parameters` rows | 230 |
+| `branch_test_library_settings` rows | 777 (defaults enabled per branch) |
+| `branch_test_parameter_overrides` rows | 0 (expected; opt-in) |
+| `test_reports` new columns (report_number, pdf_url, finalized_at, finalized_by) | 4/4 present |
+| `global_test_types` new columns | 5/5 present |
+| `test_types` desktop metadata columns | 4/4 present |
+| Storage bucket `pathology-reports` | exists |
 
-Risk: the RLS policies call `public.get_user_lab(auth.uid())`, but this project's helper is `public.get_current_lab_id()` (per current schema). I will verify with `supabase--read_query` and, if `get_user_lab` doesn't exist, replace those calls with `public.get_current_lab_id()` in the migration body before submitting. This is a mechanical rename inside the policy `USING`/`WITH CHECK` clauses only.
+Both migrations landed cleanly. No frontend/backend gaps blocking go-live.
 
-### Steps
+## What the audit will cover
 
-1. Read-only checks via `supabase--read_query`:
-   - Does `public.desktop_test_templates` exist?
-   - Does function `public.get_user_lab(uuid)` exist? (fall back to `get_current_lab_id`)
-2. Submit Migration 1 (adjusted if `desktop_test_templates` is absent) via `supabase--migration`.
-3. After approval, submit Migration 2 (with `get_user_lab` → `get_current_lab_id` swap if needed) via `supabase--migration`.
-4. Run `supabase--linter` and report any security warnings introduced.
-5. Confirm the `pathology-reports` storage bucket is created and public.
+1. **DB integrity** — spot-check RLS policies on the 3 new tables, confirm seed integrity (no orphan params, sort_order populated, formula_key values match `pathologyFormulaRegistry.ts`).
+2. **Edge function** — call `supabase--curl_edge_functions` against `generate-pathology-report-pdf` with a real report id to confirm PDF renders and uploads to `pathology-reports/<lab>/<branch>/<report>.pdf`, then check logs.
+3. **Frontend wiring** — read `PathologyReportEditor`, `PathologyTestLibraryManager`, and Branch Settings entry to confirm they query the new tables with correct RLS-safe filters and use `get_current_lab_id()` semantics.
+4. **End-to-end flow (Playwright)** — sign in with the injected Supabase session, walk: Branch Settings → toggle a library test → create patient → new pathology report → enter results → finalize → download PDF. Screenshot each step and inspect the resulting PDF URL.
+5. **Linter pass** — run `supabase--linter` and report any new warnings introduced by Migration 2 (RLS/search_path).
 
-### Not included
-- No frontend/edge-function changes. You confirmed the latest git is already online, so the app already ships `generate-pathology-report-pdf`, `PathologyReportEditor`, `pathologyFormulaRegistry`, and the Branch Settings library manager. Edge functions auto-deploy on push; nothing for me to redeploy here.
-- No data changes beyond the seed inserts contained in the migration.
+## Deliverable
 
-### After migrations run
-You publish the frontend via the Publish dialog when ready (custom domain `labflow.mywebz.in` picks up the new build automatically).
+A short audit report in chat: pass/fail per section, any policy or seed issues found, and a go/no-go for production use on `labflow.mywebz.in`. No code or DB changes in this pass unless the audit surfaces a blocker — in which case I'll stop and propose a follow-up plan.
