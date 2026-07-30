@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecentPatients } from "@/hooks/useRecentPatients";
-import { Search, FileText, IndianRupee, Clock, Activity, ArrowLeft, User, ChevronDown, Beaker } from "lucide-react";
+import { Search, FileText, IndianRupee, Clock, Activity, ArrowLeft, User, ChevronDown, Beaker, Pencil } from "lucide-react";
 import QuickStatsBar from "@/components/patient-history/QuickStatsBar";
 import PatientBadge from "@/components/patient-history/PatientBadge";
 import PatientReportsTab from "@/components/patient-history/PatientReportsTab";
@@ -18,6 +18,7 @@ import QuickActions from "@/components/patient-history/QuickActions";
 import PatientHistoryExport from "@/components/patient-history/PatientHistoryExport";
 import PatientSamples from "@/components/patient-history/PatientSamples";
 import PatientHistoryTour from "@/components/patient-history/PatientHistoryTour";
+import { EditPatientDialog, EditablePatient } from "@/components/forms/EditPatientDialog";
 import {
   Command,
   CommandEmpty,
@@ -57,14 +58,23 @@ export default function PatientHistory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("reports");
   const [refreshKey, setRefreshKey] = useState(0);
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const { addRecentPatient } = useRecentPatients();
+  const canEditPatient = !!profile?.role && ['admin', 'lab_admin', 'branch_operator', 'operator_1', 'operator_2', 'operator_3'].includes(profile.role);
 
   const handleDataRefresh = () => {
     setRefreshKey((prev) => prev + 1);
+  };
+
+  const handlePatientUpdated = (updatedPatient: EditablePatient) => {
+    setPatients((prev) => prev.map((patient) => patient.id === updatedPatient.id ? { ...patient, ...updatedPatient } : patient));
+    setSelectedPatient((prev) => prev?.id === updatedPatient.id ? { ...prev, ...updatedPatient } : prev);
+    handleDataRefresh();
+    fetchPatients();
   };
 
   useEffect(() => {
@@ -165,6 +175,12 @@ export default function PatientHistory() {
         <div className="flex items-center gap-2">
           {selectedPatient && (
             <>
+              {canEditPatient && (
+                <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Patient
+                </Button>
+              )}
               <div data-tour="export-pdf">
                 <PatientHistoryExport patient={selectedPatient} />
               </div>
@@ -313,6 +329,13 @@ export default function PatientHistory() {
           </CardContent>
         </Card>
       )}
+
+      <EditPatientDialog
+        patient={selectedPatient}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onPatientUpdated={handlePatientUpdated}
+      />
     </div>
   );
 }

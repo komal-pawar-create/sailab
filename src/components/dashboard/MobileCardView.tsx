@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, FileText, Receipt, Phone, Calendar, User, Trash2 } from "lucide-react";
+import { Eye, FileText, Receipt, Phone, Calendar, User, Trash2, Pencil } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,7 +16,12 @@ interface Patient {
   age_in_months: number | null;
   gender: string | null;
   phone: string;
+  patient_history?: string | null;
   referred_by_doctor_name: string | null;
+  referred_by_doctor_phone?: string | null;
+  referring_doctor_id?: string | null;
+  lab_id: string;
+  branch_id?: string | null;
   created_at: string;
 }
 
@@ -24,7 +29,9 @@ interface MobilePatientCardProps {
   patient: Patient;
   onAddReport: (patient: Patient) => void;
   onAddBill: (patient: Patient) => void;
+  onEditPatient?: (patient: Patient) => void;
   onDeletePatient?: (patient: Patient) => void;
+  canEditPatient?: boolean;
   canDeletePatient?: boolean;
 }
 
@@ -32,7 +39,9 @@ export const MobilePatientCard = memo(function MobilePatientCard({
   patient,
   onAddReport,
   onAddBill,
+  onEditPatient,
   onDeletePatient,
+  canEditPatient = false,
   canDeletePatient = false,
 }: MobilePatientCardProps) {
   const navigate = useNavigate();
@@ -77,11 +86,11 @@ export const MobilePatientCard = memo(function MobilePatientCard({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-2 border-t">
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 h-10"
+            className="flex-1 min-w-[30%] h-10"
             onClick={() => navigate(`/patient/${patient.id}`)}
           >
             <Eye className="h-4 w-4 mr-1.5" />
@@ -90,7 +99,7 @@ export const MobilePatientCard = memo(function MobilePatientCard({
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 h-10"
+            className="flex-1 min-w-[30%] h-10"
             onClick={() => onAddReport(patient)}
           >
             <FileText className="h-4 w-4 mr-1.5" />
@@ -99,17 +108,28 @@ export const MobilePatientCard = memo(function MobilePatientCard({
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 h-10"
+            className="flex-1 min-w-[30%] h-10"
             onClick={() => onAddBill(patient)}
           >
             <Receipt className="h-4 w-4 mr-1.5" />
             Bill
           </Button>
+          {canEditPatient && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 min-w-[30%] h-10"
+              onClick={() => onEditPatient?.(patient)}
+            >
+              <Pencil className="h-4 w-4 mr-1.5" />
+              Edit
+            </Button>
+          )}
           {canDeletePatient && (
             <Button
               variant="destructive"
               size="sm"
-              className="flex-1 h-10"
+              className="flex-1 min-w-[30%] h-10"
               onClick={() => onDeletePatient?.(patient)}
             >
               <Trash2 className="h-4 w-4 mr-1.5" />
@@ -126,7 +146,9 @@ interface MobileCardViewProps {
   patients: Patient[];
   onAddReport: (patient: Patient) => void;
   onAddBill: (patient: Patient) => void;
+  onEditPatient?: (patient: Patient) => void;
   onDeletePatient?: (patient: Patient) => void;
+  canEditPatient?: boolean;
   canDeletePatient?: boolean;
   isLoading?: boolean;
   emptyMessage?: string;
@@ -136,7 +158,9 @@ export const MobileCardView = memo(function MobileCardView({
   patients,
   onAddReport,
   onAddBill,
+  onEditPatient,
   onDeletePatient,
+  canEditPatient = false,
   canDeletePatient = false,
   isLoading = false,
   emptyMessage = "No patients found",
@@ -186,7 +210,9 @@ export const MobileCardView = memo(function MobileCardView({
           patient={patient}
           onAddReport={onAddReport}
           onAddBill={onAddBill}
+          onEditPatient={onEditPatient}
           onDeletePatient={onDeletePatient}
+          canEditPatient={canEditPatient}
           canDeletePatient={canDeletePatient}
         />
       ))}

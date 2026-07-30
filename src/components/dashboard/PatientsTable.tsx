@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, FileText, Receipt, Search, Trash2 } from "lucide-react";
+import { Eye, FileText, Pencil, Receipt, Search, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -19,6 +19,7 @@ import {
 import { AddTestReportForm } from "@/components/forms/AddTestReportForm";
 import { AddBillForm } from "@/components/forms/AddBillForm";
 import { AddPatientForm } from "@/components/forms/AddPatientForm";
+import { EditPatientDialog } from "@/components/forms/EditPatientDialog";
 import { TablePagination } from "./TablePagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -35,7 +36,12 @@ interface Patient {
   age_in_months: number | null;
   gender: string | null;
   phone: string;
+  patient_history?: string | null;
   referred_by_doctor_name: string | null;
+  referred_by_doctor_phone?: string | null;
+  referring_doctor_id?: string | null;
+  lab_id: string;
+  branch_id?: string | null;
   created_at: string;
 }
 
@@ -68,11 +74,13 @@ export function PatientsTable({
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null);
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
   const [showBillForm, setShowBillForm] = useState(false);
 
+  const canEditPatient = !!profile?.role && ['admin', 'lab_admin', 'branch_operator', 'operator_1', 'operator_2', 'operator_3'].includes(profile.role);
   const canDeletePatient = profile?.role === 'admin' || profile?.role === 'lab_admin';
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const hasNext = currentPage < totalPages;
@@ -150,6 +158,8 @@ export function PatientsTable({
           patients={patients}
           onAddReport={handleAddReport}
           onAddBill={handleAddBill}
+          onEditPatient={setPatientToEdit}
+          canEditPatient={canEditPatient}
           onDeletePatient={setPatientToDelete}
           canDeletePatient={canDeletePatient}
           isLoading={isLoading}
@@ -166,7 +176,7 @@ export function PatientsTable({
               <TableHead className="w-[120px]">Phone</TableHead>
               <TableHead>Referring Doctor</TableHead>
               <TableHead className="w-[100px]">Registered</TableHead>
-              <TableHead className="w-[240px] text-right">Actions</TableHead>
+              <TableHead className="w-[300px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -215,6 +225,17 @@ export function PatientsTable({
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
+                      {canEditPatient && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPatientToEdit(patient)}
+                          className="h-8 text-xs"
+                        >
+                          <Pencil className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -304,6 +325,16 @@ export function PatientsTable({
           )}
         </DialogContent>
       </Dialog>
+
+      <EditPatientDialog
+        patient={patientToEdit}
+        open={!!patientToEdit}
+        onOpenChange={(open) => !open && setPatientToEdit(null)}
+        onPatientUpdated={() => {
+          setPatientToEdit(null);
+          onRefresh();
+        }}
+      />
 
       <AlertDialog open={!!patientToDelete} onOpenChange={(open) => !open && !isDeleting && setPatientToDelete(null)}>
         <AlertDialogContent>
