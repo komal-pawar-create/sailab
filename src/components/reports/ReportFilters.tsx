@@ -35,6 +35,8 @@ interface ReportFiltersProps {
   onApply: () => void;
   showStatus?: boolean;
   statusOptions?: { value: string; label: string }[];
+  statusLabel?: string;
+  statusAllLabel?: string;
   showSearch?: boolean;
   searchPlaceholder?: string;
 }
@@ -53,6 +55,8 @@ export function ReportFilters({
   onApply,
   showStatus = false,
   statusOptions = [],
+  statusLabel = 'Status',
+  statusAllLabel = 'All Status',
   showSearch = true,
   searchPlaceholder = 'Search...',
 }: ReportFiltersProps) {
@@ -199,16 +203,16 @@ export function ReportFilters({
         {/* Status Filter */}
         {showStatus && statusOptions.length > 0 && (
           <div className="space-y-2">
-            <Label className="text-xs">Status</Label>
+            <Label className="text-xs">{statusLabel}</Label>
             <Select
               value={filters.status}
               onValueChange={(value) => onFiltersChange({ ...filters, status: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="All Status" />
+                <SelectValue placeholder={statusAllLabel} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="all">{statusAllLabel}</SelectItem>
                 {statusOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
