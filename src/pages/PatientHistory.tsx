@@ -299,6 +299,7 @@ export default function PatientHistory() {
                 key={`reports-${refreshKey}`}
                 patientId={selectedPatient.id}
                 patientName={selectedPatient.full_name}
+                doctorName={selectedPatient.referred_by_doctor_name}
                 doctorPhone={selectedPatient.referred_by_doctor_phone}
               />
             </TabsContent>

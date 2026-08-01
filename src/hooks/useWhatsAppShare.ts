@@ -10,6 +10,13 @@ export interface SendReportLinkArgs {
   labName: string;
   templateName?: string;
   languageCode?: string;
+  recipientPhone?: string | null | undefined;
+  recipientName?: string;
+  recipientType?: "patient" | "doctor";
+  missingPhoneMessage?: string;
+  invalidPhoneMessage?: string;
+  successMessage?: string;
+  params?: string[];
 }
 
 export function useWhatsAppShare() {
@@ -22,6 +29,11 @@ export function useWhatsAppShare() {
     const digits = raw.replace(/[^0-9]/g, "");
     if (!digits) return "";
     return digits.length === 10 ? `91${digits}` : digits;
+  };
+
+  const isValidWhatsAppNumber = (raw: string) => {
+    const digits = raw.replace(/[^0-9]/g, "");
+    return digits.length >= 10 && digits.length <= 15;
   };
 
   const formatError = (err: unknown): string => {
@@ -43,9 +55,19 @@ export function useWhatsAppShare() {
     labName,
     templateName = "copy_labflow",
     languageCode = "en",
+    recipientPhone,
+    recipientName,
+    recipientType = "patient",
+    missingPhoneMessage,
+    invalidPhoneMessage,
+    successMessage,
+    params,
   }: SendReportLinkArgs) => {
-    if (!patientPhone) {
-      toast.error("Patient has no phone number on file");
+    const targetPhone = recipientPhone ?? patientPhone;
+    const targetName = recipientName || patientName || (recipientType === "doctor" ? "Doctor" : "Patient");
+
+    if (!targetPhone) {
+      toast.error(missingPhoneMessage || "Patient has no phone number on file");
       return { success: false };
     }
     if (!billId) {
@@ -53,17 +75,22 @@ export function useWhatsAppShare() {
       return { success: false };
     }
 
-    const phone = normalizePhone(patientPhone);
-    if (phone.length < 12) {
-      toast.error("Invalid phone number");
+    if (!isValidWhatsAppNumber(targetPhone)) {
+      toast.error(invalidPhoneMessage || "Invalid phone number");
       return { success: false };
     }
 
-    const firstName = (patientName || "Patient").trim().split(/\s+/)[0];
-    const trackingUrl = buildTrackingUrl(billId);
-    const params = [firstName, testName || "lab", trackingUrl, labName || "Your Lab"];
+    const phone = normalizePhone(targetPhone);
+    if (!isValidWhatsAppNumber(phone)) {
+      toast.error(invalidPhoneMessage || "Invalid phone number");
+      return { success: false };
+    }
 
-    const requestBody = { to: phone, templateName, languageCode, params };
+    const firstName = (targetName || "Patient").trim().split(/\s+/)[0];
+    const trackingUrl = buildTrackingUrl(billId);
+    const templateParams = params || [firstName, testName || "lab", trackingUrl, labName || "Your Lab"];
+
+    const requestBody = { to: phone, templateName, languageCode, params: templateParams };
     console.log("[useWhatsAppShare] invoking send-myoperator-whatsapp with:", requestBody);
 
     setSending(true);
@@ -87,7 +114,7 @@ export function useWhatsAppShare() {
         return { success: false, error: apiErr, raw: data };
       }
 
-      toast.success(`WhatsApp sent to ${firstName}`);
+      toast.success(successMessage || `WhatsApp sent to ${firstName}`);
       return { success: true, data };
     } catch (err: any) {
       console.error("WhatsApp send exception:", err);
