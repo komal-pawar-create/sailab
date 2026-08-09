@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/use-toast';
 import { CapitalizedInput } from '@/components/ui/capitalized-input';
 import { CapitalizedTextarea } from '@/components/ui/capitalized-textarea';
-import { JpgUpload } from '@/components/ui/jpg-upload';
+import { JpgUpload, UploadedJpgFile } from '@/components/ui/jpg-upload';
 import { DocUpload } from '@/components/ui/doc-upload';
 import { OperatorSelect } from './OperatorSelect';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -32,6 +32,8 @@ interface TestType {
   is_global?: boolean;
 }
 
+type UploadedReportFile = { file_name: string; file_path: string; file_type: string; file_size: number };
+
 interface AddTestReportFormProps {
   onReportAdded: () => void;
   preSelectedPatientId?: string;
@@ -42,7 +44,7 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [testTypes, setTestTypes] = useState<TestType[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{ file_name: string; file_path: string; file_type: string; file_size: number }>>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedReportFile[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedOperator, setSelectedOperator] = useState('');
   const [department, setDepartment] = useState<'radiology' | 'sonography'>('radiology');
@@ -116,12 +118,28 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
 
       if (!profileData) return;
 
-      // Fetch local test types from the branch
-      const { data: localTestTypes, error: localError } = await supabase
+      let targetBranchId: string | null = profileData.branch_id ?? null;
+
+      if (profileData.role === 'admin' && selectedOperator) {
+        const { data: opProfile } = await supabase
+          .from('profiles')
+          .select('branch_id')
+          .eq('user_id', selectedOperator)
+          .maybeSingle();
+        targetBranchId = opProfile?.branch_id ?? targetBranchId;
+      }
+
+      let localQuery = supabase
         .from('test_types')
         .select('*')
-        .eq('branch_id', profileData.branch_id)
+        .eq('lab_id', profileData.lab_id)
         .order('test_name', { ascending: true });
+
+      if (targetBranchId) {
+        localQuery = localQuery.eq('branch_id', targetBranchId);
+      }
+
+      const { data: localTestTypes, error: localError } = await localQuery;
 
       if (localError) console.error('Error fetching local test types:', localError);
 
@@ -152,8 +170,12 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
     }
   };
 
-  const handleFileUploaded = (file: { file_name: string; file_path: string; file_type: string; file_size: number }) => {
-    setUploadedFiles([...uploadedFiles, file]);
+  const handleFileUploaded = (file: UploadedReportFile) => {
+    setUploadedFiles((currentFiles) => [...currentFiles, file]);
+  };
+
+  const handleJpgFileRemoved = (file: UploadedJpgFile) => {
+    setUploadedFiles((currentFiles) => currentFiles.filter((item) => item.file_path !== file.file_path));
   };
 
   const handlePatientSelect = (patientId: string) => {
@@ -259,6 +281,36 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
   // Get today's date in YYYY-MM-DD format
   const todayDate = new Date().toISOString().split('T')[0];
 
+  const normalizeCatalogValue = (value?: string | null) => value?.trim().toLowerCase().replace(/[\s_/-]+/g, '') || '';
+
+  const testTypeMatchesDepartment = (testType: TestType, selectedDepartment: 'radiology' | 'sonography') => {
+    const departmentValue = normalizeCatalogValue(testType.department);
+    const categoryValue = normalizeCatalogValue(testType.category);
+    const testNameValue = normalizeCatalogValue(testType.test_name);
+    const values = [departmentValue, categoryValue, testNameValue].filter(Boolean);
+
+    if (selectedDepartment === 'sonography') {
+      return values.some((value) => (
+        value.includes('sonography') ||
+        value.includes('ultrasound') ||
+        value.includes('usg')
+      ));
+    }
+
+    return values.some((value) => (
+      value.includes('radiology') ||
+      value.includes('xray') ||
+      value.includes('imaging')
+    ));
+  };
+
+  const globalDepartmentTests = testTypes.filter((testType) => (
+    testType.is_global && testTypeMatchesDepartment(testType, department)
+  ));
+  const localDepartmentTests = testTypes.filter((testType) => (
+    !testType.is_global && testTypeMatchesDepartment(testType, department)
+  ));
+
   const handleDialogChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
     if (nextOpen) {
@@ -326,25 +378,30 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
                     <SelectValue placeholder="Select test type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {testTypes.filter(t => t.is_global && (t.department || department) === department).length > 0 && (
+                    {globalDepartmentTests.length > 0 && (
                       <>
                         <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Platform Tests</div>
-                        {testTypes.filter(t => t.is_global && (t.department || department) === department).map((testType) => (
+                        {globalDepartmentTests.map((testType) => (
                           <SelectItem key={testType.id} value={testType.test_name}>
                             {testType.test_name}
                           </SelectItem>
                         ))}
                       </>
                     )}
-                    {testTypes.filter(t => !t.is_global && (t.department || department) === department).length > 0 && (
+                    {localDepartmentTests.length > 0 && (
                       <>
                         <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Branch Tests</div>
-                        {testTypes.filter(t => !t.is_global && (t.department || department) === department).map((testType) => (
+                        {localDepartmentTests.map((testType) => (
                           <SelectItem key={testType.id} value={testType.test_name}>
                             {testType.test_name}
                           </SelectItem>
                         ))}
                       </>
+                    )}
+                    {globalDepartmentTests.length === 0 && localDepartmentTests.length === 0 && (
+                      <div className="px-2 py-2 text-sm text-muted-foreground">
+                        No test types configured for this department
+                      </div>
                     )}
                   </SelectContent>
                 </Select>
@@ -400,6 +457,7 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
               <div className="space-y-3">
                 <JpgUpload 
                   onFileUploaded={handleFileUploaded}
+                  onFileRemoved={handleJpgFileRemoved}
                   patientName={selectedPatient?.full_name}
                   label="Upload JPG"
                 />
@@ -421,12 +479,12 @@ export const AddTestReportForm = ({ onReportAdded, preSelectedPatientId }: AddTe
                   <CapitalizedTextarea key={department} name="technique" rows={2} defaultValue={department === 'sonography' ? 'Real-time ultrasound examination performed with appropriate probe.' : 'Digital radiography study performed.'} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="findings">Findings *</Label>
-                  <CapitalizedTextarea name="findings" rows={4} placeholder="Enter findings" required />
+                  <Label htmlFor="findings">Findings</Label>
+                  <CapitalizedTextarea name="findings" rows={4} placeholder="Enter findings" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="impression">Impression *</Label>
-                  <CapitalizedTextarea name="impression" rows={3} placeholder="Enter impression" required />
+                  <Label htmlFor="impression">Impression</Label>
+                  <CapitalizedTextarea name="impression" rows={3} placeholder="Enter impression" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="advice">Advice</Label>

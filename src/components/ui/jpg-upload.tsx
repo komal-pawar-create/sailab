@@ -1,67 +1,83 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, X, FileImage } from 'lucide-react';
+import { X, FileImage } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
+export interface UploadedJpgFile {
+  file_name: string;
+  file_path: string;
+  file_type: string;
+  file_size: number;
+}
+
 interface JpgUploadProps {
-  onFileUploaded: (file: { file_name: string; file_path: string; file_type: string; file_size: number }) => void;
+  onFileUploaded: (file: UploadedJpgFile) => void;
+  onFileRemoved?: (file: UploadedJpgFile) => void;
   patientName?: string;
   label?: string;
   maxSize?: number; // in MB
 }
 
-export const JpgUpload = ({ onFileUploaded, patientName, label = "Upload JPG", maxSize = 5 }: JpgUploadProps) => {
+export const JpgUpload = ({ onFileUploaded, onFileRemoved, patientName, label = "Upload JPG", maxSize = 5 }: JpgUploadProps) => {
+  const inputId = useId();
   const [uploading, setUploading] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{ file_name: string; file_path: string; file_type: string; file_size: number }>>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedJpgFile[]>([]);
   const { profile } = useAuth();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
 
-    // Check file size
     const maxSizeBytes = maxSize * 1024 * 1024;
-    if (file.size > maxSizeBytes) {
+    const oversizedFile = files.find((file) => file.size > maxSizeBytes);
+    if (oversizedFile) {
       toast({
         title: "File too large",
-        description: `File size must be less than ${maxSize}MB`,
+        description: `${oversizedFile.name} must be less than ${maxSize}MB`,
         variant: "destructive",
       });
+      event.target.value = '';
       return;
     }
 
     setUploading(true);
 
     try {
-      // Generate filename with patient name if available
-      const timestamp = Date.now();
-      const fileExtension = file.name.split('.').pop();
-      const cleanPatientName = patientName ? patientName.replace(/[^a-zA-Z0-9]/g, '_') : 'UNKNOWN';
-      const fileName = `${cleanPatientName}_${timestamp}.${fileExtension}`;
-      
-      const filePath = `${profile?.user_id}/${profile?.lab_id}/${profile?.branch_id}/${fileName}`;
+      const uploadedBatch: UploadedJpgFile[] = [];
 
-      const { error: uploadError } = await supabase.storage
-        .from('lab-files')
-        .upload(filePath, file);
+      for (const [index, file] of files.entries()) {
+        const timestamp = Date.now();
+        const fileExtension = file.name.split('.').pop();
+        const cleanPatientName = patientName ? patientName.replace(/[^a-zA-Z0-9]/g, '_') : 'UNKNOWN';
+        const fileName = `${cleanPatientName}_${timestamp}_${index}.${fileExtension}`;
+        const filePath = `${profile?.user_id}/${profile?.lab_id}/${profile?.branch_id}/${fileName}`;
 
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from('lab-files')
+          .upload(filePath, file);
 
-      const fileData = {
-        file_name: fileName,
-        file_path: filePath,
-        file_type: file.type,
-        file_size: file.size,
-      };
+        if (uploadError) throw uploadError;
 
-      setUploadedFiles([...uploadedFiles, fileData]);
-      onFileUploaded(fileData);
+        const fileData = {
+          file_name: fileName,
+          file_path: filePath,
+          file_type: file.type,
+          file_size: file.size,
+        };
+
+        uploadedBatch.push(fileData);
+        onFileUploaded(fileData);
+      }
+
+      setUploadedFiles((currentFiles) => [...currentFiles, ...uploadedBatch]);
 
       toast({
-        title: "Image uploaded",
-        description: "The image has been uploaded successfully.",
+        title: files.length === 1 ? "Image uploaded" : "Images uploaded",
+        description: files.length === 1
+          ? "The image has been uploaded successfully."
+          : `${files.length} images have been uploaded successfully.`,
       });
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -72,11 +88,16 @@ export const JpgUpload = ({ onFileUploaded, patientName, label = "Upload JPG", m
       });
     } finally {
       setUploading(false);
+      event.target.value = '';
     }
   };
 
   const removeFile = (index: number) => {
-    setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
+    setUploadedFiles((currentFiles) => {
+      const fileToRemove = currentFiles[index];
+      if (fileToRemove) onFileRemoved?.(fileToRemove);
+      return currentFiles.filter((_, i) => i !== index);
+    });
   };
 
   return (
@@ -87,15 +108,16 @@ export const JpgUpload = ({ onFileUploaded, patientName, label = "Upload JPG", m
           variant="outline"
           size="sm"
           disabled={uploading}
-          onClick={() => document.getElementById('jpg-file-input')?.click()}
+          onClick={() => document.getElementById(inputId)?.click()}
         >
           <FileImage className="w-4 h-4 mr-2" />
           {uploading ? "Uploading..." : label}
         </Button>
         <input
-          id="jpg-file-input"
+          id={inputId}
           type="file"
           accept="image/jpeg,image/jpg,image/png"
+          multiple
           onChange={handleFileUpload}
           className="hidden"
         />
