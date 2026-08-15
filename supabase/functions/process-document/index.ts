@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.53.0";
 import { PDFDocument, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
-import mammoth from "https://esm.sh/mammoth@1.8.0";
-import WordExtractor from "https://esm.sh/word-extractor@1.0.4";
+import mammoth from "npm:mammoth@1.8.0";
+import WordExtractor from "npm:word-extractor@1.0.4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
