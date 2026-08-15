@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.53.0";
 import { PDFDocument, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
-import mammoth from "https://esm.sh/mammoth@1.6.0";
+import mammoth from "https://esm.sh/mammoth@1.8.0";
+import WordExtractor from "https://esm.sh/word-extractor@1.0.4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -504,29 +505,8 @@ serve(async (req) => {
     console.log('Processing document:', { documentId, documentType, hasLetterhead: !!letterheadUrl, fileName });
     
     // Check if file type is supported
-    const supportedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.docx'];
+    const supportedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.docx', '.doc'];
     const fileExtension = fileName.toLowerCase().match(/\.[^.]+$/)?.[0];
-    
-    // Explicitly reject .doc files
-    if (fileExtension === '.doc') {
-      console.warn('DOC file not supported:', fileName);
-      return new Response(
-        JSON.stringify({
-          error: 'DOC_NOT_SUPPORTED',
-          message: '.doc files are not supported. Please convert to .docx (Word 2007 or later) format before uploading.',
-          supportedTypes: supportedExtensions,
-          details: 'The older .doc format cannot be processed. Please use Word to save your document as .docx format.'
-        }),
-        { 
-          status: 400, 
-          headers: { 
-            ...corsHeaders, 
-            ...securityHeaders,
-            'Content-Type': 'application/json' 
-          } 
-        }
-      );
-    }
     
     if (!fileExtension || !supportedExtensions.includes(fileExtension)) {
       console.warn('Unsupported file type:', fileExtension);
@@ -535,7 +515,7 @@ serve(async (req) => {
           error: 'UNSUPPORTED_FILE_TYPE',
           message: `File type "${fileExtension || 'unknown'}" is not supported for letterhead processing.`,
           supportedTypes: supportedExtensions,
-          details: 'Supported file types: PDF, images (JPG, JPEG, PNG), and Word documents (DOCX only, not DOC).'
+          details: 'Supported file types: PDF, images (JPG, JPEG, PNG), and Word documents (DOCX and DOC).'
         }),
         { 
           status: 400, 
@@ -610,14 +590,48 @@ serve(async (req) => {
         }
       } else if (originalFileUrl && (fileName.toLowerCase().match(/\.(doc|docx)$/))) {
         // Handle Word documents with enhanced formatting
-        console.log('Processing Word document');
+        console.log('Processing Word document:', fileName);
         const originalResponse = await fetch(originalFileUrl);
         const docBytes = await originalResponse.arrayBuffer();
         
         try {
-          // Extract text from the Word document
-          const result = await mammoth.extractRawText({ arrayBuffer: docBytes });
-          const extractedContent = result.value;
+          let extractedContent = '';
+          
+          if (fileName.toLowerCase().endsWith('.doc')) {
+            // Legacy .doc support
+            console.log('Using word-extractor for .doc format');
+            const extractor = new WordExtractor();
+            
+            // word-extractor needs a buffer
+            const buffer = Buffer.from(docBytes);
+            const extracted = await extractor.extract(buffer);
+            extractedContent = extracted.getBody();
+            
+            // Normalize tab-separated columns into spaced columns for pdf-lib
+            extractedContent = extractedContent.replace(/\t/g, '    ');
+          } else {
+            // Modern .docx support with mammoth
+            console.log('Using mammoth for .docx format');
+            const buffer = Buffer.from(docBytes);
+            const result = await mammoth.convertToHtml({ buffer });
+            const htmlContent = result.value;
+            
+            // Parse HTML to text preserving table cells (with spaces) and paragraphs (with newlines)
+            extractedContent = htmlContent
+              .replace(/<br\s*\/?>/gi, '\n')
+              .replace(/<\/p>/gi, '\n\n')
+              .replace(/<\/tr>/gi, '\n')
+              .replace(/<\/td>/gi, '    ')
+              .replace(/<\/th>/gi, '    ')
+              .replace(/<\/h[1-6]>/gi, '\n\n')
+              .replace(/<[^>]+>/g, '') // Remove remaining tags
+              .replace(/&nbsp;/g, ' ')
+              .replace(/&amp;/g, '&')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/\n\s*\n\s*\n+/g, '\n\n') // Collapse excessive newlines
+              .trim();
+          }
           
           console.log('Extracted text from Word document, length:', extractedContent.length);
           
@@ -686,29 +700,23 @@ serve(async (req) => {
             );
           }
           
-        } catch (extractError) {
+        } catch (extractError: any) {
           console.error('Error extracting text from Word document:', extractError);
-          // Fallback to creating a simple page with error message
-          const page = pdfDoc.addPage([595.28, 841.89]);
-          
-          if (letterheadImage) {
-            const { width, height } = page.getSize();
-            page.drawImage(letterheadImage, {
-              x: 0,
-              y: 0,
-              width: width,
-              height: height,
-              opacity: 0.85, // Make letterhead more prominent
-            });
-          }
-          
-          page.drawText('Unable to extract content from Word document.', {
-            x: 60,
-            y: 700,
-            size: 12,
-            font: helveticaFont,
-            color: rgb(0, 0, 0),
-          });
+          return new Response(
+            JSON.stringify({
+              error: 'EXTRACTION_FAILED',
+              message: 'Unable to extract text from the Word document. It may be corrupted or in an unsupported format.',
+              details: extractError.message || extractError.toString()
+            }),
+            { 
+              status: 422, 
+              headers: { 
+                ...corsHeaders, 
+                ...securityHeaders,
+                'Content-Type': 'application/json' 
+              } 
+            }
+          );
         }
       } else if (originalFileUrl && (fileName.toLowerCase().match(/\.(jpg|jpeg|png)$/))) {
         // If original is an image, create a PDF with the image

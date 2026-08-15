@@ -111,7 +111,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return json({ success: false, error: 'Unauthorized' }, 401);
+      return json({ success: false, error: 'Unauthorized' }, 200);
     }
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -119,9 +119,9 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
     const token = authHeader.replace('Bearer ', '');
-    const { data: claims, error: authErr } = await supabase.auth.getClaims(token);
-    if (authErr || !claims?.claims?.sub) {
-      return json({ success: false, error: 'Unauthorized' }, 401);
+    const { data: claims, error: authErr } = await supabase.auth.getUser(token);
+    if (authErr || !claims?.user?.id) {
+      return json({ success: false, error: 'Unauthorized' }, 200);
     }
 
     const MYOP_TOKEN = Deno.env.get('MYOPERATOR_TOKEN');
@@ -145,12 +145,12 @@ serve(async (req) => {
     const { to, templateName = 'copy_labflow', languageCode = 'en', params, mode = 'send' } = body;
 
     if (!to || !params || !Array.isArray(params)) {
-      return json({ success: false, error: 'Missing required fields: to, params[]' }, 400);
+      return json({ success: false, error: 'Missing required fields: to, params[]' }, 200);
     }
 
     const digits = String(to).replace(/[^0-9]/g, '');
     if (digits.length < 10) {
-      return json({ success: false, error: 'Invalid phone number' }, 400);
+      return json({ success: false, error: 'Invalid phone number' }, 200);
     }
     const fullNumber = digits.length === 10 ? `91${digits}` : digits;
     const countryCode = fullNumber.slice(0, fullNumber.length - 10);
@@ -229,6 +229,6 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error('[myoperator] error', err);
-    return json({ success: false, error: (err as Error).message ?? 'Unknown error' }, 500);
+    return json({ success: false, error: (err as Error).message ?? 'Unknown error' }, 200);
   }
 });

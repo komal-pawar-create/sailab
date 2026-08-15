@@ -84,14 +84,15 @@ export default function PatientDocuments({ patientId, patientName, doctorPhone }
       const { data, error } = await supabase
         .from("document_templates")
         .select("*")
-        .in("original_document_id", documentIds);
+        .in("original_document_id", documentIds)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       
       // Create a map of document IDs to templates
       const templateMap: Record<string, DocumentTemplate> = {};
       (data || []).forEach(template => {
-        if (template.original_document_id) {
+        if (template.original_document_id && !templateMap[template.original_document_id]) {
           templateMap[template.original_document_id] = template;
         }
       });
@@ -422,10 +423,16 @@ export default function PatientDocuments({ patientId, patientName, doctorPhone }
                          doc.file_name?.toLowerCase().endsWith('.doc') ||
                          doc.file_name?.toLowerCase().endsWith('.docx') ? (
                           hasLetterhead ? (
-                            <DropdownMenuItem onClick={() => downloadDocument(doc, true)}>
-                              <Layers className="h-4 w-4 mr-2" />
-                              Download with Letterhead
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem onClick={() => downloadDocument(doc, true)}>
+                                <Layers className="h-4 w-4 mr-2" />
+                                Download with Letterhead
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => generateWithLetterhead(doc)}>
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Regenerate with Letterhead
+                              </DropdownMenuItem>
+                            </>
                           ) : (
                             <DropdownMenuItem onClick={() => generateWithLetterhead(doc)}>
                               <RefreshCw className="h-4 w-4 mr-2" />

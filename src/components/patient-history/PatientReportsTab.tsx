@@ -320,7 +320,7 @@ export default function PatientReportsTab({ patientId, patientName, doctorName, 
           documentId: doc.id,
           letterheadUrl,
           logoUrl,
-          documentType: "patient_document",
+          documentType: "general",
           originalFileUrl: publicUrl,
           fileName: doc.file_name,
           labId: targetLabId,
@@ -328,7 +328,9 @@ export default function PatientReportsTab({ patientId, patientName, doctorName, 
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       if (data?.success) {
         toast({ title: "Success", description: "Letterhead generated" });
         setTemplates((prev) => ({
@@ -342,7 +344,22 @@ export default function PatientReportsTab({ patientId, patientName, doctorName, 
         fetchData();
       }
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to generate", variant: "destructive" });
+      let errorMessage = error.message || "Failed to generate letterhead";
+      
+      // Handle Supabase Edge Function error structure
+      if (error.context && typeof error.context.json === 'function') {
+        try {
+          const body = await error.context.json();
+          if (body && body.message) errorMessage = body.message;
+          else if (body && body.error) errorMessage = body.error;
+        } catch (e) {
+          // Fallback if not JSON
+        }
+      } else if (error.message === "Edge Function returned a non-2xx status code") {
+          errorMessage = "Failed to process document. The document format might not be supported or is corrupted.";
+      }
+
+      toast({ title: "Generation Failed", description: errorMessage, variant: "destructive" });
     } finally {
       setProcessingDocs((prev) => {
         const s = new Set(prev);

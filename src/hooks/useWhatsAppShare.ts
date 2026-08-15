@@ -104,8 +104,20 @@ export function useWhatsAppShare() {
 
       if (error) {
         console.error("WhatsApp send error:", error);
-        toast.error(`WhatsApp send failed: ${formatError(error)}`, { duration: 10000 });
-        return { success: false, error };
+        let apiErr = error.message || "Unknown error";
+        
+        // Try to parse the backend JSON response if available
+        if (error.context && typeof error.context.json === 'function') {
+          try {
+            const body = await error.context.json();
+            apiErr = body?.error || apiErr;
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        
+        toast.error(`WhatsApp send failed: ${formatError(apiErr)}`, { duration: 10000 });
+        return { success: false, error: apiErr };
       }
 
       if (!data?.success) {
