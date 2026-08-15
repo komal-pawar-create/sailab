@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.53.0";
 import { PDFDocument, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
 import mammoth from "npm:mammoth@1.8.0";
 import WordExtractor from "npm:word-extractor@1.0.4";
+import { Buffer } from "node:buffer";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -863,11 +864,13 @@ serve(async (req) => {
     console.error('Error processing document:', error);
     return new Response(
       JSON.stringify({ 
+        success: false,
+        message: error.message || 'Unknown processing error',
         error: error.message,
         details: 'Failed to process document with letterhead'
       }),
       { 
-        status: 400, 
+        status: 200, 
         headers: { 
           ...corsHeaders, 
           ...securityHeaders,
