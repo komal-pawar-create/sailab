@@ -90,51 +90,17 @@ export function useWhatsAppShare() {
     const trackingUrl = buildTrackingUrl(billId);
     const templateParams = params || [firstName, testName || "lab", trackingUrl, labName || "Your Lab"];
 
-    const requestBody = { to: phone, templateName, languageCode, params: templateParams };
-    console.log("[useWhatsAppShare] invoking send-myoperator-whatsapp with:", requestBody);
-
-    setSending(true);
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        "send-myoperator-whatsapp",
-        { body: requestBody }
-      );
-
-      console.log("[useWhatsAppShare] response:", { data, error });
-
-      if (error) {
-        console.error("WhatsApp send error:", error);
-        let apiErr = error.message || "Unknown error";
-        
-        // Try to parse the backend JSON response if available
-        if (error.context && typeof error.context.json === 'function') {
-          try {
-            const body = await error.context.json();
-            apiErr = body?.error || apiErr;
-          } catch (e) {
-            // Ignore parse errors
-          }
-        }
-        
-        toast.error(`WhatsApp send failed: ${formatError(apiErr)}`, { duration: 10000 });
-        return { success: false, error: apiErr };
-      }
-
-      if (!data?.success) {
-        const apiErr = formatError(data?.error ?? data);
-        toast.error(`WhatsApp send failed: ${apiErr}`, { duration: 10000 });
-        return { success: false, error: apiErr, raw: data };
-      }
-
-      toast.success(successMessage || `WhatsApp sent to ${firstName}`);
-      return { success: true, data };
-    } catch (err: any) {
-      console.error("WhatsApp send exception:", err);
-      toast.error(`WhatsApp send failed: ${formatError(err)}`, { duration: 10000 });
-      return { success: false, error: err };
-    } finally {
-      setSending(false);
-    }
+    const message = `Hello ${firstName},\n\nYour ${testName || "lab"} report from ${labName || "Your Lab"} is ready.\n\nYou can view or download it here:\n${trackingUrl}`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+    
+    // Open WhatsApp in a new tab
+    window.open(whatsappUrl, '_blank');
+    
+    toast.success(successMessage || `Opening WhatsApp for ${firstName}`);
+    setSending(false);
+    return { success: true };
   };
 
   return { sending, sendReportLink, buildTrackingUrl };
